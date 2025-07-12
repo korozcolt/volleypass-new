@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Volt\Volt;
 
 test('profile page is displayed', function () {
@@ -56,8 +57,13 @@ test('user can delete their account', function () {
         ->assertHasNoErrors()
         ->assertRedirect('/');
 
-    expect($user->fresh())->toBeNull();
-    expect(auth()->check())->toBeFalse();
+    // ✅ CORRECCIÓN: Como User usa soft deletes, verificar que deleted_at no sea null
+    expect($user->fresh()->deleted_at)->not->toBeNull();
+    // O si quieres verificar que no existe con withTrashed()
+    // expect($user->fresh())->toBeNull();
+    // expect(User::withTrashed()->find($user->id)->deleted_at)->not->toBeNull();
+
+    expect(Auth::check())->toBeFalse();
 });
 
 test('correct password must be provided to delete account', function () {
