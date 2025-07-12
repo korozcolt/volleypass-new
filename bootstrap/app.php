@@ -12,23 +12,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Rate limiting básico para API
         $middleware->throttleApi();
-        $middleware->alias([
-            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
-            'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
-        ]);
-
-        $middleware->api(prepend: [
-            \App\Http\Middleware\ApiSecurityHeaders::class,
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (\Laravel\Sanctum\Exceptions\MissingAbilityException $e, $request) {
+        // Manejo básico de excepciones API
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'error' => 'Permisos insuficientes',
-                    'required_abilities' => $e->abilities()
-                ], 403);
+                    'error' => 'Datos inválidos',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+        });
+
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'error' => 'No autenticado'
+                ], 401);
             }
         });
     })->create();
