@@ -17,12 +17,14 @@ use Spatie\Activitylog\LogOptions;
 use App\Traits\HasSearch;
 use App\Traits\HasValidation;
 use App\Enums\UserStatus;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements HasMedia
 {
     use HasFactory, Notifiable, SoftDeletes;
     use HasRoles, InteractsWithMedia, LogsActivity; // Spatie traits
     use HasSearch, HasValidation; // Nuestros traits personalizados
+    use HasApiTokens;
 
     protected $fillable = [
         'name',
@@ -556,5 +558,15 @@ class User extends Authenticatable implements HasMedia
         }
 
         return $preferences;
+    }
+
+    public function createApiToken(string $name, array $abilities = ['*']): string
+    {
+        // Solo usuarios con roles específicos pueden crear tokens API
+        if (!$this->hasAnyRole(['Verifier', 'LeagueAdmin', 'SuperAdmin'])) {
+            throw new \Exception('Usuario no autorizado para tokens API');
+        }
+
+        return $this->createToken($name, $abilities)->plainTextToken;
     }
 }
