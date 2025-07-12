@@ -13,11 +13,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->command->info('🚀 Iniciando seeders de VolleyPass...');
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            ColombiaLocationsSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            KristianUsersSeeder::class,
         ]);
+
+        $this->command->info('🎉 ¡Todos los seeders ejecutados exitosamente!');
     }
 }
