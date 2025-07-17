@@ -48,6 +48,7 @@ Reemplazar el sistema tradicional de carnets físicos por una solución digital 
 - ✅ **Control centralizado** de jugadoras y documentación
 - ✅ **Verificación instantánea** en partidos mediante códigos QR
 - ✅ **Historial deportivo y médico** completo
+- ✅ **Gestión completa de torneos** con marcadores en tiempo real
 - ✅ **Transparencia** en el cumplimiento de normativas
 - ✅ **Estadísticas avanzadas** para desarrollo deportivo
 
@@ -56,7 +57,66 @@ Reemplazar el sistema tradicional de carnets físicos por una solución digital 
 - **Jugadoras y entrenadores** de la Liga de Voleibol de Sucre
 - **Directivos de clubes** y ligas departamentales
 - **Organizadores de torneos** y verificadores oficiales
+- **Árbitros y cuerpo técnico** en eventos deportivos
+- **Espectadores** con acceso a marcadores en tiempo real
 - **Federaciones deportivas** y patrocinadores
+
+### 👥 **Flujo de Creación de Usuarios**
+
+**VolleyPass** implementa un sistema jerárquico de creación de usuarios con contraseñas temporales obligatorias:
+
+```mermaid
+graph TD
+    A[SuperAdmin del Sistema] --> B[Crea Liga Departamental]
+    B --> C[Liga crea Entrenadores/Directores]
+    B --> D[Liga crea Árbitros Certificados]
+    C --> E[Entrenador crea/actualiza Equipos]
+    E --> F[Entrenador registra Jugadoras]
+    
+    G[Contraseña Temporal] --> H[Primer Login Obligatorio]
+    H --> I[Usuario debe cambiar contraseña]
+    
+    B -.-> G
+    C -.-> G
+    D -.-> G
+    F -.-> G
+```
+
+#### 🔐 **Proceso de Registro por Actor:**
+
+1. **SuperAdmin del Sistema**
+   - Crea nuevas **Ligas Departamentales**
+   - Cada liga es asignada a un **usuario administrador**
+   - Genera contraseña temporal para admin de liga
+
+2. **Administrador de Liga**
+   - Crea **Entrenadores/Directores de Equipo** (usuarios)
+   - Registra **Árbitros Certificados** (usuarios)
+   - Aprueba documentación de jugadoras
+   - Gestiona torneos de la liga
+
+3. **Entrenador/Director de Equipo**
+   - Actualiza información completa del **Equipo**
+   - Registra **Jugadoras** del equipo (usuarios)
+   - Define nóminas A/B/C para torneos
+   - Inscribe equipos en competencias
+
+4. **Sistema de Contraseñas Temporales**
+   - **Generación automática** de contraseña al crear usuario
+   - **Login forzoso** para cambio en primer acceso
+   - **Notificación por email** con credenciales temporales
+   - **Expiración** de contraseña temporal (7 días)
+
+#### 📧 **Notificaciones de Registro:**
+
+```php
+// Flujo automático al crear usuario
+1. Sistema genera contraseña temporal
+2. Envía email con credenciales
+3. Usuario debe ingresar dentro de 7 días
+4. Fuerza cambio de contraseña en primer login
+5. Activa cuenta después del cambio
+```
 
 ---
 
@@ -74,6 +134,7 @@ Reemplazar el sistema tradicional de carnets físicos por una solución digital 
 - **Coach**: Entrenador certificado
 - **SportsDoctor**: Médico deportivo
 - **Verifier**: Verificador de carnets en partidos
+- **Referee**: Árbitro certificado para partidos oficiales
 
 </details>
 
@@ -165,13 +226,282 @@ Liga (Departamental)
 
 </details>
 
-### 🏆 **Fase 3: Gestión Avanzada** *En Desarrollo*
+### 🏆 **Fase 3: Gestión Avanzada** ⏳ *Pendiente*
 
-- 📊 **Estadísticas Deportivas**: Rendimiento y rankings por jugadora
-- 🏆 **Torneos y Competencias**: Gestión completa de eventos deportivos
-- 🏅 **Sistema de Reconocimientos**: MVP, selecciones, premios especiales
-- 💰 **Gestión de Pagos**: Inscripciones, cuotas y facturación
-- 📱 **App Móvil**: React Native para verificadores en campo
+<details>
+<summary><strong>📊 Estadísticas Deportivas Avanzadas</strong></summary>
+
+- **Rankings individuales** por posición y categoría
+- **Estadísticas de rendimiento** por jugadora/equipo
+- **Análisis de performance** histórico
+- **Métricas de participación** en torneos
+- **Reportes personalizables** para entrenadores
+
+</details>
+
+<details>
+<summary><strong>🏅 Sistema de Reconocimientos</strong></summary>
+
+- **MVP** de partidos y torneos
+- **Selecciones** departamentales y nacionales
+- **Premios especiales** y reconocimientos
+- **Historial de logros** por jugadora
+- **Certificados digitales** de participación
+
+</details>
+
+<details>
+<summary><strong>💰 Gestión de Pagos y Finanzas</strong></summary>
+
+- **Inscripciones** a torneos y eventos
+- **Cuotas** de afiliación de clubes
+- **Facturación automática** y reportes
+- **Integración** con pasarelas de pago
+- **Control financiero** completo
+
+</details>
+
+### 🏆 **Fase 4: Sistema de Gestión de Torneos** ⏳ *Pendiente*
+
+<details>
+<summary><strong>🏟️ Tipos de Torneos</strong></summary>
+
+- **Liga Regular**: Todos contra todos
+- **Copa/Eliminación**: Fase eliminatoria directa
+- **Mixto**: Fase de grupos + eliminatorias
+- **Round Robin**: Grupos con todos contra todos
+- **Torneos Relámpago**: Formato corto intensivo
+- **Torneos Inter-Ligas**: Competencias departamentales/nacionales
+
+</details>
+
+<details>
+<summary><strong>⚙️ Configuración Automática de Partidos</strong></summary>
+
+- **Generación automática** de fixtures según equipos inscritos
+- **Algoritmo inteligente** para distribución equitativa
+- **Manejo de números impares** de equipos con byes automáticos
+- **Calendario optimizado** considerando disponibilidad de canchas
+- **Reprogramación inteligente** por eventos climáticos o emergencias
+
+</details>
+
+<details>
+<summary><strong>👥 Gestión de Nóminas por Equipo</strong></summary>
+
+- **Nómina A, B, C** según cantidad de jugadoras disponibles
+- **Decisión por entrenador** al momento de inscripción
+- **Verificación automática** de elegibilidad por categoría
+- **Rotación de nóminas** entre partidos del mismo torneo
+- **Control de límites** de jugadoras por categoría y torneo
+
+</details>
+
+<details>
+<summary><strong>🗂️ Distribución Inteligente de Grupos</strong></summary>
+
+- **Algoritmo de balanceo** para grupos equitativos
+- **Consideración de rankings** históricos de equipos
+- **Separación geográfica** para reducir costos de desplazamiento
+- **Evitar enfrentamientos** prematuros entre equipos fuertes
+- **Redistribución automática** si hay retiros de último momento
+
+</details>
+
+<details>
+<summary><strong>📊 Configuración por Tipo de Torneo</strong></summary>
+
+```php
+// Configuraciones específicas por tipo
+- Sets por partido (3 de 5, 2 de 3, etc.)
+- Puntos por set (25, 21, 15)
+- Tiempo límite por set
+- Reglas de desempate
+- Puntos de tabla (3-1-0, 3-2-1-0)
+- Clasificación automática
+- Criterios de ranking
+```
+
+</details>
+
+<details>
+<summary><strong>🔄 Transición Fase de Grupos → Fase de Llaves</strong></summary>
+
+- **Clasificación automática** según puntos de tabla
+- **Criterios de desempate** configurables
+- **Generación automática** de brackets eliminatorios
+- **Siembra** de equipos según ranking final de grupos
+- **Cruces estratégicos** para evitar repetición de enfrentamientos
+
+</details>
+
+<details>
+<summary><strong>🏆 Sistema de Puntuación y Estadísticas</strong></summary>
+
+- **Marcador en tiempo real** durante partidos
+- **Puntos por partido** con sistema configurable
+- **Acumulación automática** en tabla de posiciones
+- **Estadísticas individuales** por jugadora
+- **Métricas avanzadas**: Eficiencia, aces, bloqueos, recepciones
+
+</details>
+
+<details>
+<summary><strong>🎮 Gestor de Partidos en Vivo</strong></summary>
+
+- **Lista de jugadoras** verificadas para cada partido
+- **Formaciones iniciales** y cambios en tiempo real
+- **Marcador digital** con sets y puntos
+- **Historial completo** de puntos por set
+- **Timeline** de eventos importantes del partido
+
+</details>
+
+<details>
+<summary><strong>🔄 Sistema de Rotaciones</strong></summary>
+
+- **Tracking automático** de rotaciones por punto
+- **Posiciones en cancha** actualizadas en tiempo real
+- **Cambios de jugadoras** con registro temporal
+- **Validación de rotaciones** según reglas oficiales
+- **Alertas** por infracciones de rotación
+
+</details>
+
+<details>
+<summary><strong>🟨 Gestión de Amonestaciones</strong></summary>
+
+- **Tarjetas amarillas/rojas** con registro automático
+- **Razones predefinidas** (conducta, retraso, etc.)
+- **Acumulación por torneo** y consecuencias
+- **Suspensiones automáticas** por acumulación
+- **Reportes disciplinarios** para la liga
+
+</details>
+
+<details>
+<summary><strong>👨‍⚖️ Asignación de Árbitros</strong></summary>
+
+- **Base de datos** de árbitros certificados
+- **Asignación automática** considerando disponibilidad
+- **Evitar conflictos** de interés con equipos
+- **Distribución equitativa** de partidos por árbitro
+- **Evaluación post-partido** por equipos participantes
+
+</details>
+
+<details>
+<summary><strong>📚 Historial Completo de Partidos</strong></summary>
+
+- **Archivo histórico** de todos los enfrentamientos
+- **Estadísticas comparativas** entre equipos
+- **Rendimiento histórico** de jugadoras
+- **Tendencias** y análisis de rendimiento
+- **Exportación** de datos para análisis externos
+
+</details>
+
+<details>
+<summary><strong>📡 API para Marcadores en Tiempo Real</strong></summary>
+
+```php
+// Endpoints especializados
+GET /api/tournaments/{id}/live        // Estado general del torneo
+GET /api/matches/{id}/live           // Marcador en tiempo real
+POST /api/matches/{id}/score         // Actualizar puntuación
+GET /api/tournaments/{id}/standings  // Tabla de posiciones
+WebSocket /live-scores               // Actualizaciones instantáneas
+```
+
+</details>
+
+<details>
+<summary><strong>📺 Vista Pública de Marcadores</strong></summary>
+
+- **Dashboard público** sin autenticación requerida
+- **Marcadores en tiempo real** de todos los partidos activos
+- **Tabla de posiciones** actualizada automáticamente
+- **Próximos partidos** con horarios y canchas
+- **Resultados históricos** del torneo
+- **QR codes** para acceso rápido desde dispositivos móviles
+
+</details>
+
+### 🏗️ **Fase 5: Interfaces de Usuario** ⏳ *Pendiente - CRÍTICO*
+
+<details>
+<summary><strong>💻 Panel Administrativo (Filament) - URGENTE</strong></summary>
+
+**Estado Actual**: Solo User Resource implementado
+
+**Pendientes Críticos**:
+- **PlayerResource** - Gestión completa de jugadoras
+- **ClubResource** - Administración de clubes 
+- **LeagueResource** - Gestión de ligas
+- **TournamentResource** - Administración de torneos
+- **MatchResource** - Gestión de partidos
+- **RefereeResource** - Administración de árbitros
+- **TeamResource** - Gestión de equipos
+- **MedicalCertificateResource** - Certificados médicos
+- **PlayerCardResource** - Gestión de carnets
+
+**Dashboard Requerido**:
+- Métricas en tiempo real
+- Widgets de estadísticas
+- Alertas de vencimientos
+- Resumen de torneos activos
+
+</details>
+
+<details>
+<summary><strong>📱 App Móvil para Verificadores</strong></summary>
+
+- **Scanner QR** optimizado para verificación rápida
+- **Modo offline** para zonas sin conectividad
+- **Sincronización automática** cuando hay conexión
+- **Interfaz intuitiva** para uso en campo
+
+</details>
+
+<details>
+<summary><strong>🌐 Dashboard Público para Torneos</strong></summary>
+
+- **Marcadores en tiempo real** sin autenticación
+- **Tabla de posiciones** actualizada automáticamente
+- **Calendario de partidos** con horarios
+- **Estadísticas públicas** de equipos y jugadoras
+
+</details>
+
+<details>
+<summary><strong>👨‍💼 Interfaces por Rol de Usuario</strong></summary>
+
+**SuperAdmin**:
+- Gestión completa del sistema
+- Creación de ligas
+- Reportes globales
+
+**Liga Admin**:
+- Gestión de equipos y entrenadores
+- Aprobación de documentos
+- Administración de torneos
+
+**Entrenador/Director**:
+- Gestión del equipo
+- Registro de jugadoras
+- Inscripción a torneos
+
+**Jugadora**:
+- Perfil personal
+- Estado de carnet
+- Historial deportivo
+
+**Árbitro**:
+- Partidos asignados
+- Interface de marcador
+- Reportes de partido
+
+</details>
 
 ---
 
@@ -194,10 +524,15 @@ volleypass/
 │   │   ├── PlayerCard.php     # Carnets digitales con QR
 │   │   ├── MedicalCertificate.php # Certificados médicos
 │   │   ├── QrScanLog.php      # Logs de verificación
+│   │   ├── Tournament.php     # Gestión de torneos
+│   │   ├── Match.php          # Partidos individuales
+│   │   ├── MatchScore.php     # Marcadores por set
 │   │   └── ...
 │   ├── 📁 Notifications/      # Sistema de notificaciones
 │   ├── 📁 Services/           # Servicios de negocio
 │   │   ├── QrVerificationService.php # Lógica de verificación
+│   │   ├── TournamentService.php     # Gestión de torneos
+│   │   ├── MatchService.php          # Lógica de partidos
 │   │   └── NotificationBatchingService.php
 │   ├── 📁 Traits/             # Funcionalidades reutilizables (8 traits)
 │   └── 📁 Providers/          # Service providers
@@ -209,8 +544,9 @@ volleypass/
 ├── 📁 resources/
 │   ├── 📁 views/              # Vistas Blade + Livewire + Flux
 │   │   ├── 📁 emails/         # Templates de notificaciones
-│   │   └── 📁 livewire/       # Componentes reactivos
-│   └── 📁 js/                 # Frontend assets
+│   │   ├── 📁 livewire/       # Componentes reactivos
+│   │   └── 📁 tournaments/    # Vistas públicas de torneos
+│   └── 📁 js/                 # Frontend assets + WebSockets
 └── 📁 routes/                 # Rutas web + API + console
 ```
 
@@ -244,6 +580,29 @@ graph TD
     R --> S[Respuesta a verificador]
 ```
 
+### 🏆 Flujo de Gestión de Torneos
+
+```mermaid
+graph TD
+    A[Crear Torneo] --> B[Configurar Parámetros]
+    B --> C[Inscripción de Equipos]
+    C --> D[Definir Nóminas A/B/C]
+    D --> E[Generar Grupos]
+    E --> F[Crear Fixture Automático]
+    F --> G[Asignar Árbitros]
+    G --> H[Fase de Grupos]
+    H --> I[Actualizar Marcadores]
+    I --> J{Fase Completada?}
+    J -->|No| I
+    J -->|Sí| K[Generar Tabla Final]
+    K --> L[Clasificar para Playoffs]
+    L --> M[Fase Eliminatoria]
+    M --> N[Actualizar Brackets]
+    N --> O{Torneo Terminado?}
+    O -->|No| M
+    O -->|Sí| P[Generar Estadísticas Finales]
+```
+
 ---
 
 ## 🛠️ Tecnologías
@@ -269,6 +628,7 @@ graph TD
 - **[Livewire Flux](https://fluxui.dev)** - Componentes UI modernos y accesibles
 - **[Tailwind CSS](https://tailwindcss.com)** - Framework CSS utility-first
 - **[Alpine.js](https://alpinejs.dev)** - JavaScript reactivo ligero
+- **[WebSockets](https://pusher.com)** - Actualizaciones en tiempo real (preparado)
 
 ### 🗃️ Base de Datos
 
@@ -282,6 +642,7 @@ graph TD
 - **[FCM](https://firebase.google.com/docs/cloud-messaging)** - Push notifications
 - **[Twilio](https://www.twilio.com)** - SMS notifications
 - **[AWS S3](https://aws.amazon.com/s3)** - Almacenamiento en la nube
+- **[Pusher](https://pusher.com)** - WebSockets para marcadores en tiempo real
 
 ### 🛠️ Desarrollo
 
@@ -308,8 +669,8 @@ node --version     # Node.js 18+ (opcional)
 #### 1️⃣ Clonar el Repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/volleypass.git
-cd volleypass
+git clone https://github.com/korozcolt/volleypass-new.git
+cd volleypass-new
 ```
 
 #### 2️⃣ Instalar Dependencias
@@ -407,6 +768,16 @@ php artisan volleypass:test-notifications 1
 php artisan volleypass:generate-season-cards 2025
 ```
 
+### 📊 Filament Admin Panel
+
+```bash
+# Acceder al panel administrativo
+# http://localhost:8000/admin
+
+# Actualmente solo User Resource implementado
+# Pendientes: Player, Club, Tournament, etc.
+```
+
 ### 📊 Telescope (Debugging)
 
 ```bash
@@ -441,23 +812,58 @@ php artisan volleypass:generate-season-cards 2025
 | ⚙️ Jobs y Comandos Automáticos | ✅ Completado | 100% |
 | 📊 Logging y Auditoría Completa | ✅ Completado | 100% |
 
-### 🚧 **Fase 3 - Gestión Avanzada** (En Desarrollo)
+### 🚧 **Fase 3 - Gestión Avanzada** (Pendiente)
 
 | Componente | Estado | Progreso |
 |------------|--------|----------|
-| 🏆 Gestión de Torneos | ⏳ Pendiente | 0% |
 | 📊 Estadísticas Deportivas | ⏳ Pendiente | 0% |
 | 🏅 Sistema de Premios | ⏳ Pendiente | 0% |
 | 💰 Gestión de Pagos | ⏳ Pendiente | 0% |
-| 📱 App Móvil (React Native) | ⏳ Pendiente | 0% |
+
+### 🏆 **Fase 4 - Sistema de Gestión de Torneos** (Pendiente)
+
+| Componente | Estado | Progreso |
+|------------|--------|----------|
+| 🏟️ Tipos de Torneos | ⏳ Pendiente | 0% |
+| ⚙️ Configuración Automática de Partidos | ⏳ Pendiente | 0% |
+| 👥 Gestión de Nóminas A/B/C | ⏳ Pendiente | 0% |
+| 🗂️ Distribución de Grupos | ⏳ Pendiente | 0% |
+| 🔄 Transición Grupos → Llaves | ⏳ Pendiente | 0% |
+| 🏆 Sistema de Puntuación | ⏳ Pendiente | 0% |
+| 🎮 Gestor de Partidos en Vivo | ⏳ Pendiente | 0% |
+| 🔄 Sistema de Rotaciones | ⏳ Pendiente | 0% |
+| 🟨 Gestión de Amonestaciones | ⏳ Pendiente | 0% |
+| 👨‍⚖️ Asignación de Árbitros | ⏳ Pendiente | 0% |
+| 📚 Historial de Partidos | ⏳ Pendiente | 0% |
+| 📡 API Tiempo Real | ⏳ Pendiente | 0% |
+| 📺 Vista Pública de Marcadores | ⏳ Pendiente | 0% |
+
+### 🏗️ **Fase 5 - Interfaces de Usuario** (Pendiente - CRÍTICO)
+
+| Componente | Estado | Progreso | Prioridad |
+|------------|--------|----------|-----------|
+| 💻 PlayerResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
+| 💻 ClubResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
+| 💻 LeagueResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
+| 💻 TournamentResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
+| 💻 MatchResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media |
+| 💻 RefereeResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media |
+| 💻 TeamResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media |
+| 💻 MedicalCertificateResource | ⏳ Pendiente | 0% | 🔴 Alta |
+| 💻 PlayerCardResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
+| 💻 Dashboard Principal | ⏳ Pendiente | 0% | 🔴 Alta |
+| 📱 App Móvil Verificadores | ⏳ Pendiente | 0% | 🟡 Media |
+| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🟢 Baja |
+| 👨‍💼 Interfaces por Rol | ⏳ Pendiente | 0% | 🔴 Alta |
 
 ### 📅 **Roadmap**
 
 - **✅ Q4 2024**: Fase 1 completada (Infraestructura base)
 - **✅ Q1 2025**: Fase 2 completada (Carnetización digital)
 - **🚧 Q2 2025**: Fase 3 (Gestión avanzada y estadísticas)
-- **📱 Q3 2025**: App Móvil nativa (React Native)
-- **🌐 Q4 2025**: Integración con otras ligas departamentales
+- **🏆 Q3 2025**: Fase 4 (Sistema completo de torneos)
+- **📱 Q4 2025**: Fase 5 (Interfaces de usuario completas)
+- **🌐 2026**: Integración con otras ligas departamentales
 
 ---
 
@@ -617,7 +1023,7 @@ php artisan volleypass:test-notifications 1
 ### 💻 **Soporte Técnico**
 
 - 📧 **Email**: <soporte@volleypass.sucre.gov.co>
-- 📋 **Issues**: [GitHub Issues](https://github.com/volleypass/volleypass/issues)
+- 📋 **Issues**: [GitHub Issues](https://github.com/korozcolt/volleypass-new/issues)
 - 📖 **Documentación**: [docs.volleypass.sucre.gov.co](#)
 - 🚨 **Emergencias**: +57 300 123 4567 (24/7)
 
@@ -675,17 +1081,17 @@ Este proyecto está licenciado bajo la **Licencia MIT**. Ver [LICENSE](LICENSE) 
 
 ### 🌟 **Stats del Proyecto**
 
-![GitHub Stars](https://img.shields.io/github/stars/korozcolt/volleypass?style=social)
-![GitHub Forks](https://img.shields.io/github/forks/korozcolt/volleypass?style=social)
-![GitHub Issues](https://img.shields.io/github/issues/korozcolt/volleypass)
-![GitHub Contributors](https://img.shields.io/github/contributors/korozcolt/volleypass)
+![GitHub Stars](https://img.shields.io/github/stars/korozcolt/volleypass-new?style=social)
+![GitHub Forks](https://img.shields.io/github/forks/korozcolt/volleypass-new?style=social)
+![GitHub Issues](https://img.shields.io/github/issues/korozcolt/volleypass-new)
+![GitHub Contributors](https://img.shields.io/github/contributors/korozcolt/volleypass-new)
 
 ### 📊 **Métricas de Desarrollo**
 
-![Lines of Code](https://img.shields.io/tokei/lines/github/korozcolt/volleypass?label=Lines%20of%20Code)
-![PHP Version](https://img.shields.io/packagist/php-v/korozcolt/volleypass?label=PHP%20Version)
+![Lines of Code](https://img.shields.io/tokei/lines/github/korozcolt/volleypass-new?label=Lines%20of%20Code)
+![PHP Version](https://img.shields.io/packagist/php-v/korozcolt/volleypass-new?label=PHP%20Version)
 ![Laravel Version](https://img.shields.io/badge/Laravel-12.x-FF2D20)
-![Last Commit](https://img.shields.io/github/last-commit/korozcolt/volleypass)
+![Last Commit](https://img.shields.io/github/last-commit/korozcolt/volleypass-new)
 
 [⬆️ Volver arriba](#-volleypass-sucre)
 
