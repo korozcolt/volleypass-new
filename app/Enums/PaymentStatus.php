@@ -8,6 +8,8 @@ use Filament\Support\Contracts\HasIcon;
 
 enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     case Pending = 'pending';
+    case Verified = 'verified';
+    case Rejected = 'rejected';
     case Paid = 'paid';
     case Overdue = 'overdue';
     case Cancelled = 'cancelled';
@@ -17,6 +19,8 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'Pendiente',
+            self::Verified => 'Verificado',
+            self::Rejected => 'Rechazado',
             self::Paid => 'Pagado',
             self::Overdue => 'Vencido',
             self::Cancelled => 'Cancelado',
@@ -28,6 +32,8 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'warning',
+            self::Verified => 'success',
+            self::Rejected => 'danger',
             self::Paid => 'success',
             self::Overdue => 'danger',
             self::Cancelled => 'gray',
@@ -39,6 +45,8 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'heroicon-o-clock',
+            self::Verified => 'heroicon-o-check-badge',
+            self::Rejected => 'heroicon-o-x-circle',
             self::Paid => 'heroicon-o-check-circle',
             self::Overdue => 'heroicon-o-exclamation-triangle',
             self::Cancelled => 'heroicon-o-x-circle',
@@ -50,6 +58,8 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'bg-yellow-100 text-yellow-800',
+            self::Verified => 'bg-green-100 text-green-800',
+            self::Rejected => 'bg-red-100 text-red-800',
             self::Paid => 'bg-green-100 text-green-800',
             self::Overdue => 'bg-red-100 text-red-800',
             self::Cancelled => 'bg-gray-100 text-gray-800',

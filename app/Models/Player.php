@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,10 +15,11 @@ use App\Enums\PlayerPosition;
 use App\Enums\PlayerCategory;
 use App\Enums\MedicalStatus;
 use App\Enums\UserStatus;
+use App\Enums\FederationStatus;
 
 class Player extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity;
     use HasSearch, HasStatus;
 
     protected $fillable = [
@@ -39,6 +41,12 @@ class Player extends Model
         'is_eligible',
         'eligibility_checked_at',
         'eligibility_checked_by',
+        // Campos de federación
+        'federation_status',
+        'federation_date',
+        'federation_expires_at',
+        'federation_payment_id',
+        'federation_notes',
     ];
 
     protected $casts = [
@@ -48,8 +56,11 @@ class Player extends Model
         'category' => PlayerCategory::class,
         'status' => UserStatus::class,
         'medical_status' => MedicalStatus::class,
+        'federation_status' => FederationStatus::class,
         'debut_date' => 'date',
         'retirement_date' => 'date',
+        'federation_date' => 'date',
+        'federation_expires_at' => 'date',
         'achievements' => 'array',
         'preferences' => 'array',
         'is_eligible' => 'boolean',
@@ -138,6 +149,11 @@ class Player extends Model
     public function injuries(): HasMany
     {
         return $this->hasMany(Injury::class);
+    }
+
+    public function federationPayment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class, 'federation_payment_id');
     }
 
     // =======================
@@ -242,6 +258,21 @@ class Player extends Model
         });
     }
 
+    public function scopeFederated($query)
+    {
+        return $query->where('federation_status', FederationStatus::Federated);
+    }
+
+    public function scopeNotFederated($query)
+    {
+        return $query->where('federation_status', FederationStatus::NotFederated);
+    }
+
+    public function scopeFederationExpired($query)
+    {
+        return $query->where('federation_expires_at', '<', now());
+    }
+
     // =======================
     // MÉTODOS DE GESTIÓN
     // =======================
@@ -316,6 +347,61 @@ class Player extends Model
         }
 
         return true;
+    }
+
+    // =======================
+    // MÉTODOS DE FEDERACIÓN
+    // =======================
+
+    public function updateFederationStatus(FederationStatus $status, string $reason = null): bool
+    {
+        $oldStatus = $this->federation_status;
+
+        $this->update(['federation_status' => $status]);
+
+        if ($reason) {
+            $this->update(['federation_notes' => ($this->federation_notes ? $this->federation_notes . "\n\n" : '') . now()->format('Y-m-d H:i') . ": {$reason}"]);
+        }
+
+        $this->logActivity(
+            'federation_status_changed',
+            "Estado de federación cambiado de {$oldStatus->getLabel()} a {$status->getLabel()}"
+        );
+
+        return true;
+    }
+
+    public function federateWithPayment(Payment $payment): bool
+    {
+        $this->update([
+            'federation_status' => FederationStatus::Federated,
+            'federation_date' => now(),
+            'federation_expires_at' => now()->addYear(),
+            'federation_payment_id' => $payment->id,
+        ]);
+
+        return true;
+    }
+
+    public function isFederated(): bool
+    {
+        return $this->federation_status === FederationStatus::Federated &&
+               $this->federation_expires_at &&
+               $this->federation_expires_at->isFuture();
+    }
+
+    public function canPlayInFederatedTournaments(): bool
+    {
+        return $this->isFederated() && $this->can_play;
+    }
+
+    public function getFederationStatusBadgeAttribute(): array
+    {
+        return [
+            'label' => $this->federation_status->getLabel(),
+            'color' => $this->federation_status->getColor(),
+            'icon' => $this->federation_status->getIcon(),
+        ];
     }
 
     // =======================

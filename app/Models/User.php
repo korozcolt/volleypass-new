@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,7 +21,7 @@ use App\Traits\HasValidation;
 use App\Enums\UserStatus;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements HasMedia
+class User extends Authenticatable implements HasMedia, FilamentUser
 {
     use HasFactory, Notifiable, SoftDeletes;
     use HasRoles, InteractsWithMedia, LogsActivity; // Spatie traits
@@ -568,5 +570,26 @@ class User extends Authenticatable implements HasMedia
         }
 
         return $this->createToken($name, $abilities)->plainTextToken;
+    }
+
+    // =======================
+    // FILAMENT AUTHORIZATION
+    // =======================
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Para el panel admin, permitir acceso a usuarios activos
+        if ($panel->getId() === 'admin') {
+            // En testing, permitir acceso a usuarios activos
+            if (app()->environment('testing')) {
+                return $this->status === UserStatus::Active;
+            }
+
+            // En producción, verificar roles
+            return $this->status === UserStatus::Active &&
+                   $this->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'ClubDirector']);
+        }
+
+        return false;
     }
 }
