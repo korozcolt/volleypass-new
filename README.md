@@ -39,27 +39,90 @@
 
 ## 📖 Acerca del Proyecto
 
-**VolleyPass Sucre** es una plataforma integral diseñada para digitalizar y modernizar la gestión de la Liga de Voleibol de Sucre, Colombia. El sistema centraliza el registro, verificación y gestión de jugadoras, entrenadores y clubes, garantizando transparencia, eficiencia y control en torneos oficiales.
+**VolleyPass Sucre** es una plataforma integral diseñada para digitalizar y modernizar la gestión de la Liga de Voleibol de Sucre, Colombia. El sistema centraliza el registro, verificación y gestión de jugadoras, entrenadores y clubes, tanto **federados (oficiales)** como **descentralizados (ligas alternas)**, garantizando transparencia, eficiencia y control en torneos oficiales y no oficiales.
 
 ### 🎯 Objetivo Principal
 
-Reemplazar el sistema tradicional de carnets físicos por una solución digital robusta que permita:
+Crear un ecosistema digital completo que permita:
 
-- ✅ **Control centralizado** de jugadoras y documentación
+- ✅ **Gestión dual**: Equipos federados (liga oficial) y descentralizados (ligas alternas)
+- ✅ **Sistema de federación**: Control de pagos, consignaciones y membresías
+- ✅ **Reglas configurables**: Cada liga define sus propias normativas
+- ✅ **Control de traspasos**: Autorización obligatoria por parte de la liga
 - ✅ **Verificación instantánea** en partidos mediante códigos QR
-- ✅ **Historial deportivo y médico** completo
-- ✅ **Gestión completa de torneos** con marcadores en tiempo real
-- ✅ **Transparencia** en el cumplimiento de normativas
-- ✅ **Estadísticas avanzadas** para desarrollo deportivo
+- ✅ **Gestión completa de torneos** oficiales y alternos
+- ✅ **Transparencia financiera** y deportiva
 
 ### 👥 Beneficiarios
 
-- **Jugadoras y entrenadores** de la Liga de Voleibol de Sucre
-- **Directivos de clubes** y ligas departamentales
-- **Organizadores de torneos** y verificadores oficiales
+- **Jugadoras y entrenadores** federados y de ligas alternas
+- **Directivos de clubes** oficiales y descentralizados
+- **Administradores de ligas** departamentales y alternativas
+- **Organizadores de torneos** oficiales y no oficiales
 - **Árbitros y cuerpo técnico** en eventos deportivos
 - **Espectadores** con acceso a marcadores en tiempo real
-- **Federaciones deportivas** y patrocinadores
+- **Federaciones deportivas** y entidades reguladoras
+
+### 🏛️ **Sistema de Federación y Ligas**
+
+**VolleyPass** maneja dos tipos de estructuras organizacionales:
+
+```mermaid
+graph TD
+    A[Sistema VolleyPass] --> B[Equipos Federados]
+    A --> C[Equipos Descentralizados]
+    
+    B --> D[Liga Oficial Departamental]
+    D --> E[Pagos y Consignaciones]
+    D --> F[Reglas Oficiales Estrictas]
+    D --> G[Control de Traspasos]
+    
+    C --> H[Ligas Alternas]
+    H --> I[Reglas Flexibles]
+    H --> J[Gestión Independiente]
+    H --> K[Torneos No Oficiales]
+    
+    E --> L[Estado: Federado Activo]
+    F --> L
+    G --> L
+    
+    I --> M[Estado: Descentralizado]
+    J --> M
+    K --> M
+```
+
+#### 🏆 **Equipos Federados (Liga Oficial)**
+- **Inscripción mediante pago** validado por consignaciones
+- **Reglas estrictas** definidas por la liga departamental
+- **Control obligatorio** de traspasos de jugadoras
+- **Participación** en torneos oficiales únicamente
+- **Documentación completa** requerida
+- **Auditoría constante** de cumplimiento
+
+#### 🎯 **Equipos Descentralizados (Ligas Alternas)**
+- **Inscripción libre** sin pagos obligatorios
+- **Reglas flexibles** definidas por cada liga alterna
+- **Gestión independiente** de jugadoras
+- **Torneos no oficiales** y eventos comunitarios
+- **Documentación básica** requerida
+- **Autonomía** en la administración
+
+#### 💰 **Sistema de Pagos y Federación**
+```php
+// Estados de federación por equipo
+- pending_payment     // Equipo creado, pendiente pago
+- payment_review      // Consignación en revisión
+- federated_active    // Federado y activo
+- federated_suspended // Federado pero suspendido por incumplimiento
+- decentralized       // Equipo no federado (liga alterna)
+```
+
+#### 📋 **Reglas Configurables por Liga**
+- **Traspasos**: Autorización automática vs manual por liga
+- **Documentación**: Nivel de exigencia médica y legal
+- **Participación**: Restricciones por categorías
+- **Sanciones**: Políticas disciplinarias específicas
+- **Pagos**: Esquemas de cuotas y renovaciones
 
 ### 👥 **Flujo de Creación de Usuarios**
 
@@ -812,57 +875,63 @@ php artisan volleypass:generate-season-cards 2025
 | ⚙️ Jobs y Comandos Automáticos | ✅ Completado | 100% |
 | 📊 Logging y Auditoría Completa | ✅ Completado | 100% |
 
-### 🚧 **Fase 3 - Gestión Avanzada** (Pendiente)
+### 🚧 **Fase 3 - Gestión Avanzada** (Incluido en MVP)
 
-| Componente | Estado | Progreso |
-|------------|--------|----------|
-| 📊 Estadísticas Deportivas | ⏳ Pendiente | 0% |
-| 🏅 Sistema de Premios | ⏳ Pendiente | 0% |
-| 💰 Gestión de Pagos | ⏳ Pendiente | 0% |
+| Componente | Estado | Progreso | MVP |
+|------------|--------|----------|-----|
+| 💰 Sistema de Pagos y Federación | ⏳ Pendiente | 0% | ✅ Sí |
+| ⚖️ Reglas Configurables por Liga | ⏳ Pendiente | 0% | ✅ Sí |
+| 🔄 Gestión de Traspasos | ⏳ Pendiente | 0% | ✅ Sí |
+| 🏛️ Federados vs Descentralizados | ⏳ Pendiente | 0% | ✅ Sí |
+| 📊 Estadísticas Deportivas | ⏳ Pendiente | 0% | ❌ Post-MVP |
+| 🏅 Sistema de Premios | ⏳ Pendiente | 0% | ❌ Post-MVP |
 
-### 🏆 **Fase 4 - Sistema de Gestión de Torneos** (Pendiente)
+### 🏆 **Fase 4 - Sistema de Gestión de Torneos** (Incluido en MVP)
 
-| Componente | Estado | Progreso |
-|------------|--------|----------|
-| 🏟️ Tipos de Torneos | ⏳ Pendiente | 0% |
-| ⚙️ Configuración Automática de Partidos | ⏳ Pendiente | 0% |
-| 👥 Gestión de Nóminas A/B/C | ⏳ Pendiente | 0% |
-| 🗂️ Distribución de Grupos | ⏳ Pendiente | 0% |
-| 🔄 Transición Grupos → Llaves | ⏳ Pendiente | 0% |
-| 🏆 Sistema de Puntuación | ⏳ Pendiente | 0% |
-| 🎮 Gestor de Partidos en Vivo | ⏳ Pendiente | 0% |
-| 🔄 Sistema de Rotaciones | ⏳ Pendiente | 0% |
-| 🟨 Gestión de Amonestaciones | ⏳ Pendiente | 0% |
-| 👨‍⚖️ Asignación de Árbitros | ⏳ Pendiente | 0% |
-| 📚 Historial de Partidos | ⏳ Pendiente | 0% |
-| 📡 API Tiempo Real | ⏳ Pendiente | 0% |
-| 📺 Vista Pública de Marcadores | ⏳ Pendiente | 0% |
+| Componente | Estado | Progreso | MVP |
+|------------|--------|----------|-----|
+| 🏟️ Tipos de Torneos | ⏳ Pendiente | 0% | ✅ Sí |
+| ⚙️ Configuración Automática de Partidos | ⏳ Pendiente | 0% | ✅ Sí |
+| 👥 Gestión de Nóminas A/B/C | ⏳ Pendiente | 0% | ✅ Sí |
+| 🗂️ Distribución de Grupos | ⏳ Pendiente | 0% | ✅ Sí |
+| 🔄 Transición Grupos → Llaves | ⏳ Pendiente | 0% | ✅ Sí |
+| 🏆 Sistema de Puntuación | ⏳ Pendiente | 0% | ✅ Sí |
+| 🎮 Gestor de Partidos en Vivo | ⏳ Pendiente | 0% | ✅ Sí |
+| 🔄 Sistema de Rotaciones | ⏳ Pendiente | 0% | ✅ Sí |
+| 🟨 Gestión de Amonestaciones | ⏳ Pendiente | 0% | ✅ Sí |
+| 👨‍⚖️ Asignación de Árbitros | ⏳ Pendiente | 0% | ✅ Sí |
+| 📚 Historial de Partidos | ⏳ Pendiente | 0% | ✅ Sí |
+| 📡 API Tiempo Real | ⏳ Pendiente | 0% | ✅ Sí |
+| 📺 Vista Pública de Marcadores | ⏳ Pendiente | 0% | ✅ Sí |
 
-### 🏗️ **Fase 5 - Interfaces de Usuario** (Pendiente - CRÍTICO)
+### 🏗️ **Fase 5 - Interfaces de Usuario** (Parcial en MVP)
 
-| Componente | Estado | Progreso | Prioridad |
-|------------|--------|----------|-----------|
-| 💻 PlayerResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
-| 💻 ClubResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
-| 💻 LeagueResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
-| 💻 TournamentResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
-| 💻 MatchResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media |
-| 💻 RefereeResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media |
-| 💻 TeamResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media |
-| 💻 MedicalCertificateResource | ⏳ Pendiente | 0% | 🔴 Alta |
-| 💻 PlayerCardResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta |
-| 💻 Dashboard Principal | ⏳ Pendiente | 0% | 🔴 Alta |
-| 📱 App Móvil Verificadores | ⏳ Pendiente | 0% | 🟡 Media |
-| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🟢 Baja |
-| 👨‍💼 Interfaces por Rol | ⏳ Pendiente | 0% | 🔴 Alta |
+| Componente | Estado | Progreso | Prioridad | MVP |
+|------------|--------|----------|-----------|-----|
+| 💻 PlayerResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 ClubResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 LeagueResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 TournamentResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 MatchResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 RefereeResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media | ✅ Sí |
+| 💻 TeamResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 MedicalCertificateResource | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 PlayerCardResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 PaymentResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 TransferResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 LeagueRulesResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 💻 Dashboard Principal | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 📱 App Móvil Verificadores | ⏳ Pendiente | 0% | 🟡 Media | ❌ Post-MVP |
+| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| 👨‍💼 Interfaces por Rol | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
 
-### 📅 **Roadmap**
+### 📅 **Roadmap Actualizado**
 
 - **✅ Q4 2024**: Fase 1 completada (Infraestructura base)
 - **✅ Q1 2025**: Fase 2 completada (Carnetización digital)
-- **🚧 Q2 2025**: Fase 3 (Gestión avanzada y estadísticas)
-- **🏆 Q3 2025**: Fase 4 (Sistema completo de torneos)
-- **📱 Q4 2025**: Fase 5 (Interfaces de usuario completas)
+- **🚧 Q2 2025**: **MVP COMPLETO** - Fases 3, 4 y 5 (Sistema completo sin app móvil)
+- **📱 Q3 2025**: App Móvil nativa y estadísticas avanzadas
+- **🌐 Q4 2025**: Optimizaciones y features avanzadas
 - **🌐 2026**: Integración con otras ligas departamentales
 
 ---
