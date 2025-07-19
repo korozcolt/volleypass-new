@@ -1,0 +1,77 @@
+<?php
+
+return [
+    'actions' => 'Acciones',
+    'bulk_actions' => 'Acciones masivas',
+    'select_all' => 'Seleccionar todo',
+    'deselect_all' => 'Deseleccionar todo',
+    'select_record' => 'Seleccionar registro',
+    'deselect_record' => 'Deseleccionar registro',
+    'delete_selected' => 'Eliminar seleccionados',
+    'export_selected' => 'Exportar seleccionados',
+    'search' => 'Buscar',
+    'search_placeholder' => 'Buscar...',
+    'filters' => 'Filtros',
+    'filter' => 'Filtrar',
+    'clear_filters' => 'Limpiar filtros',
+    'no_records_found' => 'No se encontraron registros.',
+    'loading' => 'Cargando...',
+    'processing' => 'Procesando...',
+    'empty_state_heading' => 'No hay registros',
+    'empty_state_description' => 'Crea tu primer registro para comenzar.',
+    'empty_state_actions' => [
+        'create' => 'Crear :label',
+    ],
+    'pagination' => [
+        'previous' => 'Anterior',
+        'next' => 'Siguiente',
+        'page' => 'Página',
+        'of' => 'de',
+        'results' => 'resultados',
+        'showing' => 'Mostrando',
+        'to' => 'a',
+        'per_page' => 'por página',
+        'records' => 'registros',
+    ],
+    'sorting' => [
+        'sort' => 'Ordenar',
+        'sort_by' => 'Ordenar por',
+        'asc' => 'Ascendente',
+        'desc' => 'Descendente',
+    ],
+    'columns' => [
+        'text' => 'Texto',
+        'boolean' => [
+            'true' => 'Sí',
+            'false' => 'No',
+        ],
+        'date' => 'Fecha',
+        'datetime' => 'Fecha y hora',
+        'time' => 'Hora',
+        'image' => 'Imagen',
+        'file' => 'Archivo',
+        'tags' => 'Etiquetas',
+        'badge' => 'Insignia',
+        'icon' => 'Icono',
+        'color' => 'Color',
+        'toggle' => 'Alternar',
+    ],
+    'filters' => [
+        'select' => [
+            'placeholder' => 'Seleccionar opción',
+        ],
+        'multiselect' => [
+            'placeholder' => 'Seleccionar opciones',
+        ],
+        'date' => [
+            'from' => 'Desde',
+            'until' => 'Hasta',
+        ],
+        'ternary' => [
+            'placeholder' => 'Seleccionar opción',
+            'true' => 'Sí',
+            'false' => 'No',
+            'blank' => 'Todos',
+        ],
+    ],
+];
