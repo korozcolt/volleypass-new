@@ -38,7 +38,7 @@ class PlayerResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $navigationGroup = 'Gestión Deportiva';
+    protected static ?string $navigationGroup = 'Usuarios';
 
     public static function form(Form $form): Form
     {
@@ -129,8 +129,8 @@ class PlayerResource extends Resource
                         // TAB 2: FEDERACIÓN (PRINCIPAL)
                         Forms\Components\Tabs\Tab::make('Federación')
                             ->icon('heroicon-o-check-badge')
-                            ->badge(fn ($record) => $record?->federation_status?->getLabel())
-                            ->badgeColor(fn ($record) => $record?->federation_status?->getColor() ?? 'gray')
+                            ->badge(fn($record) => $record?->federation_status?->getLabel())
+                            ->badgeColor(fn($record) => $record?->federation_status?->getColor() ?? 'gray')
                             ->schema([
                                 Forms\Components\Section::make('Estado de Federación')
                                     ->description('Gestión del estado federativo de la jugadora')
@@ -152,7 +152,8 @@ class PlayerResource extends Resource
 
                                                 Forms\Components\DatePicker::make('federation_date')
                                                     ->label('Fecha de Federación')
-                                                    ->visible(fn (Forms\Get $get) =>
+                                                    ->visible(
+                                                        fn(Forms\Get $get) =>
                                                         in_array($get('federation_status'), [
                                                             FederationStatus::Federated->value,
                                                             FederationStatus::Expired->value
@@ -161,7 +162,8 @@ class PlayerResource extends Resource
 
                                                 Forms\Components\DatePicker::make('federation_expires_at')
                                                     ->label('Fecha de Vencimiento')
-                                                    ->visible(fn (Forms\Get $get) =>
+                                                    ->visible(
+                                                        fn(Forms\Get $get) =>
                                                         in_array($get('federation_status'), [
                                                             FederationStatus::Federated->value,
                                                             FederationStatus::Expired->value
@@ -174,11 +176,12 @@ class PlayerResource extends Resource
                                             ->relationship(
                                                 'federationPayment',
                                                 'reference_number',
-                                                fn (Builder $query) => $query->where('type', PaymentType::Federation)
+                                                fn(Builder $query) => $query->where('type', PaymentType::Federation)
                                             )
                                             ->searchable()
                                             ->preload()
-                                            ->visible(fn (Forms\Get $get) =>
+                                            ->visible(
+                                                fn(Forms\Get $get) =>
                                                 $get('federation_status') === FederationStatus::Federated->value
                                             ),
 
@@ -195,7 +198,8 @@ class PlayerResource extends Resource
                                                 ->label('Federar Jugadora')
                                                 ->icon('heroicon-o-check-badge')
                                                 ->color('success')
-                                                ->visible(fn ($record) =>
+                                                ->visible(
+                                                    fn($record) =>
                                                     $record && !$record->isFederated()
                                                 )
                                                 ->requiresConfirmation()
@@ -219,7 +223,8 @@ class PlayerResource extends Resource
                                                 ->label('Suspender Federación')
                                                 ->icon('heroicon-o-exclamation-triangle')
                                                 ->color('warning')
-                                                ->visible(fn ($record) =>
+                                                ->visible(
+                                                    fn($record) =>
                                                     $record && $record->isFederated()
                                                 )
                                                 ->requiresConfirmation()
@@ -236,14 +241,14 @@ class PlayerResource extends Resource
                                                 }),
                                         ])
                                     ])
-                                    ->visible(fn ($record) => $record !== null),
+                                    ->visible(fn($record) => $record !== null),
                             ]),
 
                         // TAB 3: ESTADO MÉDICO
                         Forms\Components\Tabs\Tab::make('Estado Médico')
                             ->icon('heroicon-o-heart')
-                            ->badge(fn ($record) => $record?->medical_status?->getLabel())
-                            ->badgeColor(fn ($record) => $record?->medical_status?->getColor() ?? 'gray')
+                            ->badge(fn($record) => $record?->medical_status?->getLabel())
+                            ->badgeColor(fn($record) => $record?->medical_status?->getColor() ?? 'gray')
                             ->schema([
                                 Forms\Components\Section::make('Estado Médico Actual')
                                     ->schema([
@@ -282,7 +287,8 @@ class PlayerResource extends Resource
 
                                         Forms\Components\DatePicker::make('retirement_date')
                                             ->label('Fecha de Retiro')
-                                            ->visible(fn (Forms\Get $get) =>
+                                            ->visible(
+                                                fn(Forms\Get $get) =>
                                                 $get('status') === UserStatus::Inactive->value
                                             ),
 
@@ -336,14 +342,15 @@ class PlayerResource extends Resource
                 Tables\Columns\TextColumn::make('federation_status')
                     ->label('Federación')
                     ->badge()
-                    ->color(fn ($record) => $record?->federation_status?->getColor() ?? 'gray')
-                    ->icon(fn ($record) => $record?->federation_status?->getIcon() ?? 'heroicon-o-minus-circle')
+                    ->color(fn($record) => $record?->federation_status?->getColor() ?? 'gray')
+                    ->icon(fn($record) => $record?->federation_status?->getIcon() ?? 'heroicon-o-minus-circle')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('federation_expires_at')
                     ->label('Vence')
                     ->date('d/m/Y')
-                    ->color(fn ($record) =>
+                    ->color(
+                        fn($record) =>
                         $record && $record->federation_expires_at && $record->federation_expires_at->isPast()
                             ? 'danger'
                             : 'success'
@@ -355,7 +362,7 @@ class PlayerResource extends Resource
                 Tables\Columns\TextColumn::make('medical_status')
                     ->label('Estado Médico')
                     ->badge()
-                    ->color(fn ($record) => $record?->medical_status?->getColor() ?? 'gray')
+                    ->color(fn($record) => $record?->medical_status?->getColor() ?? 'gray')
                     ->toggleable(),
 
                 Tables\Columns\IconColumn::make('is_eligible')
@@ -406,9 +413,10 @@ class PlayerResource extends Resource
 
                 Tables\Filters\Filter::make('federation_expires_soon')
                     ->label('Federación por Vencer')
-                    ->query(fn (Builder $query) =>
+                    ->query(
+                        fn(Builder $query) =>
                         $query->where('federation_expires_at', '<=', now()->addDays(30))
-                              ->where('federation_expires_at', '>', now())
+                            ->where('federation_expires_at', '>', now())
                     ),
 
                 Tables\Filters\TrashedFilter::make(),
@@ -421,15 +429,15 @@ class PlayerResource extends Resource
                     ->label('Federar')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
-                    ->visible(fn ($record) => !$record->isFederated())
-                    ->url(fn ($record) => PlayerResource::getUrl('edit', ['record' => $record, 'activeTab' => 'federacion'])),
+                    ->visible(fn($record) => !$record->isFederated())
+                    ->url(fn($record) => PlayerResource::getUrl('edit', ['record' => $record, 'activeTab' => 'federacion'])),
 
                 Tables\Actions\Action::make('view_card')
                     ->label('Ver Carnet')
                     ->icon('heroicon-o-identification')
                     ->color('info')
-                    ->visible(fn ($record) => $record->current_card !== null)
-                    ->url(fn ($record) => route('player.card', $record)),
+                    ->visible(fn($record) => $record->current_card !== null)
+                    ->url(fn($record) => route('player.card', $record)),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -449,7 +457,8 @@ class PlayerResource extends Resource
                                 ->required(),
                             Forms\Components\Select::make('payment_id')
                                 ->label('Pago de Federación')
-                                ->options(fn (Forms\Get $get) =>
+                                ->options(
+                                    fn(Forms\Get $get) =>
                                     Payment::where('club_id', $get('club_id'))
                                         ->where('type', PaymentType::Federation)
                                         ->where('status', PaymentStatus::Verified)

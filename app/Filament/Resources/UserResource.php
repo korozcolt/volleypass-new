@@ -22,7 +22,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Administración';
+    protected static ?string $navigationGroup = 'Usuarios';
 
     protected static ?int $navigationSort = 1;
 
@@ -92,8 +92,8 @@ class UserResource extends Resource
                                 Forms\Components\TextInput::make('password')
                                     ->label('Contraseña')
                                     ->password()
-                                    ->required(fn ($context) => $context === 'create')
-                                    ->dehydrated(fn ($state) => filled($state))
+                                    ->required(fn($context) => $context === 'create')
+                                    ->dehydrated(fn($state) => filled($state))
                                     ->minLength(8),
 
                                 Forms\Components\Textarea::make('address')
@@ -124,26 +124,28 @@ class UserResource extends Resource
                                     ->relationship(
                                         name: 'department',
                                         titleAttribute: 'name',
-                                        modifyQueryUsing: fn (Builder $query, callable $get) =>
-                                            $query->when($get('country_id'),
-                                                fn ($q, $countryId) => $q->where('country_id', $countryId)
-                                            )
+                                        modifyQueryUsing: fn(Builder $query, callable $get) =>
+                                        $query->when(
+                                            $get('country_id'),
+                                            fn($q, $countryId) => $q->where('country_id', $countryId)
+                                        )
                                     )
                                     ->searchable()
                                     ->preload()
                                     ->native(false)
                                     ->live()
-                                    ->afterStateUpdated(fn (callable $set) => $set('city_id', null)),
+                                    ->afterStateUpdated(fn(callable $set) => $set('city_id', null)),
 
                                 Forms\Components\Select::make('city_id')
                                     ->label('Ciudad')
                                     ->relationship(
                                         name: 'city',
                                         titleAttribute: 'name',
-                                        modifyQueryUsing: fn (Builder $query, callable $get) =>
-                                            $query->when($get('department_id'),
-                                                fn ($q, $departmentId) => $q->where('department_id', $departmentId)
-                                            )
+                                        modifyQueryUsing: fn(Builder $query, callable $get) =>
+                                        $query->when(
+                                            $get('department_id'),
+                                            fn($q, $departmentId) => $q->where('department_id', $departmentId)
+                                        )
                                     )
                                     ->searchable()
                                     ->preload()
@@ -246,8 +248,8 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => $state->getLabel())
-                    ->color(fn ($state) => $state->getColor()),
+                    ->formatStateUsing(fn($state) => $state->getLabel())
+                    ->color(fn($state) => $state->getColor()),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creado')
@@ -279,7 +281,7 @@ class UserResource extends Resource
 
                 Tables\Filters\Filter::make('verified_email')
                     ->label('Email Verificado')
-                    ->query(fn (Builder $query): Builder => $query->whereNotNull('email_verified_at')),
+                    ->query(fn(Builder $query): Builder => $query->whereNotNull('email_verified_at')),
 
                 Tables\Filters\TrashedFilter::make(),
             ])
@@ -342,8 +344,8 @@ class UserResource extends Resource
                                 Infolists\Components\TextEntry::make('status')
                                     ->label('Estado')
                                     ->badge()
-                                    ->formatStateUsing(fn ($state) => $state->getLabel())
-                                    ->color(fn ($state) => $state->getColor()),
+                                    ->formatStateUsing(fn($state) => $state->getLabel())
+                                    ->color(fn($state) => $state->getColor()),
 
                                 Infolists\Components\TextEntry::make('roles.name')
                                     ->label('Roles')
