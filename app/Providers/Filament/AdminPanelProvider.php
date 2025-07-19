@@ -31,8 +31,8 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
 
-            ->brandName('Panel Administrativo')
-            ->brandLogo(asset('images/logo-volley_pass_black_back.png'))
+            ->brandName(fn () => app_name())
+            ->brandLogo(fn () => view('filament.components.brand'))
             ->favicon(asset('images/favicon.ico'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

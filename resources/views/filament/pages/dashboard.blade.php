@@ -11,10 +11,10 @@
                     </div>
                     <div class="ml-4">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                            Bienvenido al Panel de Administración
+                            Bienvenido a {{ app_name() }}
                         </h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Sistema de Gestión de Federación Deportiva
+                            {{ app_description() }}
                         </p>
                     </div>
                 </div>
@@ -90,7 +90,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="text-center">
                         <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                            {{ \App\Models\SystemConfiguration::get('app.version', '1.0.0') }}
+                            {{ app_version() }}
                         </div>
                         <div class="text-sm text-gray-500 dark:text-gray-400">
                             Versión del Sistema

@@ -12,6 +12,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Middleware global para aplicar configuraciones del sistema
+        $middleware->web(append: [
+            \App\Http\Middleware\ApplySystemConfigMiddleware::class,
+            \App\Http\Middleware\SystemMaintenanceMiddleware::class,
+        ]);
+
+        // Middleware para API
+        $middleware->api(append: [
+            \App\Http\Middleware\ApplySystemConfigMiddleware::class,
+        ]);
+
+        // Alias de middleware
+        $middleware->alias([
+            'system.config' => \App\Http\Middleware\ApplySystemConfigMiddleware::class,
+            'system.maintenance' => \App\Http\Middleware\SystemMaintenanceMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Manejo básico de excepciones API

@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Services\SystemConfigurationService;
 
 class SystemConfigurationResource extends Resource
 {
@@ -188,6 +190,24 @@ class SystemConfigurationResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->is_editable),
+                Tables\Actions\Action::make('test_config')
+                    ->label('Probar')
+                    ->icon('heroicon-o-play')
+                    ->color('info')
+                    ->visible(fn ($record) => in_array($record->key, [
+                        'notifications.email_enabled',
+                        'notifications.whatsapp_enabled',
+                        'maintenance.mode'
+                    ]))
+                    ->action(function ($record) {
+                        // Lógica para probar configuraciones específicas
+                        match ($record->key) {
+                            'notifications.email_enabled' => static::testEmailNotification(),
+                            'notifications.whatsapp_enabled' => static::testWhatsAppNotification(),
+                            'maintenance.mode' => static::testMaintenanceMode($record),
+                            default => null,
+                        };
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -280,5 +300,64 @@ class SystemConfigurationResource extends Resource
     public static function canDeleteAny(): bool
     {
         return Auth::user()->hasRole('SuperAdmin');
+    }
+
+    /**
+     * Recargar configuraciones después de crear/actualizar
+     */
+    public static function afterSave(): void
+    {
+        app(SystemConfigurationService::class)->reload();
+    }
+
+    /**
+     * Probar notificación por email
+     */
+    private static function testEmailNotification(): void
+    {
+        try {
+            // Aquí podrías enviar un email de prueba
+            Notification::route('mail', system_config('notifications.admin_email'))
+                ->notify(new \App\Notifications\TestEmailNotification());
+
+            \Filament\Notifications\Notification::make()
+                ->title('Email de prueba enviado')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('Error al enviar email')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    /**
+     * Probar notificación por WhatsApp
+     */
+    private static function testWhatsAppNotification(): void
+    {
+        \Filament\Notifications\Notification::make()
+            ->title('Función de WhatsApp')
+            ->body('La integración de WhatsApp está pendiente de implementación.')
+            ->info()
+            ->send();
+    }
+
+    /**
+     * Probar modo mantenimiento
+     */
+    private static function testMaintenanceMode($record): void
+    {
+        $isActive = (bool) $record->typed_value;
+
+        \Filament\Notifications\Notification::make()
+            ->title('Modo Mantenimiento')
+            ->body($isActive
+                ? 'El modo mantenimiento está ACTIVO. Los usuarios no podrán acceder al sistema.'
+                : 'El modo mantenimiento está INACTIVO. El sistema funciona normalmente.')
+            ->color($isActive ? 'danger' : 'success')
+            ->send();
     }
 }
