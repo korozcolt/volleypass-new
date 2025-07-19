@@ -904,26 +904,156 @@ php artisan volleypass:generate-season-cards 2025
 | 📡 API Tiempo Real | ⏳ Pendiente | 0% | ✅ Sí |
 | 📺 Vista Pública de Marcadores | ⏳ Pendiente | 0% | ✅ Sí |
 
-### 🏗️ **Fase 5 - Interfaces de Usuario** (Parcial en MVP)
+### ✅ **Fase 5 - Panel Administrativo Completo** (Completada)
 
-| Componente | Estado | Progreso | Prioridad | MVP |
-|------------|--------|----------|-----------|-----|
-| 💻 PlayerResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 ClubResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 LeagueResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 TournamentResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 MatchResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 RefereeResource (Filament) | ⏳ Pendiente | 0% | 🟡 Media | ✅ Sí |
-| 💻 TeamResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 MedicalCertificateResource | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 PlayerCardResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 PaymentResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 TransferResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 LeagueRulesResource (Filament) | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 💻 Dashboard Principal | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 📱 App Móvil Verificadores | ⏳ Pendiente | 0% | 🟡 Media | ❌ Post-MVP |
-| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
-| 👨‍💼 Interfaces por Rol | ⏳ Pendiente | 0% | 🔴 Alta | ✅ Sí |
+| Componente | Estado | Progreso | Prioridad |
+|------------|--------|----------|-----------|
+| 💻 **Sistema de Configuraciones** | ✅ Completado | 100% | 🔴 Alta |
+| 💻 UserResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 PlayerResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 ClubResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 LeagueResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 TeamResource (Filament) | ✅ Completado | 100% | � Alta |
+| 💻 TournamentResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 PlayerCardResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 MedicalCertificateResource | ✅ Completado | 100% | 🔴 Alta |
+| 💻 PaymentResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
+| 💻 RoleResource (Filament) | ✅ Completado | 100% | �  Media |
+| 💻 NotificationResource (Filament) | ✅ Completado | 100% | 🟡 Media |
+| 💻 SystemConfigurationResource | ✅ Completado | 100% | 🔴 Alta |
+| � Das hboard Principal | ✅ Completado | 100% | � Alta ||
+| 💻 Widgets y Estadísticas | ✅ Completado | 100% | 🔴 Alta |
+| 🌐 Header Personalizado | ✅ Completado | 100% | � Med|ia |
+| 🔧 Modo Mantenimiento | ✅ Completado | 100% | 🟡 Media |
+| 📱 App Móvil Verificadores | ⏳ Pendiente | 0% | 🟡 Media |
+| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🔴 Alta |
+| 👨‍💼 Interfaces por Rol | ⏳ Pendiente | 0% | 🔴 Alta |
+
+### 🎯 **Sistema de Configuraciones Dinámicas** ✅ *Completado*
+
+<details>
+<summary><strong>⚙️ Configuraciones que Impactan el Sistema</strong></summary>
+
+**Aplicación**:
+- `app.name` → Nombre dinámico en header, dashboard, emails
+- `app.description` → Descripción en vistas y notificaciones
+- `app.version` → Versión mostrada en todo el sistema
+
+**Federación**:
+- `federation.annual_fee` → Cuota usada en cálculos de pagos
+- `federation.card_validity_months` → Validez de carnets en meses
+- `federation.auto_approve_payments` → Aprobación automática de pagos
+
+**Seguridad**:
+- `security.max_login_attempts` → Límite de intentos de login
+- `security.session_timeout` → Tiempo de sesión en minutos
+
+**Archivos**:
+- `files.max_upload_size` → Tamaño máximo en MB (aplica a PHP)
+- `files.allowed_extensions` → Extensiones permitidas
+
+**Notificaciones**:
+- `notifications.email_enabled` → Habilita/deshabilita emails
+- `notifications.admin_email` → Email del administrador
+- `notifications.whatsapp_enabled` → Habilita WhatsApp
+
+**Mantenimiento**:
+- `maintenance.mode` → Activa/desactiva modo mantenimiento
+- `maintenance.message` → Mensaje personalizado
+
+</details>
+
+<details>
+<summary><strong>🛠️ Herramientas de Gestión</strong></summary>
+
+**Comandos de Consola**:
+```bash
+# Obtener configuración
+php artisan system:config get app.name
+
+# Establecer configuración
+php artisan system:config set app.name "Mi Sistema"
+
+# Listar todas las configuraciones
+php artisan system:config list
+
+# Listar por grupo
+php artisan system:config list --group=federation
+
+# Recargar configuraciones
+php artisan system:config reload
+
+# Resetear a valores por defecto
+php artisan system:config reset --force
+
+# Probar configuraciones
+php artisan system:config test
+```
+
+**Funciones Helper Globales**:
+```php
+app_name()           // Nombre dinámico
+app_description()    // Descripción dinámica
+app_version()        // Versión configurable
+federation_fee()     // Cuota de federación
+is_maintenance_mode() // Estado de mantenimiento
+system_config()      // Acceso directo a configuraciones
+```
+
+**Panel Administrativo**:
+- ✅ Interfaz completa para gestionar configuraciones
+- ✅ Validación por tipos (string, number, boolean, json, date)
+- ✅ Configuraciones públicas/privadas
+- ✅ Agrupación por categorías
+- ✅ Botones de prueba para configuraciones críticas
+- ✅ Recarga automática después de cambios
+
+</details>
+
+<details>
+<summary><strong>🎨 Header Personalizado del Panel</strong></summary>
+
+**Características**:
+- ✅ Logo optimizado para 320x64px (rectangular)
+- ✅ Nombre de la aplicación dinámico desde configuraciones
+- ✅ Descripción configurable
+- ✅ Versión del sistema visible
+- ✅ Diseño responsive
+- ✅ Actualización automática al cambiar configuraciones
+
+**Implementación**:
+```html
+<div class="flex items-center space-x-3">
+    <img src="logo.png" class="h-8 w-auto">
+    <div class="flex flex-col">
+        <span class="text-lg font-semibold">{{ app_name() }}</span>
+        <span class="text-xs text-gray-500">{{ app_description() }}</span>
+    </div>
+</div>
+```
+
+</details>
+
+<details>
+<summary><strong>🔧 Modo Mantenimiento Inteligente</strong></summary>
+
+**Características**:
+- ✅ Activación desde panel administrativo
+- ✅ Mensaje personalizable
+- ✅ Página elegante con logo y información
+- ✅ Auto-refresh cada 30 segundos
+- ✅ Contador de tiempo transcurrido
+- ✅ Acceso para super administradores
+- ✅ Middleware inteligente que detecta rutas admin
+
+**Vista de Mantenimiento**:
+- ✅ Diseño moderno con gradientes
+- ✅ Logo del sistema
+- ✅ Información de estado
+- ✅ Tiempo estimado de finalización
+- ✅ Enlace directo al panel admin
+
+</details>
 
 ### 📅 **Roadmap Actualizado**
 
