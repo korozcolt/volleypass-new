@@ -4,16 +4,17 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SystemConfigurationResource\Pages;
 use App\Models\SystemConfiguration;
+use App\Services\SystemConfigurationService;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use App\Services\SystemConfigurationService;
 
 class SystemConfigurationResource extends Resource
 {
@@ -66,27 +67,35 @@ class SystemConfigurationResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('value')
                             ->label('Valor')
-                            ->visible(fn ($get) => in_array($get('type'), ['string', 'email', 'url']))
-                            ->maxLength(1000),
+                            ->visible(fn($get) => in_array($get('type'), ['string', 'email', 'url']))
+                            ->maxLength(1000)
+                            ->dehydrateStateUsing(fn($state) => (string) $state),
 
                         Forms\Components\TextInput::make('value')
                             ->label('Valor')
                             ->numeric()
-                            ->visible(fn ($get) => $get('type') === 'number'),
+                            ->visible(fn($get) => $get('type') === 'number')
+                            ->dehydrateStateUsing(fn($state) => (string) $state),
 
                         Forms\Components\Toggle::make('value')
                             ->label('Valor')
-                            ->visible(fn ($get) => $get('type') === 'boolean'),
+                            ->visible(fn($get) => $get('type') === 'boolean')
+                            ->formatStateUsing(fn($state) => (bool) $state)
+                            ->dehydrateStateUsing(fn($state) => $state ? '1' : '0'),
 
                         Forms\Components\DatePicker::make('value')
                             ->label('Valor')
-                            ->visible(fn ($get) => $get('type') === 'date'),
+                            ->visible(fn($get) => $get('type') === 'date')
+                            ->formatStateUsing(fn($state) => $state ? \Carbon\Carbon::parse($state)->format('Y-m-d') : null)
+                            ->dehydrateStateUsing(fn($state) => $state ? \Carbon\Carbon::parse($state)->toDateString() : null),
 
                         Forms\Components\Textarea::make('value')
                             ->label('Valor JSON')
                             ->rows(5)
-                            ->visible(fn ($get) => $get('type') === 'json')
-                            ->helperText('Ingrese un JSON válido'),
+                            ->visible(fn($get) => $get('type') === 'json')
+                            ->helperText('Ingrese un JSON válido')
+                            ->formatStateUsing(fn($state) => is_string($state) ? $state : json_encode($state, JSON_PRETTY_PRINT))
+                            ->dehydrateStateUsing(fn($state) => $state),
                     ]),
 
                 Forms\Components\Section::make('Configuración Avanzada')
@@ -189,12 +198,12 @@ class SystemConfigurationResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->is_editable),
+                    ->visible(fn($record) => $record->is_editable),
                 Tables\Actions\Action::make('test_config')
                     ->label('Probar')
                     ->icon('heroicon-o-play')
                     ->color('info')
-                    ->visible(fn ($record) => in_array($record->key, [
+                    ->visible(fn($record) => in_array($record->key, [
                         'notifications.email_enabled',
                         'notifications.whatsapp_enabled',
                         'maintenance.mode'
@@ -212,7 +221,7 @@ class SystemConfigurationResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->visible(fn () => Auth::user()->hasRole('SuperAdmin')),
+                        ->visible(fn() => Auth::user()->hasRole('SuperAdmin')),
                 ]),
             ])
             ->defaultSort('group')

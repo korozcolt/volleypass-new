@@ -63,7 +63,10 @@ class SystemConfiguration extends Model
 
     public function setValueAttribute($value)
     {
-        $this->attributes['value'] = match ($this->type) {
+        // Obtener el tipo actual, ya sea del modelo o de los atributos que se están estableciendo
+        $type = $this->type ?? $this->attributes['type'] ?? 'string';
+
+        $this->attributes['value'] = match ($type) {
             'boolean' => $value ? '1' : '0',
             'json' => is_array($value) ? json_encode($value) : $value,
             'date' => $value instanceof \Carbon\Carbon ? $value->toDateString() : $value,
