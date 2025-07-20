@@ -877,14 +877,14 @@ php artisan volleypass:generate-season-cards 2025
 
 ### 🚧 **Fase 3 - Gestión Avanzada** (Incluido en MVP)
 
-| Componente | Estado | Progreso | MVP |
-|------------|--------|----------|-----|
-| 💰 Sistema de Pagos y Federación | ⏳ Pendiente | 0% | ✅ Sí |
-| ⚖️ Reglas Configurables por Liga | ⏳ Pendiente | 0% | ✅ Sí |
-| 🔄 Gestión de Traspasos | ⏳ Pendiente | 0% | ✅ Sí |
-| 🏛️ Federados vs Descentralizados | ⏳ Pendiente | 0% | ✅ Sí |
-| 📊 Estadísticas Deportivas | ⏳ Pendiente | 0% | ❌ Post-MVP |
-| 🏅 Sistema de Premios | ⏳ Pendiente | 0% | ❌ Post-MVP |
+| Componente | Estado | Progreso | MVP | Prioridad |
+|------------|--------|----------|-----|-----------|
+| ⚖️ Reglas Configurables por Liga | ⏳ Pendiente | 0% | ✅ Sí | 🔴 Alta |
+| 🔄 Gestión de Traspasos | ⏳ Pendiente | 0% | ✅ Sí | 🔴 Alta |
+| 🏛️ Federados vs Descentralizados | ⏳ Pendiente | 0% | ✅ Sí | 🔴 Alta |
+| 📊 Estadísticas Deportivas | ⏳ Pendiente | 0% | ❌ Post-MVP | 🟡 Media |
+| 🏅 Sistema de Premios | ⏳ Pendiente | 0% | ❌ Post-MVP | 🟡 Media |
+| 💰 Sistema de Pagos Automatizado | ⏳ Pendiente | 0% | ❌ Post-MVP | 🟢 Baja |
 
 ### 🏆 **Fase 4 - Sistema de Gestión de Torneos** (Incluido en MVP)
 

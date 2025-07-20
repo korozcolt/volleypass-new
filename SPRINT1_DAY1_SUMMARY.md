@@ -225,14 +225,19 @@ php artisan db:seed --class=FederationTestSeeder
 - [x] Validaciones automáticas
 - [x] Procesamiento de pagos
 
-## 🚀 **PRÓXIMOS PASOS - DÍA 2**
+## 🚀 **PRÓXIMOS PASOS - FASE 3 REORGANIZADA**
 
-### **Objetivos para Mañana**
-1. **ClubResource** completo
-2. **LeagueResource** con configuraciones
-3. **Dashboard básico** con métricas
-4. Integración entre recursos
+### **Objetivos Inmediatos (Sin Sistema de Pagos)**
+1. **Reglas Configurables por Liga** - Flexibilidad del sistema
+2. **Gestión de Traspasos** - Control manual de jugadoras
+3. **Federados vs Descentralizados** - Tipos de equipos
+4. **Dashboard básico** con métricas
 5. Testing de flujos completos
+
+### **Diferido para Post-MVP**
+- Sistema de Pagos Automatizado (será manual inicialmente)
+- Estadísticas Deportivas Avanzadas
+- Sistema de Premios y Reconocimientos
 
 ### **Preparación Completada**
 - ✅ Base de datos lista
