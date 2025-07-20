@@ -13,6 +13,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Illuminate\Database\Eloquent\Builder;
 
 class LeagueResource extends Resource
@@ -29,76 +32,115 @@ class LeagueResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información Básica')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nombre')
-                            ->required()
-                            ->maxLength(255),
+                Forms\Components\Tabs::make('Tabs')
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('Información General')
+                            ->icon('heroicon-o-information-circle')
+                            ->schema([
+                                Forms\Components\Section::make('Información Básica')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('Nombre')
+                                            ->required()
+                                            ->maxLength(255),
 
-                        Forms\Components\TextInput::make('short_name')
-                            ->label('Nombre Corto')
-                            ->maxLength(50),
+                                        Forms\Components\TextInput::make('short_name')
+                                            ->label('Nombre Corto')
+                                            ->maxLength(50),
 
-                        Forms\Components\Textarea::make('description')
-                            ->label('Descripción')
-                            ->rows(3),
+                                        Forms\Components\Textarea::make('description')
+                                            ->label('Descripción')
+                                            ->rows(3),
 
-                        Forms\Components\Select::make('country_id')
-                            ->label('País')
-                            ->relationship('country', 'name')
-                            ->searchable()
-                            ->preload(),
-                    ])->columns(2),
+                                        Forms\Components\Select::make('country_id')
+                                            ->label('País')
+                                            ->relationship('country', 'name')
+                                            ->searchable()
+                                            ->preload(),
+                                    ])->columns(2),
 
-                Forms\Components\Section::make('Configuración')
-                    ->schema([
-                        Forms\Components\Select::make('status')
-                            ->label('Estado')
-                            ->options(UserStatus::class)
-                            ->default(UserStatus::Active)
-                            ->required(),
+                                Forms\Components\Section::make('Configuración Básica')
+                                    ->schema([
+                                        Forms\Components\Select::make('status')
+                                            ->label('Estado')
+                                            ->options(UserStatus::class)
+                                            ->default(UserStatus::Active)
+                                            ->required(),
 
-                        Forms\Components\DatePicker::make('founded_date')
-                            ->label('Fecha de Fundación'),
+                                        Forms\Components\DatePicker::make('founded_date')
+                                            ->label('Fecha de Fundación'),
 
-                        Forms\Components\TextInput::make('website')
-                            ->label('Sitio Web')
-                            ->url()
-                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('website')
+                                            ->label('Sitio Web')
+                                            ->url()
+                                            ->maxLength(255),
 
-                        Forms\Components\TextInput::make('email')
-                            ->label('Email')
-                            ->email()
-                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('email')
+                                            ->label('Email')
+                                            ->email()
+                                            ->maxLength(255),
 
-                        Forms\Components\TextInput::make('phone')
-                            ->label('Teléfono')
-                            ->tel()
-                            ->maxLength(20),
-                    ])->columns(2),
+                                        Forms\Components\TextInput::make('phone')
+                                            ->label('Teléfono')
+                                            ->tel()
+                                            ->maxLength(20),
+                                    ])->columns(2),
 
-                Forms\Components\Section::make('Configuración Avanzada')
-                    ->schema([
-                        Forms\Components\KeyValue::make('settings')
-                            ->label('Configuraciones')
-                            ->keyLabel('Clave')
-                            ->valueLabel('Valor'),
+                                Forms\Components\Section::make('Configuración Avanzada')
+                                    ->schema([
+                                        Forms\Components\KeyValue::make('settings')
+                                            ->label('Configuraciones')
+                                            ->keyLabel('Clave')
+                                            ->valueLabel('Valor'),
 
-                        Forms\Components\Textarea::make('notes')
-                            ->label('Notas')
-                            ->rows(3),
-                    ]),
+                                        Forms\Components\Textarea::make('notes')
+                                            ->label('Notas')
+                                            ->rows(3),
+                                    ]),
 
-                Forms\Components\Section::make('Medios')
-                    ->schema([
-                        Forms\Components\FileUpload::make('logo')
-                            ->label('Logo')
-                            ->image()
-                            ->imageEditor()
-                            ->maxSize(2048)
-                            ->directory('leagues/logos'),
-                    ]),
+                                Forms\Components\Section::make('Logo de la Liga')
+                                    ->description('Sube el logo de la liga')
+                                    ->schema([
+                                        Forms\Components\SpatieMediaLibraryFileUpload::make('logo')
+                                            ->label('Logo')
+                                            ->helperText('Logo de la liga (JPG, PNG o SVG)')
+                                            ->image()
+                                            ->imageEditor()
+                                            ->maxSize(2048)
+                                            ->collection('logo')
+                                            ->conversion('thumb')
+                                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/svg+xml']),
+                                    ]),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('Reglas de Liga')
+                            ->icon('heroicon-o-cog-6-tooth')
+                            ->schema([
+                                Forms\Components\Section::make('Configuraciones de Liga')
+                                    ->description('Estas configuraciones definen las reglas específicas de esta liga')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('config_info')
+                                            ->label('')
+                                            ->content('Las configuraciones de liga se gestionan después de crear la liga. Guarda primero la información básica.')
+                                            ->visible(fn($record) => !$record),
+                                    ])
+                                    ->visible(fn($record) => !$record),
+
+                                Forms\Components\Section::make('Configuraciones de Liga')
+                                    ->description('Gestiona las reglas específicas de esta liga')
+                                    ->schema([
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('manage_configurations')
+                                                ->label('Gestionar Configuraciones')
+                                                ->icon('heroicon-o-cog-6-tooth')
+                                                ->color('primary')
+                                                ->url(fn($record) => route('filament.admin.resources.leagues.configurations', $record)),
+                                        ]),
+                                    ])
+                                    ->visible(fn($record) => $record),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -106,8 +148,10 @@ class LeagueResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('logo')
+                Tables\Columns\SpatieMediaLibraryImageColumn::make('logo')
                     ->label('Logo')
+                    ->collection('logo')
+                    ->conversion('thumb')
                     ->circular()
                     ->size(40),
 
@@ -170,8 +214,10 @@ class LeagueResource extends Resource
             ->schema([
                 Infolists\Components\Section::make('Información General')
                     ->schema([
-                        Infolists\Components\ImageEntry::make('logo')
+                        Infolists\Components\SpatieMediaLibraryImageEntry::make('logo')
                             ->label('Logo')
+                            ->collection('logo')
+                            ->conversion('thumb')
                             ->circular()
                             ->size(80),
 
@@ -204,7 +250,7 @@ class LeagueResource extends Resource
 
                         Infolists\Components\TextEntry::make('website')
                             ->label('Sitio Web')
-                            ->url(fn ($record) => $record->website)
+                            ->url(fn($record) => $record->website)
                             ->openUrlInNewTab(),
                     ])->columns(3),
 
@@ -212,11 +258,11 @@ class LeagueResource extends Resource
                     ->schema([
                         Infolists\Components\TextEntry::make('clubs_count')
                             ->label('Total de Clubes')
-                            ->state(fn ($record) => $record->clubs()->count()),
+                            ->state(fn($record) => $record->clubs()->count()),
 
                         Infolists\Components\TextEntry::make('players_count')
                             ->label('Total de Jugadoras')
-                            ->state(fn ($record) => $record->clubs()->withCount('players')->get()->sum('players_count')),
+                            ->state(fn($record) => $record->clubs()->withCount('players')->get()->sum('players_count')),
 
                         Infolists\Components\TextEntry::make('founded_date')
                             ->label('Fecha de Fundación')
@@ -239,6 +285,7 @@ class LeagueResource extends Resource
             'create' => Pages\CreateLeague::route('/create'),
             'view' => Pages\ViewLeague::route('/{record}'),
             'edit' => Pages\EditLeague::route('/{record}/edit'),
+            'configurations' => Pages\ManageLeagueConfigurations::route('/{record}/configurations'),
         ];
     }
 }

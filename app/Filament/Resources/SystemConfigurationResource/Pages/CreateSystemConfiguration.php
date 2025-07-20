@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SystemConfigurationResource\Pages;
 
 use App\Filament\Resources\SystemConfigurationResource;
 use App\Services\SystemConfigurationService;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateSystemConfiguration extends CreateRecord
@@ -15,6 +16,9 @@ class CreateSystemConfiguration extends CreateRecord
         // Recargar configuraciones después de crear
         app(SystemConfigurationService::class)->reload();
 
-        $this->notify('success', 'Configuración creada y aplicada exitosamente.');
+        Notification::make()
+            ->title('Configuración creada y aplicada exitosamente.')
+            ->success()
+            ->send();
     }
 }

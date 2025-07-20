@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "filament/filament": "^3.3",
+        "filament/spatie-laravel-media-library-plugin": "^3.3",
         "intervention/image": "^3.11",
         "laravel-notification-channels/fcm": "^5.1",
         "laravel/framework": "^12.0",

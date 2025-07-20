@@ -2,63 +2,63 @@
 
 namespace App\Enums;
 
-use Filament\Support\Contracts\HasColor;
-use Filament\Support\Contracts\HasLabel;
-use Filament\Support\Contracts\HasIcon;
+use App\Traits\EnumHelpers;
 
-enum ConfigurationType: string implements HasLabel, HasColor, HasIcon {
-    case System = 'system';
-    case League = 'league';
-    case Club = 'club';
-    case Tournament = 'tournament';
-    case Medical = 'medical';
+enum ConfigurationType: string
+{
+    use EnumHelpers;
 
-    public function getLabel(): ?string
+    case STRING = 'string';
+    case NUMBER = 'number';
+    case BOOLEAN = 'boolean';
+    case JSON = 'json';
+    case DATE = 'date';
+    case EMAIL = 'email';
+    case URL = 'url';
+
+    public function label(): string
     {
         return match ($this) {
-            self::System => 'Sistema',
-            self::League => 'Liga',
-            self::Club => 'Club',
-            self::Tournament => 'Torneo',
-            self::Medical => 'Médico',
+            self::STRING => 'Texto',
+            self::NUMBER => 'Número',
+            self::BOOLEAN => 'Booleano',
+            self::JSON => 'JSON',
+            self::DATE => 'Fecha',
+            self::EMAIL => 'Email',
+            self::URL => 'URL',
         };
     }
 
-    public function getColor(): string | array | null
+    public function color(): string
     {
         return match ($this) {
-            self::System => 'danger',
-            self::League => 'primary',
-            self::Club => 'success',
-            self::Tournament => 'warning',
-            self::Medical => 'purple',
+            self::STRING => 'gray',
+            self::NUMBER => 'blue',
+            self::BOOLEAN => 'green',
+            self::JSON => 'purple',
+            self::DATE => 'orange',
+            self::EMAIL => 'cyan',
+            self::URL => 'indigo',
         };
     }
 
-    public function getIcon(): string | null
+    public function icon(): string
     {
         return match ($this) {
-            self::System => 'heroicon-o-cog-6-tooth',
-            self::League => 'heroicon-o-building-office-2',
-            self::Club => 'heroicon-o-building-office',
-            self::Tournament => 'heroicon-o-trophy',
-            self::Medical => 'heroicon-o-heart',
+            self::STRING => 'heroicon-o-document-text',
+            self::NUMBER => 'heroicon-o-calculator',
+            self::BOOLEAN => 'heroicon-o-check-circle',
+            self::JSON => 'heroicon-o-code-bracket',
+            self::DATE => 'heroicon-o-calendar',
+            self::EMAIL => 'heroicon-o-envelope',
+            self::URL => 'heroicon-o-link',
         };
     }
 
-    public function getColorHtml(): ?string
+    public static function options(): array
     {
-        return match ($this) {
-            self::System => 'bg-red-100 text-red-800',
-            self::League => 'bg-blue-100 text-blue-800',
-            self::Club => 'bg-green-100 text-green-800',
-            self::Tournament => 'bg-yellow-100 text-yellow-800',
-            self::Medical => 'bg-purple-100 text-purple-800',
-        };
-    }
-
-    public function getLabelHtml(): ?string
-    {
-        return '<span class="py-1 px-3 rounded-full text-xs font-medium '.$this->getColorHtml().'">'.$this->getLabel().'</span>';
+        return collect(self::cases())
+            ->mapWithKeys(fn($case) => [$case->value => $case->label()])
+            ->toArray();
     }
 }

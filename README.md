@@ -879,12 +879,66 @@ php artisan volleypass:generate-season-cards 2025
 
 | Componente | Estado | Progreso | MVP | Prioridad |
 |------------|--------|----------|-----|-----------|
-| ⚖️ Reglas Configurables por Liga | ⏳ Pendiente | 0% | ✅ Sí | 🔴 Alta |
-| 🔄 Gestión de Traspasos | ⏳ Pendiente | 0% | ✅ Sí | 🔴 Alta |
+| ⚖️ Reglas Configurables por Liga | ✅ Completado | 100% | ✅ Sí | 🔴 Alta |
+| 🔄 Gestión de Traspasos | ⏳ En Progreso | 25% | ✅ Sí | 🔴 Alta |
 | 🏛️ Federados vs Descentralizados | ⏳ Pendiente | 0% | ✅ Sí | 🔴 Alta |
 | 📊 Estadísticas Deportivas | ⏳ Pendiente | 0% | ❌ Post-MVP | 🟡 Media |
 | 🏅 Sistema de Premios | ⏳ Pendiente | 0% | ❌ Post-MVP | 🟡 Media |
 | 💰 Sistema de Pagos Automatizado | ⏳ Pendiente | 0% | ❌ Post-MVP | 🟢 Baja |
+
+### 🎯 **PROGRESO DETALLADO - FASE 3**
+
+#### **✅ DÍA 1 COMPLETADO: Reglas Configurables por Liga**
+
+<details>
+<summary><strong>🎯 Configuraciones de Liga Implementadas</strong></summary>
+
+**Funcionalidades Completadas:**
+- ✅ **LeagueConfiguration Model** - Modelo completo con validaciones
+- ✅ **LeagueConfigurationService** - Servicio con cache inteligente
+- ✅ **Interface Administrativa** - Página especializada en Filament
+- ✅ **30+ Configuraciones** - Organizadas en 6 grupos
+- ✅ **Comando de Consola** - Gestión desde CLI
+- ✅ **Helpers Globales** - Acceso fácil desde código
+- ✅ **Testing Completo** - 12 tests unitarios
+
+**Grupos de Configuraciones:**
+- 🔄 **Traspasos** - Reglas de transferencias (6 configs)
+- 📄 **Documentación** - Requisitos documentales (6 configs)
+- 👥 **Categorías** - Reglas por edad (4 configs)
+- ⚖️ **Disciplina** - Sanciones y apelaciones (4 configs)
+- 🛡️ **Federación** - Reglas de federación manual (4 configs)
+- 📺 **Vista Pública** - Configuraciones de privacidad (5 configs)
+
+**Comandos Disponibles:**
+```bash
+# Gestión de configuraciones
+php artisan league:config get 1 transfer_approval_required
+php artisan league:config set 1 max_transfers_per_season 3
+php artisan league:config list 1 --group=transfers
+php artisan league:config reset 1 --force
+
+# Seeder de configuraciones
+php artisan db:seed --class=LeagueConfigurationSeeder
+```
+
+**Helpers Implementados:**
+```php
+league_config($league_id, $key, $default)
+club_is_federated($club_id)
+can_request_transfer($player_id, $to_club_id)
+is_player_eligible_for_tournament($player_id, $tournament_id)
+get_league_transfer_rules($league_id)
+```
+
+</details>
+
+#### **🚧 PRÓXIMO: DÍA 2 - Sistema de Traspasos**
+- 🔄 **TransferService** - Lógica completa de traspasos
+- 📝 **PlayerTransfer Model** - Estados y validaciones
+- 💻 **TransferResource** - Interface administrativa
+- 🔗 **Integración PlayerResource** - Tab de traspasos
+- 🧪 **Testing de Traspasos** - Flujos completos
 
 ### 🏆 **Fase 4 - Sistema de Gestión de Torneos** (Incluido en MVP)
 
@@ -909,24 +963,25 @@ php artisan volleypass:generate-season-cards 2025
 | Componente | Estado | Progreso | Prioridad |
 |------------|--------|----------|-----------|
 | 💻 **Sistema de Configuraciones** | ✅ Completado | 100% | 🔴 Alta |
+| 💻 **LeagueConfigurationResource** | ✅ Completado | 100% | 🔴 Alta |
 | 💻 UserResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
 | 💻 PlayerResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
 | 💻 ClubResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
 | 💻 LeagueResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
-| 💻 TeamResource (Filament) | ✅ Completado | 100% | � Alta |
+| 💻 TeamResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
 | 💻 TournamentResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
 | 💻 PlayerCardResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
 | 💻 MedicalCertificateResource | ✅ Completado | 100% | 🔴 Alta |
 | 💻 PaymentResource (Filament) | ✅ Completado | 100% | 🔴 Alta |
-| 💻 RoleResource (Filament) | ✅ Completado | 100% | �  Media |
+| 💻 RoleResource (Filament) | ✅ Completado | 100% | 🟡 Media |
 | 💻 NotificationResource (Filament) | ✅ Completado | 100% | 🟡 Media |
 | 💻 SystemConfigurationResource | ✅ Completado | 100% | 🔴 Alta |
-| � Das hboard Principal | ✅ Completado | 100% | � Alta ||
+| 💻 Dashboard Principal | ✅ Completado | 100% | 🔴 Alta |
 | 💻 Widgets y Estadísticas | ✅ Completado | 100% | 🔴 Alta |
-| 🌐 Header Personalizado | ✅ Completado | 100% | � Med|ia |
+| 🌐 Header Personalizado | ✅ Completado | 100% | 🟡 Media |
 | 🔧 Modo Mantenimiento | ✅ Completado | 100% | 🟡 Media |
 | 📱 App Móvil Verificadores | ⏳ Pendiente | 0% | 🟡 Media |
-| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🔴 Alta |
+| 🌐 Dashboard Público Torneos | ⏳ Pendiente | 0% | 🟡 Media |ente | 0% | 🔴 Alta |
 | 👨‍💼 Interfaces por Rol | ⏳ Pendiente | 0% | 🔴 Alta |
 
 ### 🎯 **Sistema de Configuraciones Dinámicas** ✅ *Completado*
@@ -1118,6 +1173,22 @@ php artisan queue:monitor
 
 VolleyPass incluye comandos personalizados para gestión automatizada:
 
+### **Gestión de Configuraciones**
+```bash
+# Configuraciones del Sistema
+php artisan system:config get app.name
+php artisan system:config set app.name "Mi Sistema"
+php artisan system:config list --group=federation
+php artisan system:config reload
+
+# Configuraciones de Liga (NUEVO)
+php artisan league:config get 1 transfer_approval_required
+php artisan league:config set 1 max_transfers_per_season 3
+php artisan league:config list 1 --group=transfers
+php artisan league:config reset 1 --force
+```
+
+### **Gestión de Carnets y Jugadoras**
 ```bash
 # Enviar notificaciones de vencimiento
 php artisan volleypass:send-expiry-notifications --days=30
@@ -1125,14 +1196,26 @@ php artisan volleypass:send-expiry-notifications --days=30
 # Generar carnets para nueva temporada
 php artisan volleypass:generate-season-cards 2025
 
+# Probar sistema de notificaciones
+php artisan volleypass:test-notifications 1
+```
+
+### **Mantenimiento del Sistema**
+```bash
 # Limpiar logs antiguos del sistema
 php artisan volleypass:cleanup-logs --qr-days=365
 
 # Generar reportes estadísticos
 php artisan volleypass:generate-report weekly --email=admin@liga.com
+```
 
-# Probar sistema de notificaciones
-php artisan volleypass:test-notifications 1
+### **Seeders Especializados**
+```bash
+# Configuraciones de liga para todas las ligas
+php artisan db:seed --class=LeagueConfigurationSeeder
+
+# Datos completos del sistema
+php artisan db:seed
 ```
 
 ### ⚡ Tareas Programadas

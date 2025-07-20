@@ -60,6 +60,15 @@ class League extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
+        $this->addMediaCollection('logo_light')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/svg+xml'])
+            ->singleFile();
+
+        $this->addMediaCollection('logo_dark')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/svg+xml'])
+            ->singleFile();
+
+        // Mantener compatibilidad con logo único (por defecto será light)
         $this->addMediaCollection('logo')
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/svg+xml'])
             ->singleFile();
@@ -68,12 +77,17 @@ class League extends Model implements HasMedia
             ->acceptsMimeTypes(['application/pdf', 'image/jpeg', 'image/png']);
     }
 
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(150)
             ->height(150)
-            ->performOnCollections('logo');
+            ->performOnCollections('logo', 'logo_light', 'logo_dark');
+
+        $this->addMediaConversion('small')
+            ->width(64)
+            ->height(64)
+            ->performOnCollections('logo', 'logo_light', 'logo_dark');
     }
 
     // =======================
@@ -110,6 +124,11 @@ class League extends Model implements HasMedia
         return $this->hasMany(Tournament::class);
     }
 
+    public function configurations(): HasMany
+    {
+        return $this->hasMany(LeagueConfiguration::class);
+    }
+
     // Obtener todas las jugadoras de la liga
     public function players()
     {
@@ -142,7 +161,65 @@ class League extends Model implements HasMedia
 
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->getFirstMediaUrl('logo');
+        // Por defecto devuelve el logo light, o el logo único si existe
+        return $this->getLogoUrl('light');
+    }
+
+    public function getLogoUrl(string $mode = 'light'): ?string
+    {
+        $collection = match($mode) {
+            'dark' => 'logo_dark',
+            'light' => 'logo_light',
+            default => 'logo_light'
+        };
+
+        $url = $this->getFirstMediaUrl($collection);
+
+        // Si no existe el logo específico, intentar con el logo genérico
+        if (empty($url)) {
+            $url = $this->getFirstMediaUrl('logo');
+        }
+
+        return $url ?: null;
+    }
+
+    public function getLogoLightUrlAttribute(): ?string
+    {
+        return $this->getLogoUrl('light');
+    }
+
+    public function getLogoDarkUrlAttribute(): ?string
+    {
+        return $this->getLogoUrl('dark');
+    }
+
+    public function hasLogo(string $mode = 'light'): bool
+    {
+        $collection = match($mode) {
+            'dark' => 'logo_dark',
+            'light' => 'logo_light',
+            default => 'logo_light'
+        };
+
+        return $this->hasMedia($collection) || $this->hasMedia('logo');
+    }
+
+    public function getAdaptiveLogoUrl(): string
+    {
+        // Devuelve un HTML que se adapta automáticamente al modo
+        $lightLogo = $this->getLogoUrl('light');
+        $darkLogo = $this->getLogoUrl('dark');
+
+        if ($lightLogo && $darkLogo) {
+            return "
+                <img src='{$lightLogo}' class='block dark:hidden' alt='{$this->name}' />
+                <img src='{$darkLogo}' class='hidden dark:block' alt='{$this->name}' />
+            ";
+        }
+
+        // Si solo hay un logo, usarlo para ambos modos
+        $logo = $lightLogo ?: $darkLogo;
+        return $logo ? "<img src='{$logo}' alt='{$this->name}' />" : '';
     }
 
     public function getActiveClubsCountAttribute(): int
