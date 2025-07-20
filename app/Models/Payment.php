@@ -32,6 +32,13 @@ class Payment extends Model implements HasMedia
         'verified_by',
         'notes',
         'metadata',
+        'payment_date',
+        'due_date',
+        'confirmed_at',
+        'transaction_id',
+        'gateway',
+        'description',
+        'receipt',
     ];
 
     protected $casts = [
@@ -40,7 +47,11 @@ class Payment extends Model implements HasMedia
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
         'verified_at' => 'datetime',
+        'payment_date' => 'datetime',
+        'due_date' => 'datetime',
+        'confirmed_at' => 'datetime',
         'metadata' => 'array',
+        'receipt' => 'array',
     ];
 
     public function getActivitylogOptions(): LogOptions

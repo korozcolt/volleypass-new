@@ -27,6 +27,8 @@ class Club extends Model implements HasMedia
         'short_name',
         'description',
         'city_id',
+        'country_id',
+        'department_id',
         'address',
         'email',
         'phone',
@@ -38,6 +40,8 @@ class Club extends Model implements HasMedia
         'status',
         'is_active',
         'configurations',
+        'settings',
+        'notes',
     ];
 
     protected $casts = [
@@ -45,6 +49,7 @@ class Club extends Model implements HasMedia
         'is_active' => 'boolean',
         'status' => UserStatus::class,
         'configurations' => 'array',
+        'settings' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -106,6 +111,16 @@ class Club extends Model implements HasMedia
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function director(): BelongsTo

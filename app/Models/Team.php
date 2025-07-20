@@ -22,13 +22,21 @@ class Team extends Model
         'category',
         'gender',
         'coach_id',
+        'assistant_coach_id',
+        'captain_id',
+        'colors',
+        'founded_date',
+        'description',
         'status',
         'notes',
+        'settings',
     ];
 
     protected $casts = [
         'category' => PlayerCategory::class,
         'gender' => Gender::class,
+        'founded_date' => 'date',
+        'settings' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -50,6 +58,16 @@ class Team extends Model
     public function coach(): BelongsTo
     {
         return $this->belongsTo(Coach::class);
+    }
+
+    public function assistantCoach(): BelongsTo
+    {
+        return $this->belongsTo(Coach::class, 'assistant_coach_id');
+    }
+
+    public function captain(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'captain_id');
     }
 
     public function teamPlayers(): HasMany

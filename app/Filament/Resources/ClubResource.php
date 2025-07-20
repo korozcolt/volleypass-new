@@ -107,7 +107,7 @@ class ClubResource extends Resource
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\DatePicker::make('founded_date')
+                        Forms\Components\DatePicker::make('foundation_date')
                             ->label('Fecha de Fundación'),
 
                         Forms\Components\TextInput::make('colors')
@@ -185,7 +185,7 @@ class ClubResource extends Resource
                     ->label('Estado')
                     ->badge(),
 
-                Tables\Columns\TextColumn::make('founded_date')
+                Tables\Columns\TextColumn::make('foundation_date')
                     ->label('Fundado')
                     ->date()
                     ->sortable(),
@@ -295,7 +295,7 @@ class ClubResource extends Resource
                             ->label('Total de Equipos')
                             ->state(fn($record) => \App\Models\Team::where('club_id', $record->id)->count()),
 
-                        Infolists\Components\TextEntry::make('founded_date')
+                        Infolists\Components\TextEntry::make('foundation_date')
                             ->label('Fecha de Fundación')
                             ->date(),
                     ])->columns(3),

@@ -81,7 +81,7 @@ class PaymentResource extends Resource
                             ->label('ID de Transacción')
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('reference')
+                        Forms\Components\TextInput::make('reference_number')
                             ->label('Referencia')
                             ->maxLength(255),
 
@@ -126,7 +126,7 @@ class PaymentResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('reference')
+                Tables\Columns\TextColumn::make('reference_number')
                     ->label('Referencia')
                     ->searchable()
                     ->sortable(),
@@ -230,7 +230,7 @@ class PaymentResource extends Resource
             ->schema([
                 Infolists\Components\Section::make('Información del Pago')
                     ->schema([
-                        Infolists\Components\TextEntry::make('reference')
+                        Infolists\Components\TextEntry::make('reference_number')
                             ->label('Referencia'),
 
                         Infolists\Components\TextEntry::make('user.name')
