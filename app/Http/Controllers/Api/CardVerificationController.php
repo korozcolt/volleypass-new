@@ -43,7 +43,6 @@ class CardVerificationController extends Controller
                 ] : null,
                 'verified_at' => now()->toISOString()
             ]);
-
         } catch (\Exception $e) {
             Log::error("Error en verificación de carnet", [
                 'token' => substr($token, 0, 20) . '...',
@@ -94,7 +93,6 @@ class CardVerificationController extends Controller
                 'expires_at' => $card->expires_at->toISOString(),
                 'verified_at' => now()->toISOString()
             ]);
-
         } catch (\Exception $e) {
             Log::error("Error en verificación por número", [
                 'card_number' => $cardNumber,
@@ -132,7 +130,6 @@ class CardVerificationController extends Controller
                     PlayerCard::find($verificationResult['card_id'] ?? null)
                 )
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'valid' => false,
@@ -171,7 +168,6 @@ class CardVerificationController extends Controller
                 'verification_response' => $verificationResult,
                 'response_time_ms' => 0, // Se calculará en el modelo
             ]);
-
         } catch (\Exception $e) {
             Log::warning("Error registrando escaneo QR", [
                 'error' => $e->getMessage(),

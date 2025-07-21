@@ -129,6 +129,11 @@ class League extends Model implements HasMedia
         return $this->hasMany(LeagueConfiguration::class);
     }
 
+    public function categories(): HasMany
+    {
+        return $this->hasMany(LeagueCategory::class);
+    }
+
     // Obtener todas las jugadoras de la liga
     public function players()
     {
@@ -313,6 +318,78 @@ class League extends Model implements HasMedia
     {
         return $this->is_active && $this->status === UserStatus::Active;
     }
+
+    // =======================
+    // MÉTODOS DE CATEGORÍAS DINÁMICAS
+    // =======================
+
+    /**
+     * Obtiene categorías activas ordenadas
+     */
+    public function getActiveCategories()
+    {
+        return $this->categories()->active()->ordered()->get();
+    }
+
+    /**
+     * Encuentra la categoría apropiada para una jugadora
+     */
+    public function findCategoryForPlayer(int $age, string $gender): ?LeagueCategory
+    {
+        return $this->categories()
+            ->active()
+            ->forAge($age)
+            ->forGender($gender)
+            ->ordered()
+            ->first();
+    }
+
+    /**
+     * Verifica si tiene configuración de categorías personalizada
+     */
+    public function hasCustomCategories(): bool
+    {
+        return $this->categories()->exists();
+    }
+
+    /**
+     * Crea categorías por defecto basadas en el enum PlayerCategory
+     */
+    public function createDefaultCategories(): void
+    {
+        if ($this->hasCustomCategories()) {
+            return; // Ya tiene categorías configuradas
+        }
+
+        LeagueCategory::createDefaultCategoriesForLeague($this->id);
+    }
+
+    /**
+     * Valida la configuración de categorías
+     */
+    public function validateCategoryConfiguration(): array
+    {
+        return LeagueCategory::validateLeagueConfiguration($this->id);
+    }
+
+    /**
+     * Obtiene estadísticas de jugadoras por categorías configuradas
+     */
+    public function getCategoryStats(): array
+    {
+        if (!$this->hasCustomCategories()) {
+            return $this->getPlayersStatsByCategory(); // Fallback al método existente
+        }
+
+        $stats = [];
+        foreach ($this->getActiveCategories() as $category) {
+            $stats[$category->name] = $category->getPlayerStats()['total'];
+        }
+
+        return $stats;
+    }
+
+
 
     // =======================
     // MÉTODOS DE ESTADÍSTICAS
