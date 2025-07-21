@@ -20,3 +20,5 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+// Rutas de administración
+require __DIR__.'/admin.php';

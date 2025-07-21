@@ -113,6 +113,30 @@ class LeagueResource extends Resource
                                     ]),
                             ]),
 
+                        Forms\Components\Tabs\Tab::make('Categorías')
+                            ->icon('heroicon-o-tag')
+                            ->schema([
+                                Forms\Components\Section::make('Gestión de Categorías')
+                                    ->description('Configura las categorías de edad para esta liga')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('categories_info')
+                                            ->label('')
+                                            ->content('Las categorías se gestionan después de crear la liga. Guarda primero la información básica.')
+                                            ->visible(fn($record) => !$record),
+                                    ])
+                                    ->visible(fn($record) => !$record),
+
+                                Forms\Components\Section::make('Configuración de Categorías')
+                                    ->description('Gestiona las categorías de edad específicas de esta liga')
+                                    ->schema([
+                                        Forms\Components\ViewField::make('categories_management')
+                                            ->label('')
+                                            ->view('filament.forms.components.league-categories-manager')
+                                            ->viewData(fn($record) => ['league' => $record]),
+                                    ])
+                                    ->visible(fn($record) => $record),
+                            ]),
+
                         Forms\Components\Tabs\Tab::make('Reglas de Liga')
                             ->icon('heroicon-o-cog-6-tooth')
                             ->schema([
@@ -173,6 +197,15 @@ class LeagueResource extends Resource
                     ->counts('clubs')
                     ->badge(),
 
+                Tables\Columns\TextColumn::make('categories_count')
+                    ->label('Categorías')
+                    ->state(fn($record) => $record->categories()->active()->count())
+                    ->badge()
+                    ->color(fn($record) => $record->hasCustomCategories() ? 'success' : 'gray')
+                    ->tooltip(fn($record) => $record->hasCustomCategories() ?
+                        'Configuración personalizada' :
+                        'Sin configurar'),
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge(),
@@ -198,8 +231,71 @@ class LeagueResource extends Resource
                     ->relationship('country', 'name'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+
+                    Tables\Actions\Action::make('manage_categories')
+                        ->label('Gestionar Categorías')
+                        ->icon('heroicon-o-tag')
+                        ->color('info')
+                        ->url(fn($record) => route('filament.admin.resources.leagues.edit', ['record' => $record]) . '#categories')
+                        ->visible(fn($record) => $record->hasCustomCategories()),
+
+                    Tables\Actions\Action::make('create_default_categories')
+                        ->label('Crear Categorías')
+                        ->icon('heroicon-o-plus-circle')
+                        ->color('success')
+                        ->action(function($record) {
+                            $configService = app(\App\Services\LeagueConfigurationService::class);
+                            $result = $configService->createDefaultCategories($record);
+
+                            if ($result['success']) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Categorías creadas exitosamente')
+                                    ->body("Se crearon {$result['categories_created']} categorías por defecto")
+                                    ->success()
+                                    ->send();
+                            } else {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Error creando categorías')
+                                    ->body($result['message'])
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Crear Categorías por Defecto')
+                        ->modalDescription('¿Estás seguro de que quieres crear las categorías por defecto para esta liga?')
+                        ->visible(fn($record) => !$record->hasCustomCategories()),
+
+                    Tables\Actions\Action::make('validate_categories')
+                        ->label('Validar Configuración')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('warning')
+                        ->action(function($record) {
+                            $configService = app(\App\Services\LeagueConfigurationService::class);
+                            $validation = $configService->validateCategoryConfiguration($record);
+
+                            if ($validation['valid']) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Configuración válida')
+                                    ->body('La configuración de categorías es correcta')
+                                    ->success()
+                                    ->send();
+                            } else {
+                                $errorCount = count($validation['errors']);
+                                $warningCount = count($validation['warnings']);
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Configuración con problemas')
+                                    ->body("Se encontraron {$errorCount} errores y {$warningCount} advertencias")
+                                    ->warning()
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn($record) => $record->hasCustomCategories()),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -264,10 +360,107 @@ class LeagueResource extends Resource
                             ->label('Total de Jugadoras')
                             ->state(fn($record) => $record->clubs()->withCount('players')->get()->sum('players_count')),
 
+                        Infolists\Components\TextEntry::make('categories_count')
+                            ->label('Categorías Configuradas')
+                            ->state(fn($record) => $record->categories()->active()->count())
+                            ->badge()
+                            ->color(fn($record) => $record->hasCustomCategories() ? 'success' : 'gray'),
+
                         Infolists\Components\TextEntry::make('founded_date')
                             ->label('Fecha de Fundación')
                             ->date(),
-                    ])->columns(3),
+                    ])->columns(4),
+
+                Infolists\Components\Section::make('Configuración de Categorías')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('categories_status')
+                            ->label('Estado de Categorías')
+                            ->state(function($record) {
+                                if (!$record->hasCustomCategories()) {
+                                    return 'Sin configurar';
+                                }
+
+                                $validation = app(\App\Services\LeagueConfigurationService::class)
+                                    ->validateCategoryConfiguration($record);
+
+                                return $validation['valid'] ? 'Configuración válida' : 'Con errores';
+                            })
+                            ->badge()
+                            ->color(function($record) {
+                                if (!$record->hasCustomCategories()) {
+                                    return 'gray';
+                                }
+
+                                $validation = app(\App\Services\LeagueConfigurationService::class)
+                                    ->validateCategoryConfiguration($record);
+
+                                return $validation['valid'] ? 'success' : 'danger';
+                            }),
+
+                        Infolists\Components\TextEntry::make('age_coverage')
+                            ->label('Cobertura de Edad')
+                            ->state(function($record) {
+                                if (!$record->hasCustomCategories()) {
+                                    return 'N/A';
+                                }
+
+                                $categories = $record->getActiveCategories();
+                                if ($categories->isEmpty()) {
+                                    return 'N/A';
+                                }
+
+                                return $categories->min('min_age') . '-' . $categories->max('max_age') . ' años';
+                            }),
+
+                        Infolists\Components\TextEntry::make('category_distribution')
+                            ->label('Distribución por Categorías')
+                            ->state(function($record) {
+                                if (!$record->hasCustomCategories()) {
+                                    return 'N/A';
+                                }
+
+                                $stats = $record->getCategoryStats();
+                                $total = array_sum($stats);
+
+                                if ($total === 0) {
+                                    return 'Sin jugadoras asignadas';
+                                }
+
+                                $distribution = [];
+                                foreach ($stats as $category => $count) {
+                                    if ($count > 0) {
+                                        $percentage = round(($count / $total) * 100, 1);
+                                        $distribution[] = "{$category}: {$count} ({$percentage}%)";
+                                    }
+                                }
+
+                                return implode(', ', array_slice($distribution, 0, 3)) .
+                                       (count($distribution) > 3 ? '...' : '');
+                            })
+                            ->tooltip(function($record) {
+                                if (!$record->hasCustomCategories()) {
+                                    return null;
+                                }
+
+                                $stats = $record->getCategoryStats();
+                                $total = array_sum($stats);
+
+                                if ($total === 0) {
+                                    return 'No hay jugadoras asignadas a categorías';
+                                }
+
+                                $distribution = [];
+                                foreach ($stats as $category => $count) {
+                                    if ($count > 0) {
+                                        $percentage = round(($count / $total) * 100, 1);
+                                        $distribution[] = "{$category}: {$count} jugadoras ({$percentage}%)";
+                                    }
+                                }
+
+                                return implode("\n", $distribution);
+                            }),
+                    ])->columns(3)
+                    ->visible(fn($record) => $record->hasCustomCategories()),
             ]);
     }
 

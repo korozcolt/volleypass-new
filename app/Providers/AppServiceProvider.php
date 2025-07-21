@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Model bindings para rutas
+        \Illuminate\Support\Facades\Route::model('category', \App\Models\LeagueCategory::class);
     }
 }

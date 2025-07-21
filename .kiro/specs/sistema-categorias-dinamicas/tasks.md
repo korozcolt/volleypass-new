@@ -8,53 +8,53 @@
   - Extender modelo `League` con relación `categories()` y métodos de gestión
   - _Requisitos: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Implementar servicio de asignación automática de categorías
-  - [ ] 2.1 Crear CategoryAssignmentService con lógica de asignación dinámica
+- [x] 2. Implementar servicio de asignación automática de categorías
+  - [x] 2.1 Crear CategoryAssignmentService con lógica de asignación dinámica
     - Implementar método `assignAutomaticCategory()` que consulte configuración de liga
     - Crear lógica de fallback al enum tradicional cuando no hay configuración
     - Implementar validación de elegibilidad por edad, género y reglas especiales
     - _Requisitos: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 2.2 Crear sistema de validación de cambios de categoría
+  - [x] 2.2 Crear sistema de validación de cambios de categoría
     - Implementar `validateCategoryChange()` con validaciones específicas por liga
     - Crear validación de impacto en jugadoras existentes
     - Desarrollar sistema de alertas para cambios masivos
     - _Requisitos: 2.4, 2.5, 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 3. Desarrollar servicio de configuración de categorías por liga
-  - [ ] 3.1 Crear LeagueConfigurationService para gestión de categorías
+- [x] 3. Desarrollar servicio de configuración de categorías por liga
+  - [x] 3.1 Crear LeagueConfigurationService para gestión de categorías
     - Implementar `createDefaultCategories()` para migración inicial
     - Desarrollar `validateCategoryConfiguration()` con validaciones de integridad
     - Crear métodos de importación/exportación de configuraciones
     - _Requisitos: 4.1, 4.2, 4.3, 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [ ] 3.2 Implementar sistema de validación de configuraciones
+  - [x] 3.2 Implementar sistema de validación de configuraciones
     - Crear `CategoryValidationService` para validar rangos de edad
     - Implementar detección de superposición de rangos por género
     - Desarrollar validación de reglas especiales y consistencia de datos
     - _Requisitos: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 4. Crear interface de administración para gestión de categorías
-  - [ ] 4.1 Implementar LeagueCategoryResource en Filament
+- [x] 4. Crear interface de administración para gestión de categorías
+  - [x] 4.1 Implementar LeagueCategoryResource en Filament
     - Crear formularios con validaciones en tiempo real
     - Implementar tabla con filtros por liga, género y estado
     - Desarrollar acciones masivas para activar/desactivar categorías
     - _Requisitos: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ] 4.2 Extender LeagueResource con gestión de categorías
+  - [x] 4.2 Extender LeagueResource con gestión de categorías
     - Agregar tab de "Categorías" con vista de configuración actual
     - Implementar acciones para crear configuración por defecto
     - Crear vista de estadísticas por categoría con número de jugadoras
     - _Requisitos: 5.1, 5.2, 5.3, 5.5, 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 5. Implementar migración segura de datos existentes
-  - [ ] 5.1 Crear migración de datos para jugadoras existentes
+- [x] 5. Implementar migración segura de datos existentes
+  - [x] 5.1 Crear migración de datos para jugadoras existentes
     - Desarrollar script de migración que preserve categorías actuales
     - Implementar creación de configuraciones por defecto para todas las ligas
     - Crear sistema de rollback completo en caso de errores
     - _Requisitos: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 5.2 Implementar validación post-migración
+  - [x] 5.2 Implementar validación post-migración
     - Crear verificación de integridad de datos migrados
     - Implementar detección y corrección de inconsistencias
     - Desarrollar reportes de migración con estadísticas de éxito
