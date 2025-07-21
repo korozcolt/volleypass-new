@@ -17,6 +17,7 @@ enum EventType: string implements HasLabel, HasColor, HasIcon
     case Friendly = 'friendly';
     case Medical_Check = 'medical_check';
     case Registration = 'registration';
+    case Verification = 'verification';
 
     public function getLabel(): ?string
     {
@@ -27,6 +28,7 @@ enum EventType: string implements HasLabel, HasColor, HasIcon
             self::Friendly => 'Partido Amistoso',
             self::Medical_Check => 'Chequeo Médico',
             self::Registration => 'Registro/Inscripción',
+            self::Verification => 'Verificación de Carnet',
         };
     }
 
@@ -39,6 +41,7 @@ enum EventType: string implements HasLabel, HasColor, HasIcon
             self::Friendly => 'info',
             self::Medical_Check => 'purple',
             self::Registration => 'gray',
+            self::Verification => 'info',
         };
     }
 
@@ -51,6 +54,7 @@ enum EventType: string implements HasLabel, HasColor, HasIcon
             self::Friendly => 'heroicon-o-hand-raised',
             self::Medical_Check => 'heroicon-o-heart',
             self::Registration => 'heroicon-o-clipboard-document-list',
+            self::Verification => 'heroicon-o-qr-code',
         };
     }
 
@@ -63,6 +67,7 @@ enum EventType: string implements HasLabel, HasColor, HasIcon
             self::Friendly => 'bg-cyan-100 text-cyan-800',
             self::Medical_Check => 'bg-purple-100 text-purple-800',
             self::Registration => 'bg-gray-100 text-gray-800',
+            self::Verification => 'bg-blue-100 text-blue-800',
         };
     }
 

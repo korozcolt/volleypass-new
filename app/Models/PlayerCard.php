@@ -10,6 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use App\Traits\HasSearch;
 use App\Enums\CardStatus;
+use App\Enums\CardGenerationStatus;
 use App\Enums\MedicalStatus;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -19,10 +20,13 @@ class PlayerCard extends Model
 
     protected $fillable = [
         'player_id',
+        'league_id',
         'card_number',
         'qr_code',
+        'qr_token',
         'verification_token',
         'status',
+        'generation_status',
         'issued_at',
         'expires_at',
         'season',
@@ -32,6 +36,10 @@ class PlayerCard extends Model
         'issued_by',
         'approved_by',
         'approved_at',
+        'generation_started_at',
+        'generation_completed_at',
+        'generation_metadata',
+        'template_version',
         'restrictions',
         'card_design_data',
         'last_verified_at',
@@ -44,11 +52,15 @@ class PlayerCard extends Model
 
     protected $casts = [
         'status' => CardStatus::class,
+        'generation_status' => CardGenerationStatus::class,
         'medical_status' => MedicalStatus::class,
         'issued_at' => 'date',
         'expires_at' => 'date',
         'medical_check_date' => 'date',
         'approved_at' => 'datetime',
+        'generation_started_at' => 'datetime',
+        'generation_completed_at' => 'datetime',
+        'generation_metadata' => 'array',
         'last_verified_at' => 'datetime',
         'restrictions' => 'array',
         'card_design_data' => 'array',
@@ -90,6 +102,11 @@ class PlayerCard extends Model
     public function player(): BelongsTo
     {
         return $this->belongsTo(Player::class);
+    }
+
+    public function league(): BelongsTo
+    {
+        return $this->belongsTo(League::class);
     }
 
     public function issuer(): BelongsTo
@@ -194,13 +211,20 @@ class PlayerCard extends Model
     // MÉTODOS DE NEGOCIO
     // =======================
 
-    public static function generateCardNumber(Player $player): string
+    public static function generateCardNumber(Player $player, ?League $league = null): string
     {
+        $league = $league ?? $player->currentClub->league;
         $year = now()->year;
-        $clubCode = str_pad($player->current_club_id, 3, '0', STR_PAD_LEFT);
-        $sequence = self::where('season', $year)->count() + 1;
 
-        return "VP-{$year}-{$clubCode}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        // Obtener código de liga (máximo 5 caracteres)
+        $leagueCode = $league->short_name ?? strtoupper(substr($league->name, 0, 5));
+
+        // Obtener siguiente número secuencial para esta liga y año
+        $sequence = self::where('league_id', $league->id)
+            ->where('season', $year)
+            ->count() + 1;
+
+        return "{$leagueCode}-{$year}-" . str_pad($sequence, 6, '0', STR_PAD_LEFT);
     }
 
     public function generateQrCode(): void

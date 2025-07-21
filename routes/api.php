@@ -21,6 +21,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/verify-qr', [QrVerificationController::class, 'verify'])->name('api.verify-qr');
     Route::post('/qr-info', [QrVerificationController::class, 'getQrInfo'])->name('api.qr-info');
 
+    // Nuevas rutas de verificación de carnets
+    Route::get('/card/verify/{token}', [\App\Http\Controllers\Api\CardVerificationController::class, 'verify'])->name('api.card.verify');
+    Route::get('/card/number/{cardNumber}', [\App\Http\Controllers\Api\CardVerificationController::class, 'verifyByNumber'])->name('api.card.verify-number');
+
     // Autenticación
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login'])->name('api.auth.login');
@@ -82,6 +86,10 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     // Verificadores
     Route::post('/verify-batch', [QrVerificationController::class, 'verifyBatch'])->name('api.verify-batch');
     Route::get('/stats/dashboard', [QrVerificationController::class, 'getStats'])->name('api.stats.dashboard');
+
+    // Rutas autenticadas de verificación de carnets
+    Route::get('/card/details/{token}', [\App\Http\Controllers\Api\CardVerificationController::class, 'details'])->name('api.card.details');
+    Route::get('/card/stats', [\App\Http\Controllers\Api\CardVerificationController::class, 'stats'])->name('api.card.stats');
 
     // Sesiones de verificación
     Route::prefix('scanner')->group(function () {

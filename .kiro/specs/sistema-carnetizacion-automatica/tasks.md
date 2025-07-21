@@ -2,7 +2,7 @@
 
 ## Tareas de Implementación
 
-- [ ] 1. Configurar infraestructura base del sistema de carnetización
+- [-] 1. Configurar infraestructura base del sistema de carnetización
   - Crear migraciones para tablas de carnets y logs de generación
   - Implementar modelos PlayerCard, CardGenerationLog y CardTemplate
   - Configurar sistema de colas para procesamiento asíncrono
