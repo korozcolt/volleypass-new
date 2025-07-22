@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www
 
