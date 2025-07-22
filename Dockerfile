@@ -1,7 +1,7 @@
 # Etapa 1: Composer build
 FROM composer:2 AS build
 
-# Instalar PHP y extensiones necesarias en Alpine
+# Instalar PHP y extensiones necesarias en Alpine (eliminando el enlace simbólico problemático)
 RUN apk add --no-cache \
     php83 \
     php83-intl \
@@ -15,10 +15,9 @@ RUN apk add --no-cache \
     php83-zip \
     php83-openssl \
     php83-session \
-    php83-fileinfo \
-    && ln -s /usr/bin/php83 /usr/bin/php
+    php83-fileinfo
 
-# Crear archivo php.ini básico para que Composer detecte las extensiones
+# Configurar las extensiones para que Composer las detecte
 RUN echo "extension=intl.so" > /etc/php83/conf.d/intl.ini && \
     echo "extension=gd.so" > /etc/php83/conf.d/gd.ini && \
     echo "extension=exif.so" > /etc/php83/conf.d/exif.ini
