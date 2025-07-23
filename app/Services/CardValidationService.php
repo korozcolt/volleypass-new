@@ -18,17 +18,7 @@ class CardValidationService
         protected CategoryAssignmentService $categoryAssignmentService
     ) {}
 
-    /**
-     * Helper para obtener la categoría como string
-     */
-    private function getCategoryAsString($category): ?string
-    {
-        if ($category === null) {
-            return null;
-        }
 
-        return is_object($category) ? $category->value : (string) $category;
-    }
 
     /**
      * Validar si una jugadora puede tener un carnet generado
@@ -364,8 +354,8 @@ class CardValidationService
 
         try {
             $age = $user->age ?? 0;
-            $gender = $user->gender ? $user->gender->value : 'unknown';
-            $currentCategory = $this->getCategoryAsString($player->category);
+            $gender = $user->gender ?? 'unknown';
+            $currentCategory = is_object($player->category) ? $player->category->value : $player->category;
 
             // Buscar la categoría en la configuración de la liga
             $leagueCategory = $league->categories()
@@ -397,9 +387,9 @@ class CardValidationService
             }
 
             // Validar elegibilidad por género
-            $leagueCategoryGender = $leagueCategory->gender ? $leagueCategory->gender->value : 'mixed';
+            $leagueCategoryGender = $leagueCategory->gender ?? 'mixed';
             if ($leagueCategoryGender !== 'mixed' && $leagueCategoryGender !== $gender) {
-                $errors[] = "El género de la jugadora no coincide con las restricciones de la categoría {$leagueCategory->name}";
+                $errors[] = "El género de la jugadora no coincide con las restricciones de la categoría {$leagueCategory->category_name}";
             }
 
             // Validar reglas especiales si existen
@@ -415,7 +405,8 @@ class CardValidationService
             Log::error('Error validando contra configuración de liga', [
                 'player_id' => $player->id,
                 'league_id' => $league->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             $errors[] = 'Error validando configuración específica de la liga';
         }
@@ -433,7 +424,7 @@ class CardValidationService
     private function validateCategoryIsActive(Player $player, League $league): ValidationResult
     {
         $errors = [];
-        $currentCategory = $this->getCategoryAsString($player->category);
+        $currentCategory = (is_object($player->category) ? $player->category->value : $player->category);
 
         try {
             // Si la liga tiene configuración dinámica, verificar que la categoría esté activa
@@ -521,7 +512,7 @@ class CardValidationService
 
         $ruleType = $rule['type'] ?? '';
         $age = $user->age ?? 0;
-        $gender = $user->gender ? $user->gender->value : 'unknown';
+        $gender = $user->gender ?? 'unknown';
 
         switch ($ruleType) {
             case 'requires_medical_clearance':
@@ -606,8 +597,8 @@ class CardValidationService
             }
 
             $age = $user->age ?? 0;
-            $gender = $user->gender->value;
-            $currentCategory = $this->getCategoryAsString($player->category);
+            $gender = $user->gender ?? 'unknown';
+            $currentCategory = is_object($player->category) ? $player->category->value : $player->category;
 
             // Si la liga tiene configuración dinámica, usar esa validación
             if ($league->hasCustomCategories()) {
@@ -671,7 +662,7 @@ class CardValidationService
         $user = $player->user;
 
         try {
-            $currentCategory = $this->getCategoryAsString($player->category);
+            $currentCategory = (is_object($player->category) ? $player->category->value : $player->category);
 
             // Verificar que la categoría sea válida en el enum
             $playerCategory = PlayerCategory::tryFrom($currentCategory);
@@ -707,14 +698,14 @@ class CardValidationService
     public function getValidationDetails(Player $player, League $league): array
     {
         $user = $player->user;
-        $currentCategory = $this->getCategoryAsString($player->category);
+        $currentCategory = (is_object($player->category) ? $player->category->value : $player->category);
 
         $details = [
             'player_info' => [
                 'id' => $player->id,
                 'name' => $user->full_name,
                 'age' => $user->age ?? 0,
-                'gender' => $user->gender ? $user->gender->value : 'unknown',
+                'gender' => $user->gender ?? 'unknown',
                 'birth_date' => $user->birth_date?->format('Y-m-d'),
                 'current_category' => $currentCategory
             ],
@@ -746,7 +737,7 @@ class CardValidationService
                         'name' => $category->name,
                         'key' => $category->code,
                         'age_range' => $category->getAgeRangeText(),
-                        'gender' => $category->gender ? $category->gender->value : 'mixed',
+                        'gender' => $category->gender ?? 'mixed',
                         'is_eligible' => $category->isAgeEligible($user->age ?? 0),
                         'has_special_rules' => $category->hasSpecialRules()
                     ];
@@ -792,7 +783,7 @@ class CardValidationService
             }
 
             $age = $user->age ?? 0;
-            $currentCategory = $this->getCategoryAsString($player->category);
+            $currentCategory = (is_object($player->category) ? $player->category->value : $player->category);
 
             // Validar usando configuración dinámica si está disponible
             if ($league->hasCustomCategories()) {
@@ -857,8 +848,8 @@ class CardValidationService
 
         try {
             $age = $user->age ?? 0;
-            $gender = $user->gender->value;
-            $currentCategory = $this->getCategoryAsString($player->category);
+            $gender = $user->gender ?? 'unknown';
+            $currentCategory = is_object($player->category) ? $player->category->value : $player->category;
 
             // Buscar la categoría en la configuración de la liga
             $leagueCategory = $league->categories()
@@ -885,9 +876,9 @@ class CardValidationService
             }
 
             // Validar elegibilidad por género
-            $leagueCategoryGender = $leagueCategory->gender ? $leagueCategory->gender->value : 'mixed';
+            $leagueCategoryGender = $leagueCategory->gender ?? 'mixed';
             if ($leagueCategoryGender !== 'mixed' && $leagueCategoryGender !== $gender) {
-                $errors[] = "No se puede generar carnet: el género de la jugadora no es elegible para la categoría {$leagueCategory->name}";
+                $errors[] = "No se puede generar carnet: el género de la jugadora no es elegible para la categoría {$leagueCategory->category_name}";
             }
 
             // Validar reglas especiales para generación de carnets
@@ -1031,7 +1022,7 @@ class CardValidationService
         $user = $player->user;
 
         try {
-            $currentCategory = $this->getCategoryAsString($player->category);
+            $currentCategory = (is_object($player->category) ? $player->category->value : $player->category);
 
             // Verificar que la categoría sea válida en el enum
             $playerCategory = PlayerCategory::tryFrom($currentCategory);
@@ -1073,7 +1064,7 @@ class CardValidationService
     private function validateCategoryAvailabilityForCards(Player $player, League $league): ValidationResult
     {
         $errors = [];
-        $currentCategory = $this->getCategoryAsString($player->category);
+        $currentCategory = (is_object($player->category) ? $player->category->value : $player->category);
 
         try {
             if ($league->hasCustomCategories()) {

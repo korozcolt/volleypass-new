@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Club;
 use App\Models\League;
-use App\Models\City;
 use App\Models\User;
 use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,7 +21,7 @@ class ClubFactory extends Factory
             'name' => $name,
             'short_name' => strtoupper(substr($name, 0, 3)),
             'description' => $this->faker->paragraph(),
-            'city_id' => City::factory(),
+            'city_id' => 1, // Use seeded city data
             'address' => $this->faker->address(),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),

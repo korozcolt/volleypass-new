@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use App\Traits\HasSearch;
 
 class Department extends Model
 {
-    use LogsActivity;
+    use HasFactory, LogsActivity;
     use HasSearch; // SIN HasUuid trait
 
     protected $fillable = [

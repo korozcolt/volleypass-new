@@ -21,9 +21,9 @@ class LeagueFactory extends Factory
             'name' => $name,
             'short_name' => strtoupper(substr($name, 0, 3)),
             'description' => $this->faker->paragraph(),
-            'country_id' => Country::factory(),
-            'department_id' => Department::factory(),
-            'city_id' => City::factory(),
+            'country_id' => null, // Will be set by withLocation() method or seeded data
+            'department_id' => null, // Will be set by withLocation() method or seeded data
+            'city_id' => null, // Will be set by withLocation() method or seeded data
             'status' => UserStatus::Active,
             'foundation_date' => $this->faker->dateTimeBetween('-10 years', '-1 year'),
             'website' => $this->faker->optional()->url(),
@@ -66,5 +66,23 @@ class LeagueFactory extends Factory
 
             return ['configurations' => $configurations];
         });
+    }
+
+    public function withLocation(int $countryId = 1, int $departmentId = 1, int $cityId = 1): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'country_id' => $countryId,
+            'department_id' => $departmentId,
+            'city_id' => $cityId,
+        ]);
+    }
+
+    public function forTesting(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'country_id' => 1,
+            'department_id' => 1,
+            'city_id' => 1,
+        ]);
     }
 }

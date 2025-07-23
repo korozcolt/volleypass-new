@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -13,7 +14,7 @@ use App\Traits\HasSearch;
 
 class Country extends Model implements HasMedia
 {
-    use InteractsWithMedia, LogsActivity;
+    use HasFactory, InteractsWithMedia, LogsActivity;
     use HasSearch; // SIN HasUuid trait
 
     protected $fillable = [

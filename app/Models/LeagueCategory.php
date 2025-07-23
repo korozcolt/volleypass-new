@@ -133,12 +133,36 @@ class LeagueCategory extends Model
     // =======================
 
     /**
+     * Verifica si una edad es elegible para esta categoría
+     */
+    public function isAgeEligible(int $age): bool
+    {
+        return $age >= $this->min_age && $age <= $this->max_age;
+    }
+
+    /**
+     * Obtiene el texto del rango de edad
+     */
+    public function getAgeRangeText(): string
+    {
+        return "{$this->min_age}-{$this->max_age} años";
+    }
+
+    /**
+     * Verifica si tiene reglas especiales
+     */
+    public function hasSpecialRules(): bool
+    {
+        return !empty($this->special_rules);
+    }
+
+    /**
      * Verifica si una jugadora es elegible para esta categoría
      */
     public function isEligibleForPlayer(int $age, string $gender): bool
     {
         // Verificar rango de edad
-        if ($age < $this->min_age || $age > $this->max_age) {
+        if (!$this->isAgeEligible($age)) {
             return false;
         }
 
@@ -148,7 +172,7 @@ class LeagueCategory extends Model
         }
 
         // Verificar reglas especiales si existen
-        if ($this->special_rules) {
+        if ($this->hasSpecialRules()) {
             return $this->validateSpecialRules($age, $gender);
         }
 
