@@ -60,21 +60,21 @@
     - Desarrollar reportes de migración con estadísticas de éxito
     - _Requisitos: 4.3, 4.4, 4.5_
 
-- [ ] 6. Actualizar sistema de validación de carnets
-  - [ ] 6.1 Modificar CardValidationService para usar categorías dinámicas
+- [x] 6. Actualizar sistema de validación de carnets
+  - [x] 6.1 Modificar CardValidationService para usar categorías dinámicas
     - Actualizar validación de categorías en generación automática de carnets
     - Implementar verificación contra configuración específica de liga
     - Crear mensajes de error específicos para categorías inválidas
     - _Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 6.2 Integrar validaciones dinámicas en AutomaticCardGenerationService
+  - [x] 6.2 Integrar validaciones dinámicas en AutomaticCardGenerationService
     - Modificar proceso de validación pre-generación
     - Implementar verificación de categorías especiales
     - Crear logging específico para errores de categoría
     - _Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 7. Mantener compatibilidad con sistema existente
-  - [ ] 7.1 Extender PlayerCategory enum con métodos dinámicos
+- [-] 7. Mantener compatibilidad con sistema existente
+  - [x] 7.1 Extender PlayerCategory enum con métodos dinámicos
     - Implementar `getForAge()` que considere configuración de liga
     - Crear `getAgeRange()` con soporte para rangos dinámicos
     - Mantener métodos existentes para compatibilidad total

@@ -17,6 +17,14 @@ El Sistema de Categorías Dinámicas permite que cada liga configure sus propios
 - **Liga B**: Mini (8-10), Infantil (11-14), Juvenil (15-17)  
 - **Liga C**: Sin Masters, con Sub-21 (19-21)
 
+## Restricciones Técnicas
+
+### Restricción de Datos Geográficos
+- **NO** se deben crear factories para Country, Department y City
+- Los datos geográficos se poblarán exclusivamente mediante seeders
+- Los tests deben usar datos directos o mocks en lugar de factories geográficos
+- Esta restricción aplica a todos los tests y desarrollo del sistema
+
 ## Requisitos
 
 ### Requisito 1: Configuración Flexible de Categorías por Liga
