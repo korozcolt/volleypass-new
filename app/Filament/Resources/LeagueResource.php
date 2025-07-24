@@ -128,11 +128,88 @@ class LeagueResource extends Resource
 
                                 Forms\Components\Section::make('Configuración de Categorías')
                                     ->description('Gestiona las categorías de edad específicas de esta liga')
+                                    ->icon('heroicon-o-users')
+                                    ->collapsible()
                                     ->schema([
-                                        Forms\Components\ViewField::make('categories_management')
+                                        Forms\Components\Repeater::make('categories')
+                                            ->relationship('categories')
                                             ->label('')
-                                            ->view('filament.forms.components.league-categories-manager')
-                                            ->viewData(fn($record) => ['league' => $record]),
+                                            ->schema([
+                                                Forms\Components\Grid::make(3)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('name')
+                                                            ->label('Nombre')
+                                                            ->placeholder('Ej: Mini, Infantil, Juvenil')
+                                                            ->required()
+                                                            ->columnSpan(1),
+                                                            
+                                                        Forms\Components\TextInput::make('code')
+                                                            ->label('Código')
+                                                            ->placeholder('Ej: MINI, INF, JUV')
+                                                            ->alphaDash()
+                                                            ->columnSpan(1),
+                                                            
+                                                        Forms\Components\Select::make('gender')
+                                                            ->label('Género')
+                                                            ->options([
+                                                                'mixed' => 'Mixto',
+                                                                'male' => 'Masculino',
+                                                                'female' => 'Femenino'
+                                                            ])
+                                                            ->required()
+                                                            ->columnSpan(1),
+                                                    ]),
+                                                    
+                                                Forms\Components\Grid::make(3)
+                                                    ->schema([
+                                                        Forms\Components\TextInput::make('min_age')
+                                                            ->label('Edad Mínima')
+                                                            ->numeric()
+                                                            ->minValue(5)
+                                                            ->maxValue(100)
+                                                            ->required()
+                                                            ->live()
+                                                            ->columnSpan(1),
+                                                            
+                                                        Forms\Components\TextInput::make('max_age')
+                                                            ->label('Edad Máxima')
+                                                            ->numeric()
+                                                            ->minValue(5)
+                                                            ->maxValue(100)
+                                                            ->required()
+                                                            ->live()
+                                                            ->afterStateUpdated(function ($state, $get, $set) {
+                                                                if ($state <= $get('min_age')) {
+                                                                    $set('max_age', $get('min_age') + 1);
+                                                                }
+                                                            })
+                                                            ->columnSpan(1),
+                                                            
+                                                        Forms\Components\TextInput::make('sort_order')
+                                                            ->label('Orden')
+                                                            ->numeric()
+                                                            ->default(0)
+                                                            ->columnSpan(1),
+                                                    ]),
+                                                    
+                                                Forms\Components\Textarea::make('description')
+                                                    ->label('Descripción')
+                                                    ->placeholder('Descripción opcional de la categoría')
+                                                    ->columnSpanFull()
+                                                    ->rows(2),
+                                                    
+                                                Forms\Components\Toggle::make('is_active')
+                                                    ->label('Activa')
+                                                    ->default(true)
+                                                    ->inline(false),
+                                            ])
+                                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Nueva categoría')
+                                            ->addActionLabel('Agregar categoría')
+                                            ->reorderableWithButtons()
+                                            ->cloneable()
+                                            ->collapsible()
+                                            ->defaultItems(0)
+                                            ->minItems(0)
                                     ])
                                     ->visible(fn($record) => $record),
                             ]),
