@@ -4,35 +4,51 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClubResource\Pages;
 use App\Models\Club;
-use App\Models\League;
+use App\Models\Department;
+use App\Models\City;
 use App\Models\User;
+use App\Enums\FederationStatus;
 use App\Enums\UserStatus;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\Grid;
 use Filament\Support\Enums\FontWeight;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class ClubResource extends Resource
 {
     protected static ?string $model = Club::class;
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?string $navigationLabel = 'Clubes';
-    protected static ?string $modelLabel = 'Club';
-    protected static ?string $pluralModelLabel = 'Clubes';
-    protected static ?string $navigationGroup = 'Configuración';
-    protected static ?int $navigationSort = 2;
 
+    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    
+    protected static ?string $navigationLabel = 'Clubes';
+    
+    protected static ?string $navigationGroup = 'Gestión de Clubes';
+    
+    protected static ?int $navigationSort = 1;
+    
+    protected static ?string $modelLabel = 'Club';
+    
+    protected static ?string $pluralModelLabel = 'Clubes';
+    
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Tabs::make('Tabs')
+                Forms\Components\Tabs::make('Información del Club')
                     ->tabs([
                         Forms\Components\Tabs\Tab::make('Información General')
                             ->schema([
@@ -41,234 +57,147 @@ class ClubResource extends Resource
                                         Forms\Components\TextInput::make('name')
                                             ->label('Nombre')
                                             ->required()
-                                            ->maxLength(255)
-                                            ->live(onBlur: true)
-                                            ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
-                                                if ($operation !== 'create') {
-                                                    return;
-                                                }
-                                                $set('short_name', str($state)->limit(10)->toString());
-                                            }),
-
+                                            ->maxLength(100)
+                                            ->columnSpan(1),
                                         Forms\Components\TextInput::make('short_name')
                                             ->label('Nombre Corto')
-                                            ->maxLength(50)
-                                            ->required(),
-
-                                        Forms\Components\Select::make('league_id')
-                                            ->label('Liga')
-                                            ->relationship('league', 'name')
-                                            ->required()
-                                            ->searchable()
-                                            ->preload(),
-
-                                        Forms\Components\Select::make('director_id')
-                                            ->label('Director')
-                                            ->relationship('director', 'name')
-                                            ->searchable()
-                                            ->preload()
-                                            ->createOptionForm([
-                                                Forms\Components\TextInput::make('name')
-                                                    ->required(),
-                                                Forms\Components\TextInput::make('email')
-                                                    ->email()
-                                                    ->required(),
-                                            ]),
-
-                                        Forms\Components\Select::make('status')
-                                            ->label('Estado')
-                                            ->options(UserStatus::class)
-                                            ->required()
-                                            ->default('active'),
-
-                                        Forms\Components\DatePicker::make('foundation_date')
-                                            ->label('Fecha de Fundación')
-                                            ->maxDate(now()),
+                                            ->maxLength(20)
+                                            ->columnSpan(1),
                                     ]),
-
-                                Forms\Components\Textarea::make('description')
-                                    ->label('Descripción')
-                                    ->rows(3)
-                                    ->columnSpanFull(),
-
-                                Forms\Components\Grid::make(3)
+                                Forms\Components\Grid::make(2)
                                     ->schema([
-                                        Forms\Components\TextInput::make('colors')
-                                            ->label('Colores del Club'),
-
                                         Forms\Components\TextInput::make('email')
-                                            ->label('Email')
                                             ->email()
-                                            ->maxLength(255)
-                                            ->live(onBlur: true)
-                                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                                if (filter_var($state, FILTER_VALIDATE_EMAIL)) {
-                                                    $set('email_verified', true);
-                                                }
-                                            }),
-
+                                            ->unique(ignoreRecord: true)
+                                            ->columnSpan(1),
                                         Forms\Components\TextInput::make('phone')
                                             ->label('Teléfono')
                                             ->tel()
-                                            ->maxLength(20),
+                                            ->columnSpan(1),
                                     ]),
-
+                                Forms\Components\Textarea::make('address')
+                                    ->label('Dirección')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
                                 Forms\Components\Grid::make(2)
                                     ->schema([
-                                        Forms\Components\TextInput::make('website')
-                                            ->label('Sitio Web')
-                                            ->url()
-                                            ->maxLength(255)
-                                            ->prefix('https://'),
-
-                                        Forms\Components\TextInput::make('address')
-                                            ->label('Dirección')
-                                            ->maxLength(255),
-                                    ]),
-
-                                Forms\Components\Grid::make(3)
-                                    ->schema([
-                                        Forms\Components\Select::make('country_id')
-                                            ->label('País')
-                                            ->relationship('country', 'name')
-                                            ->searchable()
-                                            ->preload()
-                                            ->live(),
-
                                         Forms\Components\Select::make('department_id')
                                             ->label('Departamento')
                                             ->relationship('department', 'name')
                                             ->searchable()
                                             ->preload()
-                                            ->live(),
-
+                                            ->live()
+                                            ->afterStateUpdated(fn (Forms\Set $set) => $set('city_id', null))
+                                            ->columnSpan(1),
                                         Forms\Components\Select::make('city_id')
                                             ->label('Ciudad')
-                                            ->relationship('city', 'name')
+                                            ->relationship(
+                                                name: 'city',
+                                                titleAttribute: 'name',
+                                                modifyQueryUsing: fn (Builder $query, Forms\Get $get): Builder => 
+                                                    $query->where('department_id', $get('department_id'))
+                                            )
                                             ->searchable()
-                                            ->preload(),
+                                            ->preload()
+                                            ->columnSpan(1),
                                     ]),
-                            ]),
-
-                        Forms\Components\Tabs\Tab::make('Configuración')
-                            ->schema([
                                 Forms\Components\Grid::make(2)
                                     ->schema([
-                                        Forms\Components\Select::make('federation_type')
-                                            ->label('Tipo de Federación')
-                                            ->options([
-                                                'national' => 'Nacional',
-                                                'regional' => 'Regional',
-                                                'local' => 'Local',
-                                                'none' => 'Sin Federación',
-                                            ])
-                                            ->default('local')
-                                            ->live(),
-
-                                        Forms\Components\Toggle::make('is_active')
-                                            ->label('Club Activo')
-                                            ->default(true),
-
-                                        Forms\Components\Toggle::make('accepts_transfers')
-                                            ->label('Acepta Transferencias')
-                                            ->default(true),
-
-                                        Forms\Components\Toggle::make('auto_approve_players')
-                                            ->label('Auto-aprobar Jugadoras')
-                                            ->default(false),
+                                        Forms\Components\DatePicker::make('foundation_date')
+                                            ->label('Fecha de Fundación')
+                                            ->columnSpan(1),
+                                        Forms\Components\FileUpload::make('logo')
+                                            ->image()
+                                            ->maxSize(2048)
+                                            ->directory('clubs/logos')
+                                            ->columnSpan(1),
                                     ]),
-
-                                Forms\Components\KeyValue::make('settings')
-                                    ->label('Configuraciones Adicionales')
-                                    ->keyLabel('Clave')
-                                    ->valueLabel('Valor')
-                                    ->addActionLabel('Agregar configuración'),
-
-                                Forms\Components\Textarea::make('notes')
-                                    ->label('Notas Administrativas')
-                                    ->rows(4)
+                            ]),
+                        Forms\Components\Tabs\Tab::make('Configuración Federación')
+                            ->schema([
+                                Forms\Components\Toggle::make('es_federado')
+                                    ->label('¿Es Federado?')
+                                    ->live()
+                                    ->columnSpanFull(),
+                                Forms\Components\Grid::make(2)
+                                    ->schema([
+                                        Forms\Components\Select::make('tipo_federacion')
+                                            ->label('Tipo de Federación')
+                                            ->options(FederationStatus::class)
+                                            ->visible(fn (Forms\Get $get): bool => $get('es_federado'))
+                                            ->columnSpan(1),
+                                        Forms\Components\TextInput::make('codigo_federacion')
+                                            ->label('Código de Federación')
+                                            ->unique(ignoreRecord: true)
+                                            ->visible(fn (Forms\Get $get): bool => $get('es_federado'))
+                                            ->columnSpan(1),
+                                    ]),
+                                Forms\Components\DatePicker::make('vencimiento_federacion')
+                                    ->label('Vencimiento de Federación')
+                                    ->visible(fn (Forms\Get $get): bool => $get('es_federado'))
+                                    ->columnSpanFull(),
+                                Forms\Components\Textarea::make('observaciones_federacion')
+                                    ->label('Observaciones de Federación')
+                                    ->rows(3)
                                     ->columnSpanFull(),
                             ]),
-
                         Forms\Components\Tabs\Tab::make('Directivos')
                             ->schema([
-                                Forms\Components\Repeater::make('club_directors')
-                                    ->label('Directivos del Club')
-                                    ->relationship()
+                                Forms\Components\Repeater::make('directivos')
+                                    ->relationship('directivos')
                                     ->schema([
                                         Forms\Components\Grid::make(3)
                                             ->schema([
                                                 Forms\Components\Select::make('user_id')
-                                                    ->label('Persona')
+                                                    ->label('Usuario')
                                                     ->relationship('user', 'name')
                                                     ->searchable()
                                                     ->preload()
-                                                    ->required(),
-
-                                                Forms\Components\Select::make('role')
-                                                    ->label('Cargo')
+                                                    ->required()
+                                                    ->columnSpan(1),
+                                                Forms\Components\Select::make('rol')
+                                                    ->label('Rol')
                                                     ->options([
-                                                        'president' => 'Presidente',
-                                                        'vice_president' => 'Vicepresidente',
-                                                        'secretary' => 'Secretario',
-                                                        'treasurer' => 'Tesorero',
+                                                        'presidente' => 'Presidente',
                                                         'director' => 'Director',
-                                                        'coach' => 'Entrenador',
+                                                        'secretario' => 'Secretario',
+                                                        'tesorero' => 'Tesorero',
                                                     ])
-                                                    ->required(),
-
-                                                Forms\Components\Toggle::make('is_active')
+                                                    ->required()
+                                                    ->columnSpan(1),
+                                                Forms\Components\Toggle::make('activo')
                                                     ->label('Activo')
-                                                    ->default(true),
+                                                    ->default(true)
+                                                    ->columnSpan(1),
                                             ]),
-
                                         Forms\Components\Grid::make(2)
                                             ->schema([
-                                                Forms\Components\DatePicker::make('start_date')
+                                                Forms\Components\DatePicker::make('fecha_inicio')
                                                     ->label('Fecha de Inicio')
-                                                    ->default(now())
-                                                    ->required(),
-
-                                                Forms\Components\DatePicker::make('end_date')
+                                                    ->required()
+                                                    ->columnSpan(1),
+                                                Forms\Components\DatePicker::make('fecha_fin')
                                                     ->label('Fecha de Fin')
-                                                    ->after('start_date'),
+                                                    ->columnSpan(1),
                                             ]),
                                     ])
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['role'] ?? null)
+                                    ->itemLabel(fn (array $state): ?string => 
+                                        $state['rol'] ?? 'Nuevo Directivo'
+                                    )
                                     ->addActionLabel('Agregar Directivo')
-                                    ->defaultItems(0),
+                                    ->columnSpanFull(),
                             ]),
-
-                        Forms\Components\Tabs\Tab::make('Medios')
+                        Forms\Components\Tabs\Tab::make('Estadísticas')
                             ->schema([
-                                Forms\Components\Grid::make(2)
-                                    ->schema([
-                                        Forms\Components\FileUpload::make('logo')
-                                            ->label('Logo del Club')
-                                            ->image()
-                                            ->imageEditor()
-                                            ->maxSize(2048)
-                                            ->directory('clubs/logos')
-                                            ->visibility('public')
-                                            ->imageResizeMode('cover')
-                                            ->imageCropAspectRatio('1:1')
-                                            ->imageResizeTargetWidth('200')
-                                            ->imageResizeTargetHeight('200'),
-
-                                        Forms\Components\FileUpload::make('photos')
-                                            ->label('Fotos del Club')
-                                            ->image()
-                                            ->multiple()
-                                            ->maxSize(2048)
-                                            ->maxFiles(10)
-                                            ->directory('clubs/photos')
-                                            ->visibility('public')
-                                            ->imageResizeMode('cover')
-                                            ->imageResizeTargetWidth('800')
-                                            ->imageResizeTargetHeight('600'),
-                                    ]),
-                            ]),
+                                Forms\Components\Placeholder::make('estadisticas')
+                                    ->label('Estadísticas del Club')
+                                    ->content(fn (?Club $record): string => 
+                                        $record ? view('filament.components.club-stats', compact('record'))->render() : 'No disponible'
+                                    )
+                                    ->columnSpanFull(),
+                            ])
+                            ->visible(fn (?Club $record): bool => $record !== null),
                     ])
                     ->columnSpanFull(),
             ]);
@@ -279,319 +208,277 @@ class ClubResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('logo')
-                    ->label('Logo')
                     ->circular()
                     ->size(40)
-                    ->defaultImageUrl(url('/images/default-club-logo.png')),
-
+                    ->defaultImageUrl(url('/images/default-club.png')),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
                     ->sortable()
-                    ->weight(FontWeight::Bold)
-                    ->copyable(),
-
+                    ->weight(FontWeight::Bold),
                 Tables\Columns\TextColumn::make('short_name')
-                    ->label('Siglas')
+                    ->label('Nombre Corto')
                     ->searchable()
-                    ->badge()
-                    ->color('gray'),
-
-                Tables\Columns\TextColumn::make('league.name')
-                    ->label('Liga')
+                    ->badge(),
+                Tables\Columns\TextColumn::make('department.name')
+                    ->label('Departamento')
                     ->sortable()
-                    ->searchable()
-                    ->badge()
-                    ->color('primary'),
-
-                Tables\Columns\TextColumn::make('federation_type')
-                    ->label('Federación')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'national' => 'success',
-                        'regional' => 'warning',
-                        'local' => 'info',
-                        'none' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'national' => 'Nacional',
-                        'regional' => 'Regional',
-                        'local' => 'Local',
-                        'none' => 'Sin Federación',
-                        default => $state,
-                    }),
-
-                Tables\Columns\TextColumn::make('players_count')
-                    ->label('Jugadoras')
-                    ->counts('players')
-                    ->badge()
-                    ->color(fn ($state): string => match (true) {
-                        $state >= 50 => 'success',
-                        $state >= 20 => 'warning',
-                        $state > 0 => 'info',
-                        default => 'gray',
-                    })
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('director.name')
-                    ->label('Director')
-                    ->sortable()
-                    ->searchable()
                     ->toggleable(),
-
                 Tables\Columns\TextColumn::make('city.name')
                     ->label('Ciudad')
                     ->sortable()
-                    ->searchable()
                     ->toggleable(),
-
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Estado')
+                Tables\Columns\IconColumn::make('es_federado')
+                    ->label('Federado')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
+                Tables\Columns\TextColumn::make('tipo_federacion')
+                    ->label('Tipo Federación')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'inactive' => 'danger',
-                        'pending' => 'warning',
-                        'suspended' => 'gray',
+                    ->color(fn (?string $state): string => match ($state) {
+                        'activa' => 'success',
+                        'suspendida' => 'warning',
+                        'cancelada' => 'danger',
                         default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('foundation_date')
-                    ->label('Fundado')
-                    ->date('d/m/Y')
+                    })
+                    ->visible(fn ($record) => $record && $record->es_federado),
+                Tables\Columns\TextColumn::make('players_count')
+                    ->label('Jugadoras')
+                    ->counts('players')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
+                    ->badge()
+                    ->color('primary'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Registrado')
-                    ->dateTime('d/m/Y H:i')
+                    ->label('Creado')
+                    ->dateTime('d/m/Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->label('Estado')
-                    ->options(UserStatus::class)
-                    ->multiple(),
-
-                Tables\Filters\SelectFilter::make('league')
-                    ->label('Liga')
-                    ->relationship('league', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->multiple(),
-
-                Tables\Filters\SelectFilter::make('federation_type')
-                    ->label('Tipo de Federación')
-                    ->options([
-                        'national' => 'Nacional',
-                        'regional' => 'Regional',
-                        'local' => 'Local',
-                        'none' => 'Sin Federación',
-                    ])
-                    ->multiple(),
-
-                Tables\Filters\SelectFilter::make('department')
+                SelectFilter::make('department_id')
                     ->label('Departamento')
                     ->relationship('department', 'name')
                     ->searchable()
                     ->preload(),
-
-                Tables\Filters\Filter::make('players_count')
+                SelectFilter::make('tipo_federacion')
+                    ->label('Tipo Federación')
+                    ->options(FederationStatus::class),
+                Tables\Filters\TernaryFilter::make('es_federado')
+                    ->label('Estado Federación')
+                    ->boolean()
+                    ->trueLabel('Federados')
+                    ->falseLabel('No Federados')
+                    ->native(false),
+                Filter::make('fecha_fundacion')
                     ->form([
-                        Forms\Components\Grid::make(2)
-                            ->schema([
-                                Forms\Components\TextInput::make('players_from')
-                                    ->label('Jugadoras desde')
-                                    ->numeric()
-                                    ->placeholder('0'),
-                                Forms\Components\TextInput::make('players_until')
-                                    ->label('Jugadoras hasta')
-                                    ->numeric()
-                                    ->placeholder('100'),
-                            ]),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['players_from'],
-                                fn (Builder $query, $value): Builder => $query->withCount('players')->having('players_count', '>=', $value),
-                            )
-                            ->when(
-                                $data['players_until'],
-                                fn (Builder $query, $value): Builder => $query->withCount('players')->having('players_count', '<=', $value),
-                            );
-                    }),
-
-                Tables\Filters\Filter::make('foundation_date')
-                    ->form([
-                        Forms\Components\DatePicker::make('founded_from')
+                        DatePicker::make('fundacion_desde')
                             ->label('Fundado desde'),
-                        Forms\Components\DatePicker::make('founded_until')
+                        DatePicker::make('fundacion_hasta')
                             ->label('Fundado hasta'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['founded_from'],
+                                $data['fundacion_desde'],
                                 fn (Builder $query, $date): Builder => $query->whereDate('foundation_date', '>=', $date),
                             )
                             ->when(
-                                $data['founded_until'],
+                                $data['fundacion_hasta'],
                                 fn (Builder $query, $date): Builder => $query->whereDate('foundation_date', '<=', $date),
                             );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['fundacion_desde'] ?? null) {
+                            $indicators[] = 'Fundado desde ' . Carbon::parse($data['fundacion_desde'])->toFormattedDateString();
+                        }
+                        if ($data['fundacion_hasta'] ?? null) {
+                            $indicators[] = 'Fundado hasta ' . Carbon::parse($data['fundacion_hasta'])->toFormattedDateString();
+                        }
+                        return $indicators;
                     }),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\Action::make('view_players')
-                        ->label('Ver Jugadoras')
-                        ->icon('heroicon-o-users')
-                        ->url(fn ($record) => route('filament.admin.resources.players.index', ['tableFilters[club][value]' => $record->id])),
-                    Tables\Actions\Action::make('generate_cards')
-                        ->label('Generar Carnets')
-                        ->icon('heroicon-o-identification')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->action(function ($record) {
-                            // Lógica para generar carnets masivos
-                            \Filament\Notifications\Notification::make()
-                                ->title('Carnets generados')
-                                ->body("Se han generado los carnets para {$record->name}")
-                                ->success()
-                                ->send();
-                        }),
-                ])
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('Eliminar Club')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar este club? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('federate')
+                    Tables\Actions\BulkAction::make('federar')
                         ->label('Federar Clubes')
-                        ->icon('heroicon-o-check-circle')
+                        ->icon('heroicon-o-check-badge')
                         ->color('success')
-                        ->requiresConfirmation()
                         ->form([
-                            Forms\Components\Select::make('federation_type')
+                            Forms\Components\Select::make('tipo_federacion')
                                 ->label('Tipo de Federación')
-                                ->options([
-                                    'national' => 'Nacional',
-                                    'regional' => 'Regional',
-                                    'local' => 'Local',
-                                ])
+                                ->options(FederationStatus::class)
+                                ->required(),
+                            Forms\Components\DatePicker::make('vencimiento_federacion')
+                                ->label('Vencimiento de Federación')
                                 ->required(),
                         ])
-                        ->action(function (Collection $records, array $data) {
-                            $records->each(function ($record) use ($data) {
-                                $record->update(['federation_type' => $data['federation_type']]);
-                            });
-                            \Filament\Notifications\Notification::make()
-                                ->title('Clubes federados')
-                                ->body("Se han federado {$records->count()} clubes")
-                                ->success()
-                                ->send();
-                        }),
-                    Tables\Actions\BulkAction::make('export')
+                        ->action(function (array $data, Collection $records) {
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'es_federado' => true,
+                                    'tipo_federacion' => $data['tipo_federacion'],
+                                    'vencimiento_federacion' => $data['vencimiento_federacion'],
+                                ]);
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('cambiar_tipo_federacion')
+                        ->label('Cambiar Tipo Federación')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('warning')
+                        ->form([
+                            Forms\Components\Select::make('tipo_federacion')
+                                ->label('Nuevo Tipo de Federación')
+                                ->options(FederationStatus::class)
+                                ->required(),
+                        ])
+                        ->action(function (array $data, Collection $records) {
+                            foreach ($records as $record) {
+                                if ($record->es_federado) {
+                                    $record->update([
+                                        'tipo_federacion' => $data['tipo_federacion'],
+                                    ]);
+                                }
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('exportar')
                         ->label('Exportar Datos')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('info')
                         ->action(function (Collection $records) {
-                            // Lógica de exportación
                             \Filament\Notifications\Notification::make()
                                 ->title('Exportación iniciada')
                                 ->body("Se están exportando {$records->count()} clubes")
                                 ->info()
                                 ->send();
                         }),
+                    Tables\Actions\BulkAction::make('notificar')
+                        ->label('Enviar Notificaciones')
+                        ->icon('heroicon-o-bell')
+                        ->color('warning')
+                        ->form([
+                            Forms\Components\Textarea::make('mensaje')
+                                ->label('Mensaje')
+                                ->required()
+                                ->rows(3),
+                        ])
+                        ->action(function (array $data, Collection $records) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Notificaciones enviadas')
+                                ->body("Se han enviado notificaciones a {$records->count()} clubes")
+                                ->success()
+                                ->send();
+                        }),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Eliminar Clubes Seleccionados')
+                        ->modalDescription('¿Estás seguro de que deseas eliminar los clubes seleccionados? Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Sí, eliminar'),
                 ]),
             ])
             ->defaultSort('name')
-            ->striped()
-            ->paginated([10, 25, 50, 100]);
+            ->searchOnBlur()
+            ->persistSearchInSession()
+            ->persistColumnSearchesInSession();
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Información General')
+                Section::make('Información General')
                     ->schema([
-                        Infolists\Components\ImageEntry::make('logo')
-                            ->label('Logo')
-                            ->circular()
-                            ->size(80),
-
-                        Infolists\Components\TextEntry::make('name')
-                            ->label('Nombre'),
-
-                        Infolists\Components\TextEntry::make('short_name')
-                            ->label('Nombre Corto'),
-
-                        Infolists\Components\TextEntry::make('description')
-                            ->label('Descripción'),
-
-                        Infolists\Components\TextEntry::make('league.name')
-                            ->label('Liga'),
-
-                        Infolists\Components\TextEntry::make('director.name')
-                            ->label('Director'),
-
-                        Infolists\Components\TextEntry::make('status')
-                            ->label('Estado')
-                            ->badge(),
-
-                        Infolists\Components\TextEntry::make('colors')
-                            ->label('Colores'),
-                    ])->columns(2),
-
-                Infolists\Components\Section::make('Ubicación')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('address')
-                            ->label('Dirección'),
-
-                        Infolists\Components\TextEntry::make('city.name')
-                            ->label('Ciudad'),
-
-                        Infolists\Components\TextEntry::make('department.name')
-                            ->label('Departamento'),
-
-                        Infolists\Components\TextEntry::make('country.name')
-                            ->label('País'),
-                    ])->columns(2),
-
-                Infolists\Components\Section::make('Contacto')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('email')
-                            ->label('Email')
-                            ->copyable(),
-
-                        Infolists\Components\TextEntry::make('phone')
-                            ->label('Teléfono')
-                            ->copyable(),
-
-                        Infolists\Components\TextEntry::make('website')
-                            ->label('Sitio Web')
-                            ->url(fn($record) => $record->website)
-                            ->openUrlInNewTab(),
-                    ])->columns(3),
-
-                Infolists\Components\Section::make('Estadísticas')
-                    ->schema([
-                        Infolists\Components\TextEntry::make('players_count')
-                            ->label('Total de Jugadoras')
-                            ->state(fn($record) => $record->players()->count()),
-
-                        Infolists\Components\TextEntry::make('teams_count')
-                            ->label('Total de Equipos')
-                            ->state(fn($record) => \App\Models\Team::where('club_id', $record->id)->count()),
-
-                        Infolists\Components\TextEntry::make('foundation_date')
+                        Grid::make(3)
+                            ->schema([
+                                ImageEntry::make('logo')
+                                    ->circular()
+                                    ->size(80)
+                                    ->columnSpan(1),
+                                \Filament\Infolists\Components\Group::make([
+                                    TextEntry::make('nombre')
+                                        ->size('lg')
+                                        ->weight('bold'),
+                                    TextEntry::make('nombre_corto')
+                                        ->badge(),
+                                    TextEntry::make('email')
+                                        ->icon('heroicon-o-envelope'),
+                                    TextEntry::make('telefono')
+                                        ->icon('heroicon-o-phone'),
+                                ])->columnSpan(2),
+                            ]),
+                        TextEntry::make('direccion')
+                            ->icon('heroicon-o-map-pin'),
+                        Grid::make(2)
+                            ->schema([
+                                TextEntry::make('department.nombre')
+                                    ->label('Departamento'),
+                                TextEntry::make('city.nombre')
+                                    ->label('Ciudad'),
+                            ]),
+                        TextEntry::make('fundacion')
                             ->label('Fecha de Fundación')
-                            ->date(),
-                    ])->columns(3),
+                            ->date('d/m/Y'),
+                    ]),
+                Section::make('Estado de Federación')
+                    ->schema([
+                        TextEntry::make('es_federado')
+                             ->label('¿Es Federado?')
+                             ->badge()
+                             ->color(fn ($state) => $state ? 'success' : 'danger')
+                             ->formatStateUsing(fn ($state) => $state ? 'Sí' : 'No'),
+                        TextEntry::make('tipo_federacion')
+                            ->label('Tipo de Federación')
+                            ->badge()
+                            ->visible(fn ($record) => $record && $record->es_federado),
+                        TextEntry::make('codigo_federacion')
+                            ->label('Código de Federación')
+                            ->visible(fn ($record) => $record && $record->es_federado),
+                        TextEntry::make('vencimiento_federacion')
+                            ->label('Vencimiento de Federación')
+                            ->date('d/m/Y')
+                            ->visible(fn ($record) => $record && $record->es_federado),
+                        TextEntry::make('observaciones_federacion')
+                            ->label('Observaciones')
+                            ->visible(fn ($record) => $record && $record->observaciones_federacion),
+                    ])
+                    ->visible(fn ($record) => $record && $record->es_federado),
+                Section::make('Estadísticas')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextEntry::make('players_count')
+                                    ->label('Total Jugadoras')
+                                    ->state(fn ($record) => $record->players()->count())
+                                    ->badge()
+                                    ->color('primary'),
+                                TextEntry::make('federadas_count')
+                                    ->label('Jugadoras Federadas')
+                                    ->state(fn ($record) => $record->players()->whereHas('medicalCertificates', function ($query) {
+                                        $query->where('status', 'approved');
+                                    })->count())
+                                    ->badge()
+                                    ->color('success'),
+                                TextEntry::make('created_at')
+                                    ->label('Registrado')
+                                    ->since()
+                                    ->badge()
+                                    ->color('gray'),
+                            ]),
+                    ]),
             ]);
     }
 
@@ -609,10 +496,55 @@ class ClubResource extends Resource
             'create' => Pages\CreateClub::route('/create'),
             'view' => Pages\ViewClub::route('/{record}'),
             'edit' => Pages\EditClub::route('/{record}/edit'),
-            'players' => Pages\ManagePlayers::route('/{record}/players'),
-            'payments' => Pages\ManagePayments::route('/{record}/payments'),
-            'documents' => Pages\ManageDocuments::route('/{record}/documents'),
-            'activity' => Pages\ManageActivity::route('/{record}/activity'),
+        ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('view_any_club');
+    }
+
+    public static function canView($record): bool
+    {
+        return Auth::user()->can('view_club', $record);
+    }
+
+    public static function canCreate(): bool
+    {
+        return Auth::user()->can('create_club');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return Auth::user()->can('update_club', $record);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return Auth::user()->can('delete_club', $record);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['department', 'city']);
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['nombre', 'nombre_corto', 'email', 'department.nombre', 'city.nombre'];
+    }
+
+    public static function getGlobalSearchResultDetails($record): array
+    {
+        return [
+            'Departamento' => $record->department?->nombre,
+            'Ciudad' => $record->city?->nombre,
+            'Federado' => $record && $record->es_federado ? 'Sí' : 'No',
         ];
     }
 }

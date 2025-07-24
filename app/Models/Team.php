@@ -20,6 +20,7 @@ class Team extends Model
         'club_id',
         'name',
         'category',
+        'league_category_id',
         'gender',
         'coach_id',
         'assistant_coach_id',
@@ -78,5 +79,10 @@ class Team extends Model
     public function players()
     {
         return $this->belongsToMany(Player::class, 'team_players');
+    }
+
+    public function leagueCategory(): BelongsTo
+    {
+        return $this->belongsTo(LeagueCategory::class);
     }
 }

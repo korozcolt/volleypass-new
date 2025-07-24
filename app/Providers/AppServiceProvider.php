@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Club;
+use App\Observers\ClubObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +23,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Model bindings para rutas
         \Illuminate\Support\Facades\Route::model('category', \App\Models\LeagueCategory::class);
+        
+        // Registrar observers
+        Club::observe(ClubObserver::class);
     }
 }

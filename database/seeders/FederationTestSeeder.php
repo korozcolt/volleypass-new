@@ -6,17 +6,19 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\League;
 use App\Models\Club;
+use App\Models\Team;
+use App\Models\TeamPlayer;
 use App\Models\Player;
 use App\Models\Payment;
 use App\Models\City;
+use App\Enums\PlayerCategory;
+use App\Enums\Gender;
 use App\Enums\FederationStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
 use App\Enums\PlayerPosition;
-use App\Enums\PlayerCategory;
 use App\Enums\MedicalStatus;
 use App\Enums\UserStatus;
-use App\Enums\Gender;
 use Database\Factories\PlayerFactory;
 use Database\Factories\ClubFactory;
 use Database\Factories\PaymentFactory;
@@ -33,8 +35,14 @@ class FederationTestSeeder extends Seeder
         // Crear clubes de prueba
         $clubs = $this->createTestClubs($league);
 
+        // Crear equipos de prueba
+        $teams = $this->createTestTeams($clubs);
+
         // Crear jugadoras de prueba
         $players = $this->createTestPlayers($clubs);
+
+        // Asignar jugadoras a equipos
+        $this->assignPlayersToTeams($teams, $players);
 
         // Crear pagos de prueba
         $this->createTestPayments($clubs, $league);
@@ -139,6 +147,41 @@ class FederationTestSeeder extends Seeder
         return $clubs;
     }
 
+    private function createTestTeams(array $clubs): array
+    {
+        $teams = [];
+        $categories = [PlayerCategory::Infantil, PlayerCategory::Cadete, PlayerCategory::Juvenil, PlayerCategory::Mayores];
+        
+        foreach ($clubs as $club) {
+            // Cada club tiene 2-3 equipos de diferentes categorías
+            $teamCount = rand(2, 3);
+            $usedCategories = [];
+            
+            for ($i = 1; $i <= $teamCount; $i++) {
+                // Seleccionar una categoría que no se haya usado
+                do {
+                    $category = $categories[array_rand($categories)];
+                } while (in_array($category, $usedCategories));
+                
+                $usedCategories[] = $category;
+                
+                $team = Team::create([
+                    'club_id' => $club->id,
+                    'name' => $club->short_name . ' ' . $category->value . ' - Equipo ' . chr(64 + $i), // A, B, C
+                    'category' => $category,
+                    'gender' => Gender::Female,
+                    'status' => 'active',
+                    'description' => "Equipo {$category->value} del {$club->name}",
+                    'founded_date' => now()->subMonths(rand(6, 36)),
+                ]);
+                
+                $teams[] = $team;
+            }
+        }
+        
+        return $teams;
+    }
+
     private function createTestPlayers(array $clubs): array
     {
         $players = [];
@@ -187,6 +230,30 @@ class FederationTestSeeder extends Seeder
         }
 
         return $players;
+    }
+
+    private function assignPlayersToTeams(array $teams, array $players): void
+    {
+        foreach ($teams as $team) {
+            // Obtener jugadoras del mismo club
+            $clubPlayers = array_filter($players, function($player) use ($team) {
+                return $player->current_club_id === $team->club_id;
+            });
+            
+            // Asignar 6-8 jugadoras por equipo
+            $playersToAssign = array_slice($clubPlayers, 0, rand(6, 8));
+            
+            foreach ($playersToAssign as $index => $player) {
+                TeamPlayer::create([
+                    'team_id' => $team->id,
+                    'player_id' => $player->id,
+                    'jersey_number' => $index + 1,
+                    'position' => $player->position,
+                    'is_captain' => $index === 0, // Primera jugadora es capitana
+                    'joined_at' => now()->subDays(rand(1, 90)),
+                ]);
+            }
+        }
     }
 
     private function createTestPayments(array $clubs, League $league): void

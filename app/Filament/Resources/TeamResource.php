@@ -24,8 +24,8 @@ class TeamResource extends Resource
     protected static ?string $navigationLabel = 'Equipos';
     protected static ?string $modelLabel = 'Equipo';
     protected static ?string $pluralModelLabel = 'Equipos';
-    protected static ?string $navigationGroup = 'Configuración';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'Gestión de Clubes';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -45,9 +45,20 @@ class TeamResource extends Resource
                             ->preload()
                             ->required(),
 
-                        Forms\Components\Select::make('category')
+                        Forms\Components\Select::make('league_category_id')
                             ->label('Categoría')
-                            ->options(PlayerCategory::class)
+                            ->options(function (Forms\Get $get) {
+                                $clubId = $get('club_id');
+                                if (!$clubId) {
+                                    return [];
+                                }
+                                $club = Club::find($clubId);
+                                if (!$club || !$club->league) {
+                                    return [];
+                                }
+                                return $club->league->categories()->active()->pluck('name', 'id');
+                            })
+                            ->reactive()
                             ->required(),
 
                         Forms\Components\Select::make('gender')
@@ -121,9 +132,15 @@ class TeamResource extends Resource
                     ->label('Club')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('category')
+                Tables\Columns\TextColumn::make('leagueCategory.name')
                     ->label('Categoría')
-                    ->badge(),
+                    ->badge()
+                    ->placeholder('Sin categoría'),
+
+                Tables\Columns\TextColumn::make('category')
+                    ->label('Categoría (Legacy)')
+                    ->badge()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('gender')
                     ->label('Género')
@@ -164,8 +181,12 @@ class TeamResource extends Resource
                     ->label('Estado')
                     ->options(UserStatus::class),
 
-                Tables\Filters\SelectFilter::make('category')
+                Tables\Filters\SelectFilter::make('league_category_id')
                     ->label('Categoría')
+                    ->relationship('leagueCategory', 'name'),
+
+                Tables\Filters\SelectFilter::make('category')
+                    ->label('Categoría (Legacy)')
                     ->options(PlayerCategory::class),
 
                 Tables\Filters\SelectFilter::make('gender')
@@ -199,9 +220,10 @@ class TeamResource extends Resource
                         Infolists\Components\TextEntry::make('club.name')
                             ->label('Club'),
 
-                        Infolists\Components\TextEntry::make('category')
+                        Infolists\Components\TextEntry::make('leagueCategory.name')
                             ->label('Categoría')
-                            ->badge(),
+                            ->badge()
+                            ->placeholder('Sin categoría'),
 
                         Infolists\Components\TextEntry::make('gender')
                             ->label('Género')

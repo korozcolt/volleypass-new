@@ -22,8 +22,8 @@ class PlayerCardResource extends Resource
     protected static ?string $navigationLabel = 'Carnets';
     protected static ?string $modelLabel = 'Carnet';
     protected static ?string $pluralModelLabel = 'Carnets';
-    protected static ?string $navigationGroup = 'Gestión Deportiva';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'Gestión de Clubes';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

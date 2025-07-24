@@ -19,6 +19,9 @@ abstract class TestCase extends BaseTestCase
 
         // Crear roles y permisos básicos si no existen
         $this->createBasicRolesAndPermissions();
+        
+        // Crear datos geográficos básicos si no existen
+        $this->createBasicGeographicData();
     }
 
     /**
@@ -87,5 +90,52 @@ abstract class TestCase extends BaseTestCase
     protected function createApiToken(\App\Models\User $user, array $abilities = ['*']): string
     {
         return $user->createToken('Test Token', $abilities)->plainTextToken;
+    }
+
+    /**
+     * Crear datos geográficos básicos para tests
+     */
+    protected function createBasicGeographicData(): void
+    {
+        // Solo crear si las tablas existen (evita errores en tests que no usan base de datos)
+        if (!Schema::hasTable('countries') || !Schema::hasTable('departments') || !Schema::hasTable('cities')) {
+            return;
+        }
+
+        // Crear país Colombia si no existe
+        $country = \App\Models\Country::firstOrCreate(
+            ['code' => 'CO'],
+            [
+                'name' => 'Colombia',
+                'phone_code' => '+57',
+                'currency_code' => 'COP',
+                'is_active' => true,
+            ]
+        );
+
+        // Crear departamento de prueba si no existe
+        $department = \App\Models\Department::firstOrCreate(
+            [
+                'country_id' => $country->id,
+                'code' => 'TEST'
+            ],
+            [
+                'name' => 'Test Department',
+                'is_active' => true,
+            ]
+        );
+
+        // Crear ciudad de prueba si no existe
+        \App\Models\City::firstOrCreate(
+            [
+                'department_id' => $department->id,
+                'code' => 'TEST'
+            ],
+            [
+                'name' => 'Test City',
+                'postal_code' => '00000',
+                'is_active' => true,
+            ]
+        );
     }
 }

@@ -19,9 +19,24 @@ class PlayerCategoryDynamicTest extends TestCase
         parent::setUp();
 
         // Crear datos necesarios para League
-        $country = \App\Models\Country::factory()->create();
-        $department = \App\Models\Department::factory()->create(['country_id' => $country->id]);
-        $city = \App\Models\City::factory()->create(['department_id' => $department->id]);
+        $country = \App\Models\Country::first() ?? \App\Models\Country::create([
+            'name' => 'Test Country',
+            'code' => 'TC',
+            'phone_code' => '+1',
+            'currency_code' => 'USD',
+            'is_active' => true
+        ]);
+        $department = \App\Models\Department::first() ?? \App\Models\Department::create([
+            'country_id' => $country->id,
+            'name' => 'Test Department',
+            'code' => 'TD',
+            'is_active' => true
+        ]);
+        $city = \App\Models\City::first() ?? \App\Models\City::create([
+            'name' => 'Test City',
+            'department_id' => $department->id,
+            'is_active' => true
+        ]);
 
         $this->league = League::factory()->create([
             'country_id' => $country->id,

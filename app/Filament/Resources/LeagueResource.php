@@ -25,7 +25,7 @@ class LeagueResource extends Resource
     protected static ?string $navigationLabel = 'Ligas';
     protected static ?string $modelLabel = 'Liga';
     protected static ?string $pluralModelLabel = 'Ligas';
-    protected static ?string $navigationGroup = 'Configuración';
+    protected static ?string $navigationGroup = 'Administración de Ligas';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

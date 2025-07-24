@@ -34,6 +34,13 @@ class Kernel extends ConsoleKernel
                  ->weekly()
                  ->sundays()
                  ->at('03:00');
+
+        // Sincronizar estadísticas de clubes diariamente
+        $schedule->command('clubs:sync-stats --force')
+                 ->daily()
+                 ->at('05:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
     }
 
     /**

@@ -21,9 +21,9 @@ class LeagueFactory extends Factory
             'name' => $name,
             'short_name' => strtoupper(substr($name, 0, 3)),
             'description' => $this->faker->paragraph(),
-            'country_id' => null, // Will be set by withLocation() method or seeded data
-            'department_id' => null, // Will be set by withLocation() method or seeded data
-            'city_id' => null, // Will be set by withLocation() method or seeded data
+            'country_id' => Country::first()?->id ?? 1,
+            'department_id' => Department::first()?->id ?? 1,
+            'city_id' => City::first()?->id ?? 1,
             'status' => UserStatus::Active,
             'foundation_date' => $this->faker->dateTimeBetween('-10 years', '-1 year'),
             'website' => $this->faker->optional()->url(),

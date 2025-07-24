@@ -36,9 +36,9 @@ class PlayerResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Jugadoras';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationGroup = 'Usuarios';
+    protected static ?string $navigationGroup = 'Gestión de Usuarios';
 
     public static function form(Form $form): Form
     {
