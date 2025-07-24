@@ -482,7 +482,7 @@ class ClubResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            Pages\ManagePlayers::class,
         ];
     }
 

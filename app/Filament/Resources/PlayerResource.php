@@ -273,7 +273,195 @@ class PlayerResource extends Resource
                                     ->columns(2),
                             ]),
 
-                        // TAB 4: ESTADO GENERAL
+                        // TAB 4: DOCUMENTOS
+                        Forms\Components\Tabs\Tab::make('Documentos')
+                            ->icon('heroicon-o-document-text')
+                            ->badge(fn($record) => $record?->documents?->count() ?? 0)
+                            ->badgeColor('primary')
+                            ->schema([
+                                Forms\Components\Section::make('Gestión de Documentos')
+                                    ->description('Administra los documentos requeridos para la jugadora')
+                                    ->schema([
+                                        Forms\Components\Repeater::make('documents')
+                                            ->relationship('documents')
+                                            ->schema([
+                                                Forms\Components\Grid::make(3)
+                                                    ->schema([
+                                                        Forms\Components\Select::make('document_type')
+                                                            ->label('Tipo de Documento')
+                                                            ->options(\App\Enums\DocumentType::class)
+                                                            ->required(),
+
+                                                        Forms\Components\FileUpload::make('file_path')
+                                                            ->label('Archivo')
+                                                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
+                                                            ->maxSize(5120) // 5MB
+                                                            ->required(),
+
+                                                        Forms\Components\Select::make('status')
+                                                            ->label('Estado')
+                                                            ->options(\App\Enums\DocumentStatus::class)
+                                                            ->default('pending')
+                                                            ->required(),
+                                                    ]),
+
+                                                Forms\Components\Grid::make(2)
+                                                    ->schema([
+                                                        Forms\Components\DatePicker::make('issued_date')
+                                                            ->label('Fecha de Emisión'),
+
+                                                        Forms\Components\DatePicker::make('expires_at')
+                                                            ->label('Fecha de Vencimiento'),
+                                                    ]),
+
+                                                Forms\Components\Textarea::make('review_notes')
+                                                    ->label('Notas de Revisión')
+                                                    ->rows(2)
+                                                    ->columnSpanFull(),
+                                            ])
+                                            ->collapsible()
+                                            ->itemLabel(fn (array $state): ?string => $state['document_type'] ?? 'Nuevo Documento')
+                                            ->addActionLabel('Agregar Documento')
+                                            ->reorderableWithButtons()
+                                            ->cloneable(),
+                                    ]),
+
+                                Forms\Components\Section::make('Acciones de Documentos')
+                                    ->schema([
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('approve_all')
+                                                ->label('Aprobar Todos')
+                                                ->icon('heroicon-o-check-circle')
+                                                ->color('success')
+                                                ->visible(fn($record) => $record && $record->documents()->where('status', 'pending')->exists())
+                                                ->requiresConfirmation()
+                                                ->action(function ($record) {
+                                                    $record->documents()->where('status', 'pending')->update(['status' => 'approved']);
+                                                }),
+
+                                            Forms\Components\Actions\Action::make('request_missing')
+                                                ->label('Solicitar Faltantes')
+                                                ->icon('heroicon-o-exclamation-triangle')
+                                                ->color('warning')
+                                                ->visible(fn($record) => $record !== null)
+                                                ->action(function ($record) {
+                                                    // Lógica para solicitar documentos faltantes
+                                                }),
+                                        ])
+                                    ])
+                                    ->visible(fn($record) => $record !== null),
+                            ]),
+
+                        // TAB 5: HISTORIAL
+                        Forms\Components\Tabs\Tab::make('Historial')
+                            ->icon('heroicon-o-clock')
+                            ->schema([
+                                Forms\Components\Section::make('Historial de Actividades')
+                                    ->description('Registro completo de cambios y actividades de la jugadora')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('activity_log')
+                                            ->label('')
+                                            ->content(function ($record) {
+                                                if (!$record) {
+                                                    return 'No hay historial disponible para jugadoras nuevas.';
+                                                }
+
+                                                $activities = $record->activities()
+                                                    ->with('causer')
+                                                    ->latest()
+                                                    ->limit(50)
+                                                    ->get();
+
+                                                if ($activities->isEmpty()) {
+                                                    return 'No se han registrado actividades para esta jugadora.';
+                                                }
+
+                                                $html = '<div class="space-y-3">';
+                                                foreach ($activities as $activity) {
+                                                    $date = $activity->created_at->format('d/m/Y H:i');
+                                                    $user = $activity->causer?->name ?? 'Sistema';
+                                                    $description = $activity->description;
+                                                    
+                                                    $changes = '';
+                                                    if ($activity->properties->has('attributes') && $activity->properties->has('old')) {
+                                                        $attributes = $activity->properties->get('attributes');
+                                                        $old = $activity->properties->get('old');
+                                                        
+                                                        $changesList = [];
+                                                        foreach ($attributes as $key => $newValue) {
+                                                            if (isset($old[$key]) && $old[$key] != $newValue) {
+                                                                $changesList[] = "<strong>{$key}:</strong> {$old[$key]} → {$newValue}";
+                                                            }
+                                                        }
+                                                        
+                                                        if (!empty($changesList)) {
+                                                            $changes = '<div class="mt-1 text-sm text-gray-600"><strong>Cambios:</strong> ' . implode(', ', $changesList) . '</div>';
+                                                        }
+                                                    }
+                                                    
+                                                    $html .= '
+                                                        <div class="border-l-4 border-blue-400 bg-blue-50 p-3 rounded-r">
+                                                            <div class="flex justify-between items-start">
+                                                                <div class="font-medium text-blue-900">' . $description . '</div>
+                                                                <div class="text-xs text-blue-600">' . $date . '</div>
+                                                            </div>
+                                                            <div class="text-sm text-blue-700 mt-1">Por: ' . $user . '</div>
+                                                            ' . $changes . '
+                                                        </div>
+                                                    ';
+                                                }
+                                                $html .= '</div>';
+                                                
+                                                return new \Illuminate\Support\HtmlString($html);
+                                            })
+                                    ]),
+
+                                Forms\Components\Section::make('Historial de Transferencias')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('transfers_history')
+                                            ->label('')
+                                            ->content(function ($record) {
+                                                if (!$record) {
+                                                    return 'No hay historial de transferencias disponible.';
+                                                }
+
+                                                $transfers = $record->transfers()
+                                                    ->with(['fromClub', 'toClub', 'requestedBy', 'approvedBy'])
+                                                    ->latest()
+                                                    ->get();
+
+                                                if ($transfers->isEmpty()) {
+                                                    return 'No se han registrado transferencias para esta jugadora.';
+                                                }
+
+                                                $html = '<div class="space-y-3">';
+                                                foreach ($transfers as $transfer) {
+                                                    $date = $transfer->transfer_date->format('d/m/Y');
+                                                    $status = $transfer->status->getLabel();
+                                                    $statusColor = $transfer->status->getColor();
+                                                    $fromClub = $transfer->fromClub?->name ?? 'Club anterior';
+                                                    $toClub = $transfer->toClub?->name ?? 'Club destino';
+                                                    
+                                                    $html .= '
+                                                        <div class="border border-gray-200 bg-gray-50 p-3 rounded">
+                                                            <div class="flex justify-between items-start">
+                                                                <div class="font-medium">Transferencia: ' . $fromClub . ' → ' . $toClub . '</div>
+                                                                <span class="px-2 py-1 text-xs rounded-full bg-' . $statusColor . '-100 text-' . $statusColor . '-800">' . $status . '</span>
+                                                            </div>
+                                                            <div class="text-sm text-gray-600 mt-1">Fecha: ' . $date . '</div>
+                                                            ' . ($transfer->reason ? '<div class="text-sm text-gray-600">Motivo: ' . $transfer->reason . '</div>' : '') . '
+                                                        </div>
+                                                    ';
+                                                }
+                                                $html .= '</div>';
+                                                
+                                                return new \Illuminate\Support\HtmlString($html);
+                                            })
+                                    ])
+                                    ->visible(fn($record) => $record && $record->transfers()->exists()),
+                            ]),
+
+                        // TAB 6: ESTADO GENERAL
                         Forms\Components\Tabs\Tab::make('Estado General')
                             ->icon('heroicon-o-cog-6-tooth')
                             ->schema([
@@ -493,6 +681,7 @@ class PlayerResource extends Resource
             'create' => Pages\CreatePlayer::route('/create'),
             'view' => Pages\ViewPlayer::route('/{record}'),
             'edit' => Pages\EditPlayer::route('/{record}/edit'),
+            'manage-transfers' => Pages\ManageTransfers::route('/{record}/transfers'),
         ];
     }
 

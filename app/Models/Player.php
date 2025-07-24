@@ -151,6 +151,11 @@ class Player extends Model
         return $this->hasMany(Injury::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PlayerDocument::class);
+    }
+
     public function federationPayment(): BelongsTo
     {
         return $this->belongsTo(Payment::class, 'federation_payment_id');
