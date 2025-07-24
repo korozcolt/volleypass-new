@@ -174,6 +174,12 @@ class Club extends Model implements HasMedia
         return $this->hasMany(Team::class);
     }
 
+    public function tournaments()
+    {
+        return $this->belongsToMany(Tournament::class, 'tournament_registrations')
+            ->withTimestamps();
+    }
+
     public function directors()
     {
         return $this->belongsToMany(User::class, 'club_directors')

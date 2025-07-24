@@ -190,11 +190,8 @@ class ClubResource extends Resource
                             ]),
                         Forms\Components\Tabs\Tab::make('Estadísticas')
                             ->schema([
-                                Forms\Components\Placeholder::make('estadisticas')
-                                    ->label('Estadísticas del Club')
-                                    ->content(fn (?Club $record): string => 
-                                        $record ? view('filament.components.club-stats', compact('record'))->render() : 'No disponible'
-                                    )
+                                Forms\Components\View::make('filament.components.club-stats')
+                                    ->viewData(fn (?Club $record): array => ['record' => $record])
                                     ->columnSpanFull(),
                             ])
                             ->visible(fn (?Club $record): bool => $record !== null),
