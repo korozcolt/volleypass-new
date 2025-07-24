@@ -19,6 +19,7 @@ class VolleyMatch extends Model
 
     protected $fillable = [
         'tournament_id',
+        'group_id',
         'home_team_id',
         'away_team_id',
         'league_id',
@@ -99,6 +100,16 @@ class VolleyMatch extends Model
     public function teamStatistics(): HasMany
     {
         return $this->hasMany(TeamStatistic::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(TournamentGroup::class, 'group_id');
+    }
+
+    public function cards(): HasMany
+    {
+        return $this->hasMany(TournamentCard::class, 'match_id');
     }
 
     // =======================
@@ -206,5 +217,57 @@ class VolleyMatch extends Model
     public function getTeamStatistics(int $teamId): ?TeamStatistic
     {
         return $this->teamStatistics()->where('team_id', $teamId)->first();
+    }
+
+    public function getMatchCards(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->cards()->with(['player', 'team'])->orderBy('issued_at')->get();
+    }
+
+    public function getTeamCards(int $teamId): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->cards()->where('team_id', $teamId)->with(['player'])->orderBy('issued_at')->get();
+    }
+
+    public function hasActiveCards(): bool
+    {
+        return $this->cards()->active()->exists();
+    }
+
+    public function updateGroupStandings(): void
+    {
+        if ($this->group_id && $this->is_finished) {
+            $this->group->updateStandings();
+        }
+    }
+
+    public function isGroupMatch(): bool
+    {
+        return !is_null($this->group_id);
+    }
+
+    public function isKnockoutMatch(): bool
+    {
+        return is_null($this->group_id) && !is_null($this->tournament_id);
+    }
+
+    public function getMatchType(): string
+    {
+        if ($this->isGroupMatch()) {
+            return 'Fase de Grupos';
+        }
+        
+        if ($this->isKnockoutMatch()) {
+            return match($this->phase) {
+                MatchPhase::FINAL => 'Final',
+                MatchPhase::SEMI_FINALS => 'Semifinal',
+                MatchPhase::QUARTER_FINALS => 'Cuartos de Final',
+                MatchPhase::ROUND_OF_16 => 'Octavos de Final',
+                MatchPhase::THIRD_PLACE => 'Tercer Lugar',
+                default => 'Eliminatoria'
+            };
+        }
+        
+        return 'Liga Regular';
     }
 }
