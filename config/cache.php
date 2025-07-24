@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -77,6 +77,42 @@ return [
             'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
         ],
 
+        // VolleyPass specific cache stores
+        'categories' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'prefix' => 'volleypass_categories',
+            'ttl' => 3600, // 1 hour
+        ],
+
+        'players' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'prefix' => 'volleypass_players',
+            'ttl' => 1800, // 30 minutes
+        ],
+
+        'tournaments' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'prefix' => 'volleypass_tournaments',
+            'ttl' => 1800, // 30 minutes
+        ],
+
+        'federation' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'prefix' => 'volleypass_federation',
+            'ttl' => 900, // 15 minutes
+        ],
+
+        'qr_verification' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
+            'prefix' => 'volleypass_qr',
+            'ttl' => 300, // 5 minutes
+        ],
+
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -103,6 +139,30 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'),
+    'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'volleypass'), '_').'_cache_'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | VolleyPass Cache Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Custom cache configuration for VolleyPass specific needs including
+    | TTL settings, cache tags support, and fallback mechanisms.
+    |
+    */
+
+    'volleypass' => [
+        'ttl' => [
+            'categories' => env('CACHE_TTL_CATEGORIES', 3600), // 1 hour
+            'players' => env('CACHE_TTL_PLAYERS', 1800), // 30 minutes
+            'tournaments' => env('CACHE_TTL_TOURNAMENTS', 1800), // 30 minutes
+            'federation' => env('CACHE_TTL_FEDERATION', 900), // 15 minutes
+            'qr_verification' => env('CACHE_TTL_QR', 300), // 5 minutes
+            'dashboard' => env('CACHE_TTL_DASHBOARD', 600), // 10 minutes
+        ],
+        'tags_enabled' => env('CACHE_TAGS_ENABLED', true),
+        'fallback_to_database' => env('CACHE_FALLBACK_DB', true),
+        'performance_monitoring' => env('CACHE_PERFORMANCE_MONITORING', true),
+    ],
 
 ];
