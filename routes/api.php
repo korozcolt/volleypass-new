@@ -82,6 +82,12 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/tokens', [AuthController::class, 'listTokens'])->name('api.auth.tokens.list');
         Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('api.auth.tokens.revoke');
     });
+    
+    // Gestión de categorías de jugadores
+    Route::prefix('players')->group(function () {
+        Route::get('/{player}/category', [\App\Http\Controllers\Api\PlayerCategoryController::class, 'show'])->name('api.players.category.show');
+        Route::put('/{player}/category', [\App\Http\Controllers\Api\PlayerCategoryController::class, 'update'])->name('api.players.category.update');
+    });
 
     // Verificadores
     Route::post('/verify-batch', [QrVerificationController::class, 'verifyBatch'])->name('api.verify-batch');

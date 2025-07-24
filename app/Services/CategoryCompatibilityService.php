@@ -6,6 +6,7 @@ use App\Enums\PlayerCategory;
 use App\Models\League;
 use App\Models\Player;
 use App\Models\User;
+use App\Services\CategoryNotificationService;
 
 /**
  * Servicio de compatibilidad para mantener la API existente del sistema de categorías
@@ -137,8 +138,13 @@ class CategoryCompatibilityService
 
     /**
      * Migra automáticamente las categorías de jugadores cuando cambia la configuración de liga
+     * 
+     * @param League $league La liga cuya configuración ha cambiado
+     * @param User|null $changedBy El usuario que realizó el cambio en la configuración (opcional)
+     * @param bool $notifyChanges Si se deben enviar notificaciones de los cambios
+     * @return array Resultados de la migración
      */
-    public function migratePlayersCategories(League $league): array
+    public function migratePlayersCategories(League $league, ?User $changedBy = null, bool $notifyChanges = true): array
     {
         $results = [
             'migrated' => 0,
@@ -152,6 +158,8 @@ class CategoryCompatibilityService
             ->get()
             ->pluck('players')
             ->flatten();
+            
+        $playerChanges = [];
 
         foreach ($players as $player) {
             try {
@@ -167,6 +175,16 @@ class CategoryCompatibilityService
                         'new_category' => $newCategory->value,
                         'action' => 'migrated'
                     ];
+                    
+                    // Preparar datos para notificación
+                    if ($notifyChanges) {
+                        $playerChanges[] = [
+                            'player' => $player,
+                            'old_category' => $currentCategory,
+                            'new_category' => $newCategory->value,
+                            'reason' => 'Cambio en la configuración de categorías de la liga'
+                        ];
+                    }
                 } else {
                     $results['unchanged']++;
                 }
@@ -178,6 +196,11 @@ class CategoryCompatibilityService
                     'action' => 'error'
                 ];
             }
+        }
+        
+        // Enviar notificaciones si hay cambios y se solicita
+        if ($notifyChanges && !empty($playerChanges)) {
+            app(CategoryNotificationService::class)->notifyBulkPlayerCategoryReassignments($playerChanges);
         }
 
         return $results;

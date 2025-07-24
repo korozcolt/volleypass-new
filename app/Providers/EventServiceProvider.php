@@ -25,6 +25,15 @@ class EventServiceProvider extends ServiceProvider
         DocumentsApproved::class => [
             TriggerAutomaticCardGeneration::class,
         ],
+        
+        // Sistema de Categorías Dinámicas - Notificaciones
+        \App\Events\CategoryConfigurationChanged::class => [
+            \App\Listeners\NotifyCategoryConfigurationChanged::class,
+        ],
+        
+        \App\Events\PlayerCategoryReassigned::class => [
+            \App\Listeners\NotifyPlayerCategoryReassigned::class,
+        ],
     ];
 
     /**

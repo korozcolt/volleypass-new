@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\League;
 use App\Models\LeagueCategory;
 use App\Models\Player;
+use App\Models\User;
 use App\Enums\PlayerCategory;
+use App\Services\CategoryNotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
@@ -589,8 +591,14 @@ class CategoryAssignmentService
 
     /**
      * Ejecuta cambios masivos de categoría con validación
+     * 
+     * @param League $league La liga donde se realizan los cambios
+     * @param array $changes Array de cambios con formato [['player_id' => int, 'new_category' => string], ...]
+     * @param bool $notifyChanges Si se deben enviar notificaciones de los cambios
+     * @param string $changeReason Motivo del cambio para incluir en las notificaciones
+     * @return array Resultados de los cambios
      */
-    public function executeMassiveCategoryChanges(League $league, array $changes): array
+    public function executeMassiveCategoryChanges(League $league, array $changes, bool $notifyChanges = true, string $changeReason = 'Actualización de categoría'): array
     {
         $results = [
             'total' => count($changes),
@@ -598,6 +606,8 @@ class CategoryAssignmentService
             'failed' => 0,
             'details' => []
         ];
+        
+        $playerChanges = [];
 
         foreach ($changes as $change) {
             try {
@@ -638,6 +648,16 @@ class CategoryAssignmentService
                     'new_category' => $change['new_category'],
                     'warnings' => $validation['warnings'] ?? []
                 ];
+                
+                // Preparar datos para notificación
+                if ($notifyChanges) {
+                    $playerChanges[] = [
+                        'player' => $player,
+                        'old_category' => $oldCategory,
+                        'new_category' => $change['new_category'],
+                        'reason' => $changeReason
+                    ];
+                }
 
                 Log::info('Cambio masivo de categoría ejecutado', [
                     'player_id' => $player->id,
@@ -658,10 +678,91 @@ class CategoryAssignmentService
                 ]);
             }
         }
+        
+        // Enviar notificaciones si hay cambios y se solicita
+        if ($notifyChanges && !empty($playerChanges)) {
+            app(CategoryNotificationService::class)->notifyBulkPlayerCategoryReassignments($playerChanges);
+        }
 
         // Limpiar caché después de cambios masivos
         $this->clearCategoryCache($league->id);
 
         return $results;
+    }
+    
+    /**
+     * Actualiza la categoría de un jugador individual y envía notificaciones si se solicita
+     * 
+     * @param Player $player El jugador cuya categoría se actualizará
+     * @param string $newCategory La nueva categoría a asignar
+     * @param User|null $changedBy El usuario que realiza el cambio (opcional)
+     * @param bool $notifyChange Si se debe enviar notificación del cambio
+     * @param string $changeReason Motivo del cambio para incluir en la notificación
+     * @return array Resultado de la operación
+     */
+    public function updatePlayerCategory(
+        Player $player, 
+        string $newCategory, 
+        ?User $changedBy = null, 
+        bool $notifyChange = true,
+        string $changeReason = 'Actualización de categoría'
+    ): array {
+        $result = [
+            'success' => false,
+            'errors' => [],
+            'warnings' => []
+        ];
+        
+        try {
+            // Validar el cambio de categoría
+            $validation = $this->validateCategoryChange($player, $newCategory);
+            
+            if (!empty($validation['errors'])) {
+                $result['errors'] = $validation['errors'];
+                return $result;
+            }
+            
+            // Guardar la categoría anterior para la notificación
+            $oldCategory = $player->category?->value ?? $player->category;
+            
+            // Actualizar la categoría
+            $player->update(['category' => $newCategory]);
+            
+            // Enviar notificación si se solicita
+            if ($notifyChange) {
+                app(CategoryNotificationService::class)->notifyPlayerCategoryReassigned(
+                    $player,
+                    $oldCategory,
+                    $newCategory,
+                    $changeReason
+                );
+            }
+            
+            // Limpiar caché si el jugador pertenece a una liga
+            if ($player->league_id) {
+                $this->clearCategoryCache($player->league_id);
+            }
+            
+            $result['success'] = true;
+            $result['warnings'] = $validation['warnings'] ?? [];
+            
+            Log::info('Categoría de jugador actualizada', [
+                'player_id' => $player->id,
+                'old_category' => $oldCategory,
+                'new_category' => $newCategory,
+                'changed_by' => $changedBy ? $changedBy->id : 'sistema'
+            ]);
+            
+        } catch (\Exception $e) {
+            $result['errors'][] = 'Error al actualizar la categoría: ' . $e->getMessage();
+            
+            Log::error('Error al actualizar categoría de jugador', [
+                'player_id' => $player->id,
+                'new_category' => $newCategory,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        return $result;
     }
 }
