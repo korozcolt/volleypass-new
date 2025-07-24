@@ -33,7 +33,7 @@ class ViewClub extends ViewRecord
 
     public function getTitle(): string
     {
-        return $this->record->nombre;
+        return $this->record->name;
     }
 
     public function getSubheading(): ?string
@@ -50,19 +50,19 @@ class ViewClub extends ViewRecord
                         ->schema([
                             Section::make('Información General')
                                 ->schema([
-                                    TextEntry::make('nombre')
+                                    TextEntry::make('name')
                                         ->label('Nombre del Club')
                                         ->weight(FontWeight::Bold)
                                         ->size('lg'),
-                                    TextEntry::make('nombre_corto')
+                                    TextEntry::make('short_name')
                                         ->label('Nombre Corto'),
                                     TextEntry::make('email')
                                         ->label('Email')
                                         ->copyable(),
-                                    TextEntry::make('telefono')
+                                    TextEntry::make('phone')
                                         ->label('Teléfono')
                                         ->copyable(),
-                                    TextEntry::make('fundacion')
+                                    TextEntry::make('foundation_date')
                                         ->label('Fecha de Fundación')
                                         ->date(),
                                     TextEntry::make('created_at')
@@ -73,12 +73,12 @@ class ViewClub extends ViewRecord
                             
                             Section::make('Estado y Federación')
                                 ->schema([
-                                    TextEntry::make('es_federado')
+                                    TextEntry::make('is_federated')
                                         ->label('Estado de Federación')
                                         ->formatStateUsing(fn (bool $state): string => $state ? 'Federado' : 'No Federado')
                                         ->badge()
                                         ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
-                                    TextEntry::make('tipo_federacion')
+                                    TextEntry::make('federation_type')
                                         ->label('Tipo de Federación')
                                         ->badge()
                                         ->color(fn (string $state): string => match ($state) {
@@ -87,15 +87,15 @@ class ViewClub extends ViewRecord
                                             'municipal' => 'info',
                                             default => 'gray',
                                         })
-                                        ->visible(fn ($record) => $record->es_federado),
-                                    TextEntry::make('codigo_federacion')
+                                        ->visible(fn ($record) => $record->is_federated),
+                                    TextEntry::make('federation_code')
                                         ->label('Código de Federación')
                                         ->copyable()
-                                        ->visible(fn ($record) => $record->es_federado),
-                                    TextEntry::make('vencimiento_federacion')
+                                        ->visible(fn ($record) => $record->is_federated),
+                                    TextEntry::make('federation_expiry')
                                         ->label('Vencimiento Federación')
                                         ->date()
-                                        ->visible(fn ($record) => $record->es_federado),
+                                        ->visible(fn ($record) => $record->is_federated),
                                 ])
                                 ->columnSpan(1),
                         ]),
@@ -112,11 +112,11 @@ class ViewClub extends ViewRecord
                     ->schema([
                         Section::make('Ubicación')
                             ->schema([
-                                TextEntry::make('departamento.name')
+                                TextEntry::make('department.name')
                                     ->label('Departamento'),
-                                TextEntry::make('ciudad.name')
+                                TextEntry::make('city.name')
                                     ->label('Ciudad'),
-                                TextEntry::make('direccion')
+                                TextEntry::make('address')
                                     ->label('Dirección')
                                     ->columnSpanFull(),
                             ])
@@ -124,7 +124,7 @@ class ViewClub extends ViewRecord
                         
                         Section::make('Estadísticas')
                             ->schema([
-                                TextEntry::make('jugadoras_count')
+                                TextEntry::make('players_count')
                                     ->label('Total de Jugadoras')
                                     ->numeric()
                                     ->suffix(' jugadoras'),
@@ -147,15 +147,15 @@ class ViewClub extends ViewRecord
                             ->listWithLineBreaks()
                             ->formatStateUsing(function ($record) {
                                 return $record->directivos
-                                    ->where('pivot.activo', true)
-                                    ->map(function ($directivo) {
-                                        $rol = ucfirst($directivo->pivot->rol ?? 'Directivo');
-                                        $nombre = $directivo->name;
-                                        $fechaInicio = $directivo->pivot->fecha_inicio ? 
-                                            \Carbon\Carbon::parse($directivo->pivot->fecha_inicio)->format('d/m/Y') : '';
-                                        
-                                        return "{$rol}: {$nombre}" . ($fechaInicio ? " (desde {$fechaInicio})" : '');
-                                    })
+                                    ->where('pivot.is_active', true)
+                                ->map(function ($directivo) {
+                                    $rol = ucfirst($directivo->pivot->role ?? 'Directivo');
+                                    $nombre = $directivo->name;
+                                    $fechaInicio = $directivo->pivot->start_date ? 
+                                        \Carbon\Carbon::parse($directivo->pivot->start_date)->format('d/m/Y') : '';
+                                    
+                                    return "{$rol}: {$nombre}" . ($fechaInicio ? " (desde {$fechaInicio})" : '');
+                                })
                                     ->join("\n");
                             })
                             ->placeholder('No hay directivos activos'),
@@ -164,13 +164,13 @@ class ViewClub extends ViewRecord
                 
                 Section::make('Observaciones')
                     ->schema([
-                        TextEntry::make('observaciones_federacion')
+                        TextEntry::make('federation_notes')
                             ->label('Observaciones de Federación')
                             ->placeholder('Sin observaciones'),
                     ])
                     ->collapsible()
                     ->collapsed()
-                    ->visible(fn ($record) => !empty($record->observaciones_federacion)),
+                    ->visible(fn ($record) => !empty($record->federation_notes)),
             ]);
     }
 
@@ -178,7 +178,7 @@ class ViewClub extends ViewRecord
     {
         return [
             '/admin/clubs' => 'Clubes',
-            '' => $this->record->nombre,
+            '' => $this->record->name,
         ];
     }
 

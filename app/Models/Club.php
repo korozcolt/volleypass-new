@@ -23,27 +23,27 @@ class Club extends Model implements HasMedia
 
     protected $fillable = [
         'league_id',
-        'nombre',
-        'nombre_corto',
+        'name',
+        'short_name',
         'description',
-        'ciudad_id',
+        'city_id',
         'country_id',
-        'departamento_id',
-        'direccion',
+        'department_id',
+        'address',
         'email',
-        'telefono',
+        'phone',
         'website',
-        'fundacion',
+        'foundation_date',
         'colors',
         'history',
         'director_id',
         'status',
         'is_active',
-        'es_federado',
-        'tipo_federacion',
-        'codigo_federacion',
-        'vencimiento_federacion',
-        'observaciones_federacion',
+        'is_federated',
+        'federation_type',
+        'federation_code',
+        'federation_expiry',
+        'federation_notes',
         'created_by',
         'updated_by',
         'configurations',
@@ -52,9 +52,9 @@ class Club extends Model implements HasMedia
     ];
 
     protected $casts = [
-        'fundacion' => 'date',
-        'vencimiento_federacion' => 'date',
-        'es_federado' => 'boolean',
+        'foundation_date' => 'date',
+        'federation_expiry' => 'date',
+        'is_federated' => 'boolean',
         'is_active' => 'boolean',
         'status' => UserStatus::class,
         'configurations' => 'array',
@@ -63,7 +63,7 @@ class Club extends Model implements HasMedia
         'updated_at' => 'datetime',
     ];
 
-    protected $searchable = ['nombre', 'nombre_corto', 'email', 'ciudad.name', 'departamento.name'];
+    protected $searchable = ['name', 'short_name', 'email', 'city.name', 'department.name'];
 
     // =======================
     // SPATIE CONFIGURATION
@@ -117,9 +117,9 @@ class Club extends Model implements HasMedia
         return $this->belongsTo(League::class);
     }
 
-    public function ciudad(): BelongsTo
+    public function city(): BelongsTo
     {
-        return $this->belongsTo(City::class, 'ciudad_id');
+        return $this->belongsTo(City::class, 'city_id');
     }
 
     public function country(): BelongsTo
@@ -127,9 +127,20 @@ class Club extends Model implements HasMedia
         return $this->belongsTo(Country::class);
     }
 
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    // Alias methods for UI compatibility (Spanish names for frontend)
     public function departamento(): BelongsTo
     {
-        return $this->belongsTo(Department::class, 'departamento_id');
+        return $this->department();
+    }
+
+    public function ciudad(): BelongsTo
+    {
+        return $this->city();
     }
 
     public function director(): BelongsTo
@@ -137,9 +148,10 @@ class Club extends Model implements HasMedia
         return $this->belongsTo(User::class, 'director_id');
     }
 
+    // Alias method for UI compatibility (Spanish name for frontend)
     public function jugadoras(): HasMany
     {
-        return $this->hasMany(Player::class, 'club_id');
+        return $this->players();
     }
 
     public function players(): HasMany
@@ -162,11 +174,17 @@ class Club extends Model implements HasMedia
         return $this->hasMany(Team::class);
     }
 
+    public function directors()
+    {
+        return $this->belongsToMany(User::class, 'club_directors')
+            ->withPivot(['role', 'is_active', 'start_date', 'end_date', 'notes'])
+            ->withTimestamps();
+    }
+
+    // Alias method for UI compatibility (Spanish name for frontend)
     public function directivos()
     {
-        return $this->belongsToMany(User::class, 'club_directivos')
-            ->withPivot(['rol', 'activo', 'fecha_inicio', 'fecha_fin'])
-            ->withTimestamps();
+        return $this->directors();
     }
 
     public function createdBy(): BelongsTo
@@ -195,24 +213,24 @@ class Club extends Model implements HasMedia
 
     public function getFullNameAttribute(): string
     {
-        return $this->nombre_corto ?
-            "{$this->nombre} ({$this->nombre_corto})" :
-            $this->nombre;
+        return $this->short_name ?
+            "{$this->name} ({$this->short_name})" :
+            $this->name;
     }
 
     public function getAnosFuncionamientoAttribute(): int
     {
-        return $this->fundacion ? $this->fundacion->diffInYears(now()) : 0;
+        return $this->foundation_date ? $this->foundation_date->diffInYears(now()) : 0;
     }
 
     public function getTipoFederacionFormattedAttribute(): string
     {
-        return $this->tipo_federacion ? ucfirst($this->tipo_federacion) : '';
+        return $this->federation_type ? ucfirst($this->federation_type) : '';
     }
 
     public function getFederacionExpiradaAttribute(): bool
     {
-        return $this->es_federado && $this->vencimiento_federacion && $this->vencimiento_federacion->isPast();
+        return $this->is_federated && $this->federation_expiry && $this->federation_expiry->isPast();
     }
 
     public function getActivePlayersCountAttribute(): int
@@ -224,17 +242,21 @@ class Club extends Model implements HasMedia
 
     public function getJugadorasActivasCountAttribute(): int
     {
-        return $this->jugadoras()->where('activa', true)->count();
+        return $this->players()->whereHas('user', function($query) {
+            $query->where('status', UserStatus::Active);
+        })->count();
     }
 
     public function getJugadorasFederadasCountAttribute(): int
     {
-        return $this->jugadoras()->where('activa', true)->where('es_federada', true)->count();
+        return $this->players()->whereHas('user', function($query) {
+            $query->where('status', UserStatus::Active);
+        })->where('federation_status', 'active')->count();
     }
 
     public function getDirectivosActivosCountAttribute(): int
     {
-        return $this->directivos()->wherePivot('activo', true)->count();
+        return $this->directors()->wherePivot('is_active', true)->count();
     }
 
     public function getCoachesCountAttribute(): int
@@ -244,15 +266,15 @@ class Club extends Model implements HasMedia
 
     public function getEstablishedYearsAttribute(): ?int
     {
-        return $this->fundacion ?
-            $this->fundacion->diffInYears(now()) : null;
+        return $this->foundation_date ?
+            $this->foundation_date->diffInYears(now()) : null;
     }
 
     public function getLocationAttribute(): string
     {
-        $location = $this->ciudad->nombre;
-        if ($this->direccion) {
-            $location .= " - {$this->direccion}";
+        $location = $this->city?->name ?? '';
+        if ($this->address) {
+            $location .= " - {$this->address}";
         }
         return $location;
     }
@@ -268,7 +290,7 @@ class Club extends Model implements HasMedia
 
     public function scopeInCity($query, $cityId)
     {
-        return $query->where('ciudad_id', $cityId);
+        return $query->where('city_id', $cityId);
     }
 
     public function scopeWithDirector($query)
@@ -283,37 +305,37 @@ class Club extends Model implements HasMedia
 
     public function scopeFederados($query)
     {
-        return $query->where('es_federado', true);
+        return $query->where('is_federated', true);
     }
 
     public function scopeNoFederados($query)
     {
-        return $query->where('es_federado', false);
+        return $query->where('is_federated', false);
     }
 
     public function scopePorDepartamento($query, $departamentoId)
     {
-        return $query->where('departamento_id', $departamentoId);
+        return $query->where('department_id', $departamentoId);
     }
 
     public function scopePorTipoFederacion($query, $tipo)
     {
-        return $query->where('tipo_federacion', $tipo);
+        return $query->where('federation_type', $tipo);
     }
 
     public function scopeFederacionVigente($query)
     {
-        return $query->where('es_federado', true)
+        return $query->where('is_federated', true)
             ->where(function($q) {
-                $q->whereNull('vencimiento_federacion')
-                  ->orWhere('vencimiento_federacion', '>=', now());
+                $q->whereNull('federation_expiry')
+                  ->orWhere('federation_expiry', '>=', now());
             });
     }
 
     public function scopeFederacionExpirada($query)
     {
-        return $query->where('es_federado', true)
-            ->where('vencimiento_federacion', '<', now());
+        return $query->where('is_federated', true)
+            ->where('federation_expiry', '<', now());
     }
 
     // =======================

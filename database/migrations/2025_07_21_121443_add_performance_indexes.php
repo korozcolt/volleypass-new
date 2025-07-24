@@ -39,7 +39,7 @@ return new class extends Migration
         // Índice para verificación QR
         Schema::table('player_cards', function (Blueprint $table) {
             $table->index(
-                ['qr_token', 'is_active', 'valid_until'],
+                ['qr_token', 'status', 'expires_at'],
                 'idx_qr_verification'
             );
         });
@@ -73,7 +73,7 @@ return new class extends Migration
         // Índice para carnets próximos a vencer
         Schema::table('player_cards', function (Blueprint $table) {
             $table->index(
-                ['valid_until', 'is_active', 'player_id'],
+                ['expires_at', 'status', 'player_id'],
                 'idx_player_cards_expiry'
             );
         });

@@ -85,12 +85,12 @@
                                 <div>
                                     <div class="font-medium">{{ $directivo->name }}</div>
                                     <div class="text-sm text-gray-500">
-                                        {{ ucfirst($directivo->pivot->rol ?? 'Directivo') }}
+                                        {{ ucfirst($directivo->pivot->role ?? 'Directivo') }}
                                     </div>
                                 </div>
                                 <div class="text-xs text-gray-400">
-                                    @if($directivo->pivot->fecha_inicio)
-                                        Desde {{ \Carbon\Carbon::parse($directivo->pivot->fecha_inicio)->format('M Y') }}
+                                    @if($directivo->pivot->start_date)
+                                        Desde {{ \Carbon\Carbon::parse($directivo->pivot->start_date)->format('M Y') }}
                                     @endif
                                 </div>
                             </div>

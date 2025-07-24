@@ -135,7 +135,7 @@ class SyncClubStats extends Command
         
         // Contar directivos activos
         $activeDirectorsCount = $club->directivos()
-            ->wherePivot('activo', true)
+            ->wherePivot('is_active', true)
             ->count();
         
         // Contar torneos participados
@@ -196,7 +196,7 @@ class SyncClubStats extends Command
                     ->where('es_federada', true)
                     ->count(),
                 'directivos_activos' => $club->directivos()
-                    ->wherePivot('activo', true)
+                    ->wherePivot('is_active', true)
                     ->count(),
                 'torneos_participados' => $club->torneos()->count(),
                 'fecha_fundacion' => $club->fundacion,

@@ -88,9 +88,9 @@ class ClubTest extends TestCase
         
         foreach ($directors as $director) {
             $club->directivos()->attach($director->id, [
-                'rol' => 'presidente',
-                'activo' => true,
-                'fecha_inicio' => now(),
+                'role' => 'presidente',
+                'is_active' => true,
+                'start_date' => now(),
             ]);
         }
         
@@ -262,19 +262,19 @@ class ClubTest extends TestCase
         // Directivos activos
         foreach ($activeDirectors as $director) {
             $club->directivos()->attach($director->id, [
-                'rol' => 'presidente',
-                'activo' => true,
-                'fecha_inicio' => now(),
+                'role' => 'presidente',
+                'is_active' => true,
+                'start_date' => now(),
             ]);
         }
         
         // Directivos inactivos
         foreach ($inactiveDirectors as $director) {
             $club->directivos()->attach($director->id, [
-                'rol' => 'secretario',
-                'activo' => false,
-                'fecha_inicio' => now()->subYear(),
-                'fecha_fin' => now()->subMonth(),
+                'role' => 'secretario',
+                'is_active' => false,
+                'start_date' => now()->subYear(),
+                'end_date' => now()->subMonth(),
             ]);
         }
         

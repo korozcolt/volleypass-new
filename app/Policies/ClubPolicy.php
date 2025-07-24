@@ -154,7 +154,7 @@ class ClubPolicy
     {
         return $club->directivos()
             ->wherePivot('user_id', $user->id)
-            ->wherePivot('activo', true)
+            ->wherePivot('is_active', true)
             ->exists();
     }
 

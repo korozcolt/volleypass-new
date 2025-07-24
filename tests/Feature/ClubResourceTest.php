@@ -212,9 +212,9 @@ class ClubResourceTest extends TestCase
         
         // Asociar director al club
         $directorClub->directivos()->attach($this->directorUser->id, [
-            'rol' => 'presidente',
-            'activo' => true,
-            'fecha_inicio' => now(),
+            'role' => 'presidente',
+            'is_active' => true,
+            'start_date' => now(),
         ]);
         
         $otherClub = Club::factory()->create([

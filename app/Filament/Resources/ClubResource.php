@@ -115,36 +115,36 @@ class ClubResource extends Resource
                             ]),
                         Forms\Components\Tabs\Tab::make('Configuración Federación')
                             ->schema([
-                                Forms\Components\Toggle::make('es_federado')
+                                Forms\Components\Toggle::make('is_federated')
                                     ->label('¿Es Federado?')
                                     ->live()
                                     ->columnSpanFull(),
                                 Forms\Components\Grid::make(2)
                                     ->schema([
-                                        Forms\Components\Select::make('tipo_federacion')
+                                        Forms\Components\Select::make('federation_type')
                                             ->label('Tipo de Federación')
                                             ->options(FederationStatus::class)
-                                            ->visible(fn (Forms\Get $get): bool => $get('es_federado'))
+                                            ->visible(fn (Forms\Get $get): bool => $get('is_federated'))
                                             ->columnSpan(1),
-                                        Forms\Components\TextInput::make('codigo_federacion')
+                                        Forms\Components\TextInput::make('federation_code')
                                             ->label('Código de Federación')
                                             ->unique(ignoreRecord: true)
-                                            ->visible(fn (Forms\Get $get): bool => $get('es_federado'))
+                                            ->visible(fn (Forms\Get $get): bool => $get('is_federated'))
                                             ->columnSpan(1),
                                     ]),
-                                Forms\Components\DatePicker::make('vencimiento_federacion')
+                                Forms\Components\DatePicker::make('federation_expiry')
                                     ->label('Vencimiento de Federación')
-                                    ->visible(fn (Forms\Get $get): bool => $get('es_federado'))
+                                    ->visible(fn (Forms\Get $get): bool => $get('is_federated'))
                                     ->columnSpanFull(),
-                                Forms\Components\Textarea::make('observaciones_federacion')
+                                Forms\Components\Textarea::make('federation_notes')
                                     ->label('Observaciones de Federación')
                                     ->rows(3)
                                     ->columnSpanFull(),
                             ]),
                         Forms\Components\Tabs\Tab::make('Directivos')
                             ->schema([
-                                Forms\Components\Repeater::make('directivos')
-                                    ->relationship('directivos')
+                                Forms\Components\Repeater::make('directors')
+                                    ->relationship('directors')
                                     ->schema([
                                         Forms\Components\Grid::make(3)
                                             ->schema([
@@ -155,7 +155,7 @@ class ClubResource extends Resource
                                                     ->preload()
                                                     ->required()
                                                     ->columnSpan(1),
-                                                Forms\Components\Select::make('rol')
+                                                Forms\Components\Select::make('role')
                                                     ->label('Rol')
                                                     ->options([
                                                         'presidente' => 'Presidente',
@@ -165,25 +165,25 @@ class ClubResource extends Resource
                                                     ])
                                                     ->required()
                                                     ->columnSpan(1),
-                                                Forms\Components\Toggle::make('activo')
+                                                Forms\Components\Toggle::make('is_active')
                                                     ->label('Activo')
                                                     ->default(true)
                                                     ->columnSpan(1),
                                             ]),
                                         Forms\Components\Grid::make(2)
                                             ->schema([
-                                                Forms\Components\DatePicker::make('fecha_inicio')
+                                                Forms\Components\DatePicker::make('start_date')
                                                     ->label('Fecha de Inicio')
                                                     ->required()
                                                     ->columnSpan(1),
-                                                Forms\Components\DatePicker::make('fecha_fin')
+                                                Forms\Components\DatePicker::make('end_date')
                                                     ->label('Fecha de Fin')
                                                     ->columnSpan(1),
                                             ]),
                                     ])
                                     ->collapsible()
                                     ->itemLabel(fn (array $state): ?string => 
-                                        $state['rol'] ?? 'Nuevo Directivo'
+                                        $state['role'] ?? 'Nuevo Directivo'
                                     )
                                     ->addActionLabel('Agregar Directivo')
                                     ->columnSpanFull(),
@@ -228,14 +228,14 @@ class ClubResource extends Resource
                     ->label('Ciudad')
                     ->sortable()
                     ->toggleable(),
-                Tables\Columns\IconColumn::make('es_federado')
+                Tables\Columns\IconColumn::make('is_federated')
                     ->label('Federado')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-badge')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                Tables\Columns\TextColumn::make('tipo_federacion')
+                Tables\Columns\TextColumn::make('federation_type')
                     ->label('Tipo Federación')
                     ->badge()
                     ->color(fn (?string $state): string => match ($state) {
@@ -244,7 +244,7 @@ class ClubResource extends Resource
                         'cancelada' => 'danger',
                         default => 'gray',
                     })
-                    ->visible(fn ($record) => $record && $record->es_federado),
+                    ->visible(fn ($record) => $record && $record->is_federated),
                 Tables\Columns\TextColumn::make('players_count')
                     ->label('Jugadoras')
                     ->counts('players')
@@ -263,10 +263,10 @@ class ClubResource extends Resource
                     ->relationship('department', 'name')
                     ->searchable()
                     ->preload(),
-                SelectFilter::make('tipo_federacion')
+                SelectFilter::make('federation_type')
                     ->label('Tipo Federación')
                     ->options(FederationStatus::class),
-                Tables\Filters\TernaryFilter::make('es_federado')
+                Tables\Filters\TernaryFilter::make('is_federated')
                     ->label('Estado Federación')
                     ->boolean()
                     ->trueLabel('Federados')
@@ -317,20 +317,20 @@ class ClubResource extends Resource
                         ->icon('heroicon-o-check-badge')
                         ->color('success')
                         ->form([
-                            Forms\Components\Select::make('tipo_federacion')
+                            Forms\Components\Select::make('federation_type')
                                 ->label('Tipo de Federación')
                                 ->options(FederationStatus::class)
                                 ->required(),
-                            Forms\Components\DatePicker::make('vencimiento_federacion')
+                            Forms\Components\DatePicker::make('federation_expiry')
                                 ->label('Vencimiento de Federación')
                                 ->required(),
                         ])
                         ->action(function (array $data, Collection $records) {
                             foreach ($records as $record) {
                                 $record->update([
-                                    'es_federado' => true,
-                                    'tipo_federacion' => $data['tipo_federacion'],
-                                    'vencimiento_federacion' => $data['vencimiento_federacion'],
+                                    'is_federated' => true,
+                                    'federation_type' => $data['federation_type'],
+                                    'federation_expiry' => $data['federation_expiry'],
                                 ]);
                             }
                         })
@@ -340,16 +340,16 @@ class ClubResource extends Resource
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
                         ->form([
-                            Forms\Components\Select::make('tipo_federacion')
+                            Forms\Components\Select::make('federation_type')
                                 ->label('Nuevo Tipo de Federación')
                                 ->options(FederationStatus::class)
                                 ->required(),
                         ])
                         ->action(function (array $data, Collection $records) {
                             foreach ($records as $record) {
-                                if ($record->es_federado) {
+                                if ($record->is_federated) {
                                     $record->update([
-                                        'tipo_federacion' => $data['tipo_federacion'],
+                                        'federation_type' => $data['federation_type'],
                                     ]);
                                 }
                             }
@@ -409,27 +409,27 @@ class ClubResource extends Resource
                                     ->size(80)
                                     ->columnSpan(1),
                                 \Filament\Infolists\Components\Group::make([
-                                    TextEntry::make('nombre')
-                                        ->size('lg')
-                                        ->weight('bold'),
-                                    TextEntry::make('nombre_corto')
-                                        ->badge(),
-                                    TextEntry::make('email')
-                                        ->icon('heroicon-o-envelope'),
-                                    TextEntry::make('telefono')
-                                        ->icon('heroicon-o-phone'),
+                                    TextEntry::make('name')
+                                    ->size('lg')
+                                    ->weight('bold'),
+                                TextEntry::make('short_name')
+                                    ->badge(),
+                                TextEntry::make('email')
+                                    ->icon('heroicon-o-envelope'),
+                                TextEntry::make('phone')
+                                    ->icon('heroicon-o-phone'),
                                 ])->columnSpan(2),
                             ]),
-                        TextEntry::make('direccion')
+                        TextEntry::make('address')
                             ->icon('heroicon-o-map-pin'),
                         Grid::make(2)
                             ->schema([
-                                TextEntry::make('department.nombre')
+                                TextEntry::make('departamento.name')
                                     ->label('Departamento'),
-                                TextEntry::make('city.nombre')
+                                TextEntry::make('ciudad.name')
                                     ->label('Ciudad'),
                             ]),
-                        TextEntry::make('fundacion')
+                        TextEntry::make('foundation_date')
                             ->label('Fecha de Fundación')
                             ->date('d/m/Y'),
                     ]),
@@ -451,9 +451,9 @@ class ClubResource extends Resource
                             ->label('Vencimiento de Federación')
                             ->date('d/m/Y')
                             ->visible(fn ($record) => $record && $record->es_federado),
-                        TextEntry::make('observaciones_federacion')
+                        TextEntry::make('federation_notes')
                             ->label('Observaciones')
-                            ->visible(fn ($record) => $record && $record->observaciones_federacion),
+                            ->visible(fn ($record) => $record && $record->federation_notes),
                     ])
                     ->visible(fn ($record) => $record && $record->es_federado),
                 Section::make('Estadísticas')
@@ -531,19 +531,19 @@ class ClubResource extends Resource
 
     public static function getGlobalSearchEloquentQuery(): Builder
     {
-        return parent::getGlobalSearchEloquentQuery()->with(['department', 'city']);
+        return parent::getGlobalSearchEloquentQuery()->with(['departamento', 'ciudad']);
     }
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['nombre', 'nombre_corto', 'email', 'department.nombre', 'city.nombre'];
+        return ['name', 'short_name', 'email', 'departamento.name', 'ciudad.name'];
     }
 
     public static function getGlobalSearchResultDetails($record): array
     {
         return [
-            'Departamento' => $record->department?->nombre,
-            'Ciudad' => $record->city?->nombre,
+            'Departamento' => $record->departamento?->name,
+            'Ciudad' => $record->ciudad?->name,
             'Federado' => $record && $record->es_federado ? 'Sí' : 'No',
         ];
     }

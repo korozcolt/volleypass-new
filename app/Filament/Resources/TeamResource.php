@@ -47,18 +47,9 @@ class TeamResource extends Resource
 
                         Forms\Components\Select::make('league_category_id')
                             ->label('Categoría')
-                            ->options(function (Forms\Get $get) {
-                                $clubId = $get('club_id');
-                                if (!$clubId) {
-                                    return [];
-                                }
-                                $club = Club::find($clubId);
-                                if (!$club || !$club->league) {
-                                    return [];
-                                }
-                                return $club->league->categories()->active()->pluck('name', 'id');
-                            })
-                            ->reactive()
+                            ->relationship('leagueCategory', 'name')
+                            ->searchable()
+                            ->preload()
                             ->required(),
 
                         Forms\Components\Select::make('gender')
@@ -183,7 +174,8 @@ class TeamResource extends Resource
 
                 Tables\Filters\SelectFilter::make('league_category_id')
                     ->label('Categoría')
-                    ->relationship('leagueCategory', 'name'),
+                    ->relationship('leagueCategory', 'name')
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('category')
                     ->label('Categoría (Legacy)')

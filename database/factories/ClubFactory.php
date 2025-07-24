@@ -22,29 +22,24 @@ class ClubFactory extends Factory
         return [
             'league_id' => League::factory(),
             'name' => $name,
-            'nombre' => $name,
             'short_name' => $shortName,
-            'nombre_corto' => $shortName,
             'description' => $this->faker->paragraph(),
             'city_id' => City::first()?->id ?? 1,
-            'departamento_id' => Department::first()?->id ?? 1,
+            'department_id' => Department::first()?->id ?? 1,
             'address' => $this->faker->address(),
-            'direccion' => $this->faker->address(),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
-            'telefono' => $this->faker->phoneNumber(),
             'website' => $this->faker->optional()->url(),
             'foundation_date' => $this->faker->dateTimeBetween('-20 years', '-1 year'),
-            'fundacion' => $this->faker->dateTimeBetween('-20 years', '-1 year'),
             'colors' => $this->faker->colorName() . ' y ' . $this->faker->colorName(),
             'history' => $this->faker->optional()->paragraph(),
             'status' => UserStatus::Active,
             'is_active' => true,
-            'es_federado' => $this->faker->boolean(30), // 30% de probabilidad
-            'tipo_federacion' => null,
-            'codigo_federacion' => null,
-            'vencimiento_federacion' => null,
-            'observaciones_federacion' => null,
+            'is_federated' => $this->faker->boolean(30), // 30% de probabilidad
+            'federation_type' => null,
+            'federation_code' => null,
+            'federation_expiry' => null,
+            'federation_notes' => null,
             'configurations' => [
                 'max_players' => $this->faker->numberBetween(15, 25),
                 'allow_transfers' => true,
@@ -84,10 +79,10 @@ class ClubFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'es_federado' => true,
-                'tipo_federacion' => $this->faker->randomElement(['departamental', 'nacional']),
-                'codigo_federacion' => $this->generateFederationCode(),
-                'vencimiento_federacion' => $this->faker->dateTimeBetween('now', '+2 years'),
+                'is_federated' => true,
+                'federation_type' => $this->faker->randomElement(['departamental', 'nacional']),
+                'federation_code' => $this->generateFederationCode(),
+                'federation_expiry' => $this->faker->dateTimeBetween('now', '+2 years'),
             ];
         });
     }
@@ -96,10 +91,10 @@ class ClubFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'es_federado' => false,
-                'tipo_federacion' => null,
-                'codigo_federacion' => null,
-                'vencimiento_federacion' => null,
+                'is_federated' => false,
+                'federation_type' => null,
+                'federation_code' => null,
+                'federation_expiry' => null,
             ];
         });
     }
@@ -108,10 +103,10 @@ class ClubFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'es_federado' => true,
-                'tipo_federacion' => $this->faker->randomElement(['departamental', 'nacional']),
-                'codigo_federacion' => $this->generateFederationCode(),
-                'vencimiento_federacion' => $this->faker->dateTimeBetween('-1 year', '-1 day'),
+                'is_federated' => true,
+                'federation_type' => $this->faker->randomElement(['departamental', 'nacional']),
+                'federation_code' => $this->generateFederationCode(),
+                'federation_expiry' => $this->faker->dateTimeBetween('-1 year', '-1 day'),
             ];
         });
     }
@@ -120,7 +115,7 @@ class ClubFactory extends Factory
     {
         do {
             $code = 'FED-' . strtoupper($this->faker->bothify('??###'));
-        } while (Club::where('codigo_federacion', $code)->exists());
+        } while (Club::where('federation_code', $code)->exists());
         
         return $code;
     }
