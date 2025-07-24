@@ -90,6 +90,38 @@ class CategoryNotificationService
     }
     
     /**
+     * Notifica cambios en la configuración de categorías (método simplificado)
+     *
+     * @param League $league
+     * @param User $changedBy
+     * @param string $changeDescription
+     * @return void
+     */
+    public function notifyConfigurationChanged(League $league, User $changedBy, string $changeDescription): void
+    {
+        try {
+            // Usar el método existente con configuraciones vacías
+            $this->notifyCategoryConfigurationChanged(
+                $league,
+                [], // configuración anterior
+                [], // nueva configuración
+                $changedBy
+            );
+            
+            Log::info('Notificación de cambio de configuración enviada', [
+                'league_id' => $league->id,
+                'description' => $changeDescription,
+                'changed_by' => $changedBy->email
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al notificar cambio de configuración', [
+                'league_id' => $league->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
      * Notifica a múltiples jugadores sobre cambios en sus categorías
      *
      * @param array $playerChanges Array de cambios de categoría con formato:

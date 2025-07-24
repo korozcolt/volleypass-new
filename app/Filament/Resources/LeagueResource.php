@@ -138,10 +138,18 @@ class LeagueResource extends Resource
                                                 Forms\Components\Grid::make(3)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('name')
-                                                            ->label('Nombre')
-                                                            ->placeholder('Ej: Mini, Infantil, Juvenil')
-                                                            ->required()
-                                                            ->columnSpan(1),
+                                            ->label('Nombre')
+                                            ->placeholder('Ej: Mini, Infantil, Juvenil')
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, $get, $set, $livewire) {
+                                                // Auto-generar código basado en el nombre
+                                                if ($state && !$get('code')) {
+                                                    $code = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $state), 0, 4));
+                                                    $set('code', $code);
+                                                }
+                                            })
+                                            ->columnSpan(1),
                                                             
                                                         Forms\Components\TextInput::make('code')
                                                             ->label('Código')
@@ -163,13 +171,36 @@ class LeagueResource extends Resource
                                                 Forms\Components\Grid::make(3)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('min_age')
-                                                            ->label('Edad Mínima')
-                                                            ->numeric()
-                                                            ->minValue(5)
-                                                            ->maxValue(100)
-                                                            ->required()
-                                                            ->live()
-                                                            ->columnSpan(1),
+                                            ->label('Edad Mínima')
+                                            ->numeric()
+                                            ->minValue(5)
+                                            ->maxValue(100)
+                                            ->required()
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, $get, $set, $livewire) {
+                                                // Validar superposiciones con otras categorías
+                                                $categories = $livewire->data['categories'] ?? [];
+                                                $currentIndex = array_search($get('../../'), $categories);
+                                                
+                                                foreach ($categories as $index => $category) {
+                                                    if ($index !== $currentIndex && isset($category['min_age'], $category['max_age'])) {
+                                                        $minAge = (int) $state;
+                                                        $maxAge = (int) $get('max_age');
+                                                        $otherMin = (int) $category['min_age'];
+                                                        $otherMax = (int) $category['max_age'];
+                                                        
+                                                        if ($maxAge && (($minAge >= $otherMin && $minAge <= $otherMax) || 
+                                                            ($maxAge >= $otherMin && $maxAge <= $otherMax))) {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->warning()
+                                                                ->title('Superposición detectada')
+                                                                ->body("El rango {$minAge}-{$maxAge} se superpone con {$category['name']} ({$otherMin}-{$otherMax})")
+                                                                ->send();
+                                                        }
+                                                    }
+                                                }
+                                            })
+                                            ->columnSpan(1),
                                                             
                                                         Forms\Components\TextInput::make('max_age')
                                                             ->label('Edad Máxima')
@@ -179,10 +210,13 @@ class LeagueResource extends Resource
                                                             ->required()
                                                             ->live()
                                                             ->afterStateUpdated(function ($state, $get, $set) {
-                                                                if ($state <= $get('min_age')) {
-                                                                    $set('max_age', $get('min_age') + 1);
-                                                                }
-                                                            })
+                                                if ($state <= $get('min_age')) {
+                                                    $set('max_age', $get('min_age') + 1);
+                                                }
+                                            })
+                                            ->helperText(fn ($get) => $get('min_age') && $get('max_age') ? 
+                                                'Rango: ' . $get('min_age') . '-' . $get('max_age') . ' años' : 
+                                                'Ingresa edad mínima primero')
                                                             ->columnSpan(1),
                                                             
                                                         Forms\Components\TextInput::make('sort_order')
