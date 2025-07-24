@@ -1,237 +1,397 @@
-<x-filament-widgets::widget>
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center gap-2">
-                <x-heroicon-o-eye class="h-5 w-5 text-primary-500" />
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Preview del Impacto en Jugadoras</h3>
-            </div>
-        </div>
-        <div class="p-6">
+{{-- resources/views/filament/widgets/category-impact-preview.blade.php --}}
 
-        @if(!$hasCustomCategories)
-            <div class="text-center py-8">
-                <x-heroicon-o-information-circle class="mx-auto h-12 w-12 text-gray-400" />
-                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    Sistema Tradicional Activo
-                </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Configure categorías personalizadas para ver el impacto en las jugadoras.
-                </p>
+<x-filament-widgets::widget>
+    <x-filament::section>
+        {{-- Header simple y limpio --}}
+        <x-slot name="heading">
+            <div class="flex items-center gap-x-3">
+                <x-filament::icon
+                    icon="heroicon-m-eye"
+                    class="h-5 w-5"
+                />
+                Preview del Impacto en Jugadoras
             </div>
-        @else
-            <div class="space-y-6">
-                <!-- Resumen del Impacto -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-700">
-                        <div class="flex items-center justify-between">
+        </x-slot>
+
+        <x-slot name="description">
+            @if(!$hasData)
+                Guarda la liga primero para ver el análisis de impacto
+            @elseif(!$hasCustomCategories)
+                Configure categorías personalizadas para ver el impacto detallado
+            @else
+                Análisis del impacto de las categorías personalizadas en las jugadoras existentes
+            @endif
+        </x-slot>
+
+        {{-- Contenido principal limpio --}}
+        <div class="space-y-6">
+
+            {{-- Estado: Liga no guardada --}}
+            @if(!$hasData)
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                    <x-filament::icon
+                        icon="heroicon-o-document-plus"
+                        class="h-12 w-12 text-gray-400 dark:text-gray-500"
+                    />
+                    <h3 class="mt-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                        Liga no guardada
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Guarda la liga para ver el análisis de impacto
+                    </p>
+                </div>
+            @endif
+
+            {{-- Estado: Sin categorías personalizadas --}}
+            @if($hasData && !$hasCustomCategories)
+                <x-filament::section>
+                    <div class="flex items-start gap-x-3">
+                        <x-filament::icon
+                            icon="heroicon-m-information-circle"
+                            class="mt-0.5 h-5 w-5 text-blue-500"
+                        />
+                        <div>
+                            <h3 class="text-base font-medium text-gray-900 dark:text-gray-100">
+                                Sistema Tradicional Activo
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                Configure categorías personalizadas en la sección superior para ver el impacto detallado en las jugadoras existentes.
+                            </p>
+                        </div>
+                    </div>
+                </x-filament::section>
+            @endif
+
+            {{-- Contenido: Con categorías personalizadas --}}
+            @if($hasData && $hasCustomCategories)
+
+                {{-- Alerta crítica --}}
+                @if($needsAttention)
+                    <x-filament::section
+                        :compact="true"
+                        class="border-l-4 border-l-danger-600 bg-danger-50 dark:bg-danger-950/50"
+                    >
+                        <div class="flex items-start gap-x-3">
+                            <x-filament::icon
+                                icon="heroicon-m-exclamation-triangle"
+                                class="mt-0.5 h-5 w-5 text-danger-600"
+                            />
                             <div>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <x-heroicon-o-check-circle class="h-5 w-5 text-green-500" />
-                                    <span class="text-sm font-medium text-green-800 dark:text-green-200">
-                                        Sin cambios
-                                    </span>
-                                </div>
-                                <p class="text-2xl font-bold text-green-900 dark:text-green-100">
+                                <h3 class="text-sm font-medium text-danger-800 dark:text-danger-200">
+                                    Atención Requerida
+                                </h3>
+                                <p class="mt-1 text-sm text-danger-700 dark:text-danger-300">
+                                    {{ $criticalCount }} jugadoras no tienen categoría asignada y requieren configuración manual.
+                                </p>
+                            </div>
+                        </div>
+                    </x-filament::section>
+                @endif
+
+                {{-- Métricas en grid limpio --}}
+                <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {{-- Sin cambios --}}
+                    <x-filament::section :compact="true">
+                        <div class="flex items-center gap-x-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-success-100 dark:bg-success-950">
+                                <x-filament::icon
+                                    icon="heroicon-m-check-circle"
+                                    class="h-5 w-5 text-success-600 dark:text-success-400"
+                                />
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                                     {{ $impact['summary']['no_change'] }}
                                 </p>
-                                <p class="text-xs text-green-600 dark:text-green-400 mt-1">
-                                    Jugadoras que mantienen su categoría
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Sin cambios
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </x-filament::section>
 
-                    <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-700">
-                        <div class="flex items-center justify-between">
+                    {{-- Cambio categoría --}}
+                    <x-filament::section :compact="true">
+                        <div class="flex items-center gap-x-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-warning-100 dark:bg-warning-950">
+                                <x-filament::icon
+                                    icon="heroicon-m-arrow-path"
+                                    class="h-5 w-5 text-warning-600 dark:text-warning-400"
+                                />
+                            </div>
                             <div>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <x-heroicon-o-arrow-path class="h-5 w-5 text-yellow-500" />
-                                    <span class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                                        Cambio categoría
-                                    </span>
-                                </div>
-                                <p class="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+                                <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                                     {{ $impact['summary']['category_change'] }}
                                 </p>
-                                <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                                    Jugadoras que cambian de categoría
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Cambio categoría
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </x-filament::section>
 
-                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
-                        <div class="flex items-center justify-between">
+                    {{-- Nueva categoría --}}
+                    <x-filament::section :compact="true">
+                        <div class="flex items-center gap-x-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-info-100 dark:bg-info-950">
+                                <x-filament::icon
+                                    icon="heroicon-m-plus-circle"
+                                    class="h-5 w-5 text-info-600 dark:text-info-400"
+                                />
+                            </div>
                             <div>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <x-heroicon-o-plus-circle class="h-5 w-5 text-blue-500" />
-                                    <span class="text-sm font-medium text-blue-800 dark:text-blue-200">
-                                        Nueva categoría
-                                    </span>
-                                </div>
-                                <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                                <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                                     {{ $impact['summary']['new_category'] }}
                                 </p>
-                                <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                    Jugadoras asignadas a nueva categoría
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Nueva categoría
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </x-filament::section>
 
-                    <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-700">
-                        <div class="flex items-center justify-between">
+                    {{-- Sin categoría --}}
+                    <x-filament::section
+                        :compact="true"
+                        @class([
+                            'ring-2 ring-danger-200 dark:ring-danger-800' => $impact['summary']['no_category'] > 0
+                        ])
+                    >
+                        <div class="flex items-center gap-x-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-danger-100 dark:bg-danger-950">
+                                <x-filament::icon
+                                    icon="heroicon-m-exclamation-triangle"
+                                    class="h-5 w-5 text-danger-600 dark:text-danger-400"
+                                />
+                            </div>
                             <div>
-                                <div class="flex items-center gap-2 mb-2">
-                                    <x-heroicon-o-exclamation-triangle class="h-5 w-5 text-red-500" />
-                                    <span class="text-sm font-medium text-red-800 dark:text-red-200">
-                                        Sin categoría
-                                    </span>
-                                </div>
-                                <p class="text-2xl font-bold text-red-900 dark:text-red-100">
+                                <p class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                                     {{ $impact['summary']['no_category'] }}
                                 </p>
-                                <p class="text-xs text-red-600 dark:text-red-400 mt-1">
-                                    Jugadoras sin categoría asignada
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    Sin categoría
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </x-filament::section>
                 </div>
 
-                <!-- Distribución por Categoría -->
-                @if(count($impact['category_changes']) > 0)
-                    <div>
-                        <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                            Distribución por Categoría Personalizada
-                        </h4>
-                        <div class="grid gap-4">
-                            @foreach($impact['category_changes'] as $categoryName => $categoryData)
-                                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                                        <div class="flex items-center justify-between w-full">
-                                            <div class="flex items-center gap-2">
-                                                <x-heroicon-o-user-group class="h-5 w-5 text-primary-500" />
-                                                <span class="font-medium text-gray-900 dark:text-white">{{ $categoryName }}</span>
-                                                @if($categoryData['category'])
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                                                        {{ $categoryData['category']->min_age }}-{{ $categoryData['category']->max_age }} años
-                                                    </span>
-                                                @endif
-                                            </div>
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
-                                                {{ $categoryData['players_count'] }} jugadoras
-                                            </span>
+                {{-- Lista de jugadoras afectadas --}}
+                @if($totalAffected > 0)
+                    <x-filament::section>
+                        <x-slot name="heading">
+                            Jugadoras Afectadas
+                            <span class="ml-2 text-sm font-normal text-gray-500">({{ $totalAffected }} total)</span>
+                        </x-slot>
+
+                        <x-slot name="description">
+                            Jugadoras que requieren atención o cambiarán de categoría
+                        </x-slot>
+
+                        <div class="space-y-3">
+                            @foreach(array_slice($impact['affected_players'], 0, 5) as $affected)
+                                <div class="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                                    <div class="flex items-center gap-x-3">
+                                        {{-- Avatar --}}
+                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                                            <x-filament::icon
+                                                icon="heroicon-m-user"
+                                                class="h-5 w-5 text-gray-500"
+                                            />
+                                        </div>
+
+                                        {{-- Info jugadora --}}
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                {{ $affected['player']->user->name ?? 'Sin nombre' }}
+                                            </p>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $affected['current_age'] }} años •
+                                                {{ $affected['player']->currentClub->name ?? 'Sin club' }}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div class="p-4">
-                                    
-                                    @if(count($categoryData['from_traditional']) > 0)
-                                        <div class="space-y-3">
-                                            <h6 class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                <x-heroicon-o-arrow-right class="inline h-4 w-4 mr-1" />
-                                                Provienen de categorías tradicionales:
-                                            </h6>
-                                            <div class="grid gap-2">
-                                                @foreach($categoryData['from_traditional'] as $traditionalCategory => $count)
-                                                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $traditionalCategory }}</span>
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                            {{ $count }} jugadoras
-                                                        </span>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
+
+                                    {{-- Badge estado --}}
+                                    @php
+                                        $badgeConfig = match($affected['change_type']) {
+                                            'no_category' => ['danger', 'Sin categoría'],
+                                            'category_change' => ['warning', 'Cambio'],
+                                            'new_category' => ['info', 'Nueva'],
+                                            default => ['gray', 'Normal']
+                                        };
+                                    @endphp
+
+                                    <x-filament::badge
+                                        :color="$badgeConfig[0]"
+                                        size="sm"
+                                    >
+                                        {{ $badgeConfig[1] }}
+                                    </x-filament::badge>
+                                </div>
+                            @endforeach
+
+                            {{-- Ver más --}}
+                            @if($totalAffected > 5)
+                                <div class="rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-800">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Mostrando 5 de {{ $totalAffected }} jugadoras afectadas
+                                    </p>
+                                    <x-filament::button
+                                        size="sm"
+                                        color="gray"
+                                        class="mt-2"
+                                    >
+                                        Ver todas
+                                    </x-filament::button>
+                                </div>
+                            @endif
+                        </div>
+                    </x-filament::section>
+                @else
+                    {{-- Estado exitoso --}}
+                    <x-filament::section>
+                        <div class="flex flex-col items-center justify-center py-8 text-center">
+                            <x-filament::icon
+                                icon="heroicon-o-check-circle"
+                                class="h-12 w-12 text-success-500"
+                            />
+                            <h3 class="mt-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                ¡Excelente configuración!
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                Todas las jugadoras mantienen sus categorías con la nueva configuración
+                            </p>
+                        </div>
+                    </x-filament::section>
+                @endif
+
+                {{-- Distribución por categoría --}}
+                @if(!empty($impact['category_changes']))
+                    <x-filament::section>
+                        <x-slot name="heading">
+                            Distribución por Categoría
+                        </x-slot>
+
+                        <x-slot name="description">
+                            Cómo se distribuirán las jugadoras con las nuevas categorías
+                        </x-slot>
+
+                        <div class="space-y-3">
+                            @foreach($impact['category_changes'] as $categoryName => $data)
+                                <div class="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                                    <div class="flex items-center gap-x-3">
+                                        <div @class([
+                                            'h-3 w-3 rounded-full',
+                                            'bg-danger-500' => $categoryName === 'Sin categoría',
+                                            'bg-primary-500' => $categoryName !== 'Sin categoría'
+                                        ])></div>
+                                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $categoryName }}
+                                        </span>
+                                        @if($data['category'])
+                                            <span class="text-xs text-gray-500">
+                                                ({{ $data['category']->min_age }}-{{ $data['category']->max_age }} años)
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $data['players_count'] }}
+                                        </span>
+                                        @if($categoryName === 'Sin categoría')
+                                            <x-filament::icon
+                                                icon="heroicon-m-exclamation-triangle"
+                                                class="h-4 w-4 text-danger-500"
+                                            />
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-                    </div>
+                    </x-filament::section>
                 @endif
 
-                <!-- Jugadoras Afectadas (solo las primeras 10) -->
-                @if(count($impact['affected_players']) > 0)
-                    <div>
-                        <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                            Jugadoras Afectadas
-                            @if(count($impact['affected_players']) > 10)
-                                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                                    (Mostrando las primeras 10 de {{ count($impact['affected_players']) }})
-                                </span>
-                            @endif
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jugadora</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Edad</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Club</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cambio</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            
-                            @foreach(array_slice($impact['affected_players'], 0, 10) as $affectedPlayer)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center gap-3">
-                                            @if($affectedPlayer['player']->user->avatar_url ?? null)
-                                                <img class="h-8 w-8 rounded-full object-cover" 
-                                                     src="{{ $affectedPlayer['player']->user->avatar_url }}" 
-                                                     alt="{{ $affectedPlayer['player']->user->name ?? 'N/A' }}">
-                                            @else
-                                                <div class="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                                                    <x-heroicon-o-user class="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                                                </div>
-                                            @endif
-                                            <div>
-                                                <div class="font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ $affectedPlayer['player']->user->name ?? 'N/A' }}
-                                                </div>
-                                                @if($affectedPlayer['player']->user->email)
-                                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                        {{ $affectedPlayer['player']->user->email }}
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
-                                            {{ $affectedPlayer['current_age'] }} años
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900 dark:text-gray-100">
-                                            {{ $affectedPlayer['player']->currentClub->name ?? 'Sin club' }}
-                                        </div>
-                                    </td>
-                                    
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $badgeColor = match($affectedPlayer['change_type']) {
-                                                'category_change' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                                'no_category' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-                                                default => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                            };
-                                        @endphp
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $badgeColor }}">
-                                            {{ $affectedPlayer['change_description'] }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            @endforeach
-                         </tbody>
-                     </table>
-                    </div>
+                {{-- Acciones recomendadas --}}
+                @if($needsAttention)
+                    <x-filament::section>
+                        <x-slot name="heading">
+                            <div class="flex items-center gap-x-2">
+                                <x-filament::icon
+                                    icon="heroicon-m-light-bulb"
+                                    class="h-5 w-5 text-info-500"
+                                />
+                                Acciones Recomendadas
+                            </div>
+                        </x-slot>
+
+                        <div class="space-y-4">
+                            <div class="flex gap-x-3">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-700 dark:bg-primary-950 dark:text-primary-300">
+                                    1
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        Ajustar rangos de edad
+                                    </p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Modifica los rangos para cubrir las {{ $criticalCount }} jugadoras sin asignar
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-x-3">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-700 dark:bg-primary-950 dark:text-primary-300">
+                                    2
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        Crear categoría adicional
+                                    </p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Agrega una nueva categoría que cubra las edades faltantes
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex gap-x-3">
+                                <x-filament::button
+                                    color="primary"
+                                    size="sm"
+                                    icon="heroicon-m-cog-6-tooth"
+                                >
+                                    Configuración automática
+                                </x-filament::button>
+
+                                <x-filament::button
+                                    color="gray"
+                                    size="sm"
+                                    icon="heroicon-m-eye"
+                                >
+                                    Ver todas las jugadoras
+                                </x-filament::button>
+                            </div>
+                        </div>
+                    </x-filament::section>
                 @endif
-            </div>
-        @endif
+
+            @endif
+
         </div>
-    </div>
+
+        {{-- Footer informativo --}}
+        @if($hasData && $hasCustomCategories)
+            <x-slot name="footerActions">
+                <div class="flex w-full items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>
+                        Última actualización: {{ now()->format('d/m/Y H:i') }}
+                    </span>
+                    <span>
+                        {{ $impact['total_players'] }} jugadoras analizadas
+                    </span>
+                </div>
+            </x-slot>
+        @endif
+
+    </x-filament::section>
 </x-filament-widgets::widget>

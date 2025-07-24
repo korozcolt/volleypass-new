@@ -3,179 +3,184 @@
 namespace App\Filament\Resources\LeagueResource\Pages;
 
 use App\Filament\Resources\LeagueResource;
-use App\Filament\Resources\LeagueResource\Widgets\CategoryStatsWidget;
 use App\Filament\Resources\LeagueResource\Widgets\CategoryImpactPreviewWidget;
-use App\Models\LeagueConfiguration;
-use App\Models\LeagueCategory;
-use App\Services\LeagueConfigurationService;
-use App\Services\CategoryNotificationService;
+use App\Filament\Resources\LeagueResource\Widgets\CategoryStatsWidget;
 use Filament\Actions;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class EditLeague extends EditRecord
 {
     protected static string $resource = LeagueResource::class;
-
-    public function hasCombinedRelationManagerTabsWithContent(): bool
-    {
-        return true;
-    }
-
-    public function getContentTabLabel(): ?string
-    {
-        return 'Información General';
-    }
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
-            Actions\Action::make('export_categories')
-                ->label('Exportar Categorías')
-                ->icon('heroicon-o-arrow-down-tray')
+
+            // Acción adicional para gestión rápida de categorías
+            Actions\Action::make('manage_categories')
+                ->label('Gestionar Categorías')
+                ->icon('heroicon-o-cog-6-tooth')
+                ->color('info')
+                ->url(fn() => '#categories')
+                ->extraAttributes(['onclick' => 'document.querySelector("[data-tab=\'categories\']")?.click(); return false;']),
+
+            // Acción para validación rápida
+            Actions\Action::make('validate_configuration')
+                ->label('Validar Configuración')
+                ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->action(function () {
-                    $this->exportCategories();
-                }),
-            Actions\Action::make('import_categories')
-                ->label('Importar Categorías')
-                ->icon('heroicon-o-arrow-up-tray')
-                ->color('info')
-                ->form([
-                    Forms\Components\FileUpload::make('categories_file')
-                        ->label('Archivo de Categorías')
-                        ->acceptedFileTypes(['application/json'])
-                        ->required()
-                        ->helperText('Selecciona un archivo JSON con la configuración de categorías'),
-                ])
-                ->action(function (array $data) {
-                    $this->importCategories($data['categories_file']);
-                }),
-            Actions\Action::make('reload_configurations')
-                ->label('Recargar Configuraciones')
-                ->icon('heroicon-o-arrow-path')
-                ->color('warning')
-                ->action(function () {
-                    // Recargar configuraciones básicas
-                    $this->record->refresh();
-                    Notification::make()
-                        ->title('Configuraciones de liga recargadas exitosamente.')
-                        ->success()
-                        ->send();
-                }),
+                    $this->validateCategoryConfiguration();
+                })
+                ->visible(fn() => $this->record->hasCustomCategories()),
         ];
     }
 
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            CategoryStatsWidget::class,
-        ];
-    }
-
+    /**
+     * Widgets que se mostrarán después del formulario principal
+     */
     protected function getFooterWidgets(): array
     {
         return [
+            CategoryStatsWidget::class,
             CategoryImpactPreviewWidget::class,
         ];
     }
 
-    private function exportCategories(): void
+    /**
+     * Método para validar configuración de categorías
+     */
+    private function validateCategoryConfiguration(): void
     {
-        $categories = $this->record->categories()->active()->get();
-        
-        $exportData = [
-            'league_name' => $this->record->name,
-            'export_date' => now()->toISOString(),
-            'categories' => $categories->map(function ($category) {
-                return [
-                    'name' => $category->name,
-                    'code' => $category->code,
-                    'min_age' => $category->min_age,
-                    'max_age' => $category->max_age,
-                    'gender' => $category->gender,
-                    'sort_order' => $category->sort_order,
-                    'description' => $category->description,
-                ];
-            })->toArray(),
-        ];
+        if (!$this->record->hasCustomCategories()) {
+            $this->notify('warning', 'No hay categorías personalizadas configuradas');
+            return;
+        }
 
-        $filename = 'categories_' . Str::slug($this->record->name) . '_' . now()->format('Y-m-d_H-i-s') . '.json';
-        $content = json_encode($exportData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        
-        Storage::disk('public')->put('exports/' . $filename, $content);
-        
-        Notification::make()
-             ->title('Categorías exportadas exitosamente')
-             ->body('Archivo: ' . $filename)
-             ->success()
-             ->send();
+        // Aquí puedes agregar lógica de validación más específica
+        $impact = $this->calculateCategoryImpact();
+
+        if ($impact['summary']['no_category'] > 0) {
+            $this->notify('warning',
+                'Configuración incompleta',
+                "{$impact['summary']['no_category']} jugadoras sin categoría asignada"
+            );
+        } else {
+            $this->notify('success',
+                'Configuración válida',
+                'Todas las jugadoras tienen categoría asignada'
+            );
+        }
     }
 
-    private function importCategories(string $filePath): void
+    /**
+     * Método helper para cálculo rápido de impacto
+     */
+    private function calculateCategoryImpact(): array
     {
-        try {
-            $content = Storage::disk('public')->get($filePath);
-            $data = json_decode($content, true);
-            
-            if (!isset($data['categories']) || !is_array($data['categories'])) {
-                throw new \Exception('Formato de archivo inválido');
-            }
+        // Lógica simplificada para validación rápida
+        $players = \App\Models\Player::whereHas('currentClub', function ($query) {
+            $query->where('league_id', $this->record->id);
+        })->get();
 
-            $importedCount = 0;
-            $errors = [];
+        $summary = [
+            'no_category' => 0,
+            'category_change' => 0,
+            'no_change' => 0,
+        ];
 
-            foreach ($data['categories'] as $categoryData) {
-                try {
-                    LeagueCategory::updateOrCreate(
-                        [
-                            'league_id' => $this->record->id,
-                            'code' => $categoryData['code'],
-                        ],
-                        [
-                            'name' => $categoryData['name'],
-                            'min_age' => $categoryData['min_age'],
-                            'max_age' => $categoryData['max_age'],
-                            'gender' => $categoryData['gender'] ?? 'female',
-                            'sort_order' => $categoryData['sort_order'] ?? 0,
-                            'description' => $categoryData['description'] ?? null,
-                            'is_active' => true,
-                        ]
-                    );
-                    $importedCount++;
-                } catch (\Exception $e) {
-                    $errors[] = "Error en categoría {$categoryData['name']}: " . $e->getMessage();
+        if (!$this->record->hasCustomCategories()) {
+            return ['summary' => $summary];
+        }
+
+        $customCategories = $this->record->getActiveCategories();
+
+        foreach ($players as $player) {
+            $age = $player->age;
+            if (!$age) continue;
+
+            $customCategory = $customCategories->first(function ($category) use ($age) {
+                return $age >= $category->min_age && $age <= $category->max_age;
+            });
+
+            if (!$customCategory) {
+                $summary['no_category']++;
+            } else {
+                $traditionalCategory = \App\Enums\PlayerCategory::getForAge($age, $player->user->gender ?? 'female');
+                if ($customCategory->code !== $traditionalCategory->value) {
+                    $summary['category_change']++;
+                } else {
+                    $summary['no_change']++;
                 }
             }
-
-            // Las categorías han sido importadas exitosamente
-
-            if (empty($errors)) {
-                Notification::make()
-                    ->title('Importación completada exitosamente')
-                    ->body("{$importedCount} categorías importadas")
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Importación completada con errores')
-                    ->body("{$importedCount} categorías importadas, " . count($errors) . ' errores')
-                    ->warning()
-                    ->send();
-            }
-
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Error en la importación')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
         }
+
+        return ['summary' => $summary];
+    }
+
+    /**
+     * Método helper para notificaciones mejoradas
+     */
+    private function notify(string $type, string $title, string $body = ''): void
+    {
+        \Filament\Notifications\Notification::make()
+            ->title($title)
+            ->body($body)
+            ->$type()
+            ->send();
+    }
+
+    /**
+     * Configurar pestañas activas por defecto
+     */
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        // Si hay problemas de categorías, activar tab de categorías por defecto
+        if ($this->record && $this->record->hasCustomCategories()) {
+            $impact = $this->calculateCategoryImpact();
+            if ($impact['summary']['no_category'] > 0) {
+                // Lógica para highlight de problemas críticos
+                session()->flash('highlight_categories', true);
+            }
+        }
+
+        return parent::mutateFormDataBeforeFill($data);
+    }
+
+    /**
+     * Configuración de página
+     */
+    public function getTitle(): string
+    {
+        $title = parent::getTitle();
+
+        // Agregar indicador si hay problemas críticos
+        if ($this->record && $this->record->hasCustomCategories()) {
+            $impact = $this->calculateCategoryImpact();
+            if ($impact['summary']['no_category'] > 0) {
+                $title .= " ⚠️";
+            }
+        }
+
+        return $title;
+    }
+
+    /**
+     * Breadcrumbs personalizados
+     */
+    public function getBreadcrumbs(): array
+    {
+        $breadcrumbs = parent::getBreadcrumbs();
+
+        // Agregar contexto adicional si es necesario
+        if ($this->record && $this->record->hasCustomCategories()) {
+            $categories = $this->record->getActiveCategories();
+            $lastBreadcrumb = array_key_last($breadcrumbs);
+            $breadcrumbs[$lastBreadcrumb] .= " ({$categories->count()} categorías)";
+        }
+
+        return $breadcrumbs;
     }
 }

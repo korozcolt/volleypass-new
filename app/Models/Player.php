@@ -156,6 +156,16 @@ class Player extends Model
         return $this->belongsTo(Payment::class, 'federation_payment_id');
     }
 
+    public function league()
+    {
+        return $this->belongsTo(League::class);
+    }
+
+    public function club()
+    {
+        return $this->belongsTo(Club::class);
+    }
+
     // =======================
     // ACCESSORS
     // =======================
@@ -386,8 +396,8 @@ class Player extends Model
     public function isFederated(): bool
     {
         return $this->federation_status === FederationStatus::Federated &&
-               $this->federation_expires_at &&
-               $this->federation_expires_at->isFuture();
+            $this->federation_expires_at &&
+            $this->federation_expires_at->isFuture();
     }
 
     public function canPlayInFederatedTournaments(): bool

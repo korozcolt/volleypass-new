@@ -135,6 +135,11 @@ class League extends Model implements HasMedia
         return $this->hasMany(LeagueCategory::class);
     }
 
+    public function leagueCategories()
+    {
+        return $this->hasMany(LeagueCategory::class);
+    }
+
     // Obtener todas las jugadoras de la liga
     public function players()
     {
@@ -173,7 +178,7 @@ class League extends Model implements HasMedia
 
     public function getLogoUrl(string $mode = 'light'): ?string
     {
-        $collection = match($mode) {
+        $collection = match ($mode) {
             'dark' => 'logo_dark',
             'light' => 'logo_light',
             default => 'logo_light'
@@ -201,7 +206,7 @@ class League extends Model implements HasMedia
 
     public function hasLogo(string $mode = 'light'): bool
     {
-        $collection = match($mode) {
+        $collection = match ($mode) {
             'dark' => 'logo_dark',
             'light' => 'logo_light',
             default => 'logo_light'
@@ -236,7 +241,7 @@ class League extends Model implements HasMedia
     public function getActivePlayersCountAttribute(): int
     {
         return $this->players()
-            ->whereHas('user', function($query) {
+            ->whereHas('user', function ($query) {
                 $query->where('status', UserStatus::Active);
             })
             ->count();

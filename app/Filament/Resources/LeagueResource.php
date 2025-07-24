@@ -5,7 +5,9 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\LeagueResource\Pages;
 use App\Models\League;
 use App\Models\Country;
+use App\Models\Player;
 use App\Enums\UserStatus;
+use App\Enums\PlayerCategory;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -17,6 +19,7 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class LeagueResource extends Resource
 {
@@ -150,13 +153,13 @@ class LeagueResource extends Resource
                                                 }
                                             })
                                             ->columnSpan(1),
-                                                            
+
                                                         Forms\Components\TextInput::make('code')
                                                             ->label('Código')
                                                             ->placeholder('Ej: MINI, INF, JUV')
                                                             ->alphaDash()
                                                             ->columnSpan(1),
-                                                            
+
                                                         Forms\Components\Select::make('gender')
                                                             ->label('Género')
                                                             ->options([
@@ -167,7 +170,7 @@ class LeagueResource extends Resource
                                                             ->required()
                                                             ->columnSpan(1),
                                                     ]),
-                                                    
+
                                                 Forms\Components\Grid::make(3)
                                                     ->schema([
                                                         Forms\Components\TextInput::make('min_age')
@@ -181,15 +184,15 @@ class LeagueResource extends Resource
                                                 // Validar superposiciones con otras categorías
                                                 $categories = $livewire->data['categories'] ?? [];
                                                 $currentIndex = array_search($get('../../'), $categories);
-                                                
+
                                                 foreach ($categories as $index => $category) {
                                                     if ($index !== $currentIndex && isset($category['min_age'], $category['max_age'])) {
                                                         $minAge = (int) $state;
                                                         $maxAge = (int) $get('max_age');
                                                         $otherMin = (int) $category['min_age'];
                                                         $otherMax = (int) $category['max_age'];
-                                                        
-                                                        if ($maxAge && (($minAge >= $otherMin && $minAge <= $otherMax) || 
+
+                                                        if ($maxAge && (($minAge >= $otherMin && $minAge <= $otherMax) ||
                                                             ($maxAge >= $otherMin && $maxAge <= $otherMax))) {
                                                             \Filament\Notifications\Notification::make()
                                                                 ->warning()
@@ -201,7 +204,7 @@ class LeagueResource extends Resource
                                                 }
                                             })
                                             ->columnSpan(1),
-                                                            
+
                                                         Forms\Components\TextInput::make('max_age')
                                                             ->label('Edad Máxima')
                                                             ->numeric()
@@ -214,24 +217,24 @@ class LeagueResource extends Resource
                                                     $set('max_age', $get('min_age') + 1);
                                                 }
                                             })
-                                            ->helperText(fn ($get) => $get('min_age') && $get('max_age') ? 
-                                                'Rango: ' . $get('min_age') . '-' . $get('max_age') . ' años' : 
+                                            ->helperText(fn ($get) => $get('min_age') && $get('max_age') ?
+                                                'Rango: ' . $get('min_age') . '-' . $get('max_age') . ' años' :
                                                 'Ingresa edad mínima primero')
                                                             ->columnSpan(1),
-                                                            
+
                                                         Forms\Components\TextInput::make('sort_order')
                                                             ->label('Orden')
                                                             ->numeric()
                                                             ->default(0)
                                                             ->columnSpan(1),
                                                     ]),
-                                                    
+
                                                 Forms\Components\Textarea::make('description')
                                                     ->label('Descripción')
                                                     ->placeholder('Descripción opcional de la categoría')
                                                     ->columnSpanFull()
                                                     ->rows(2),
-                                                    
+
                                                 Forms\Components\Toggle::make('is_active')
                                                     ->label('Activa')
                                                     ->default(true)
@@ -245,6 +248,313 @@ class LeagueResource extends Resource
                                             ->defaultItems(0)
                                             ->minItems(0)
                                     ])
+                                    ->visible(fn($record) => $record),
+
+                                Forms\Components\Section::make('Preview del Impacto en Jugadoras')
+                                    ->description('Revisa cómo afectarán tus cambios a las jugadoras existentes')
+                                    ->icon('heroicon-o-eye')
+                                    ->schema([
+                                        // Mensaje para ligas no guardadas
+                                        Forms\Components\Placeholder::make('save_first')
+                                            ->label('')
+                                            ->content(function () {
+                                                return new HtmlString('
+                                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                        <div class="flex items-start">
+                                                            <div class="flex-shrink-0">
+                                                                <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <div class="ml-3">
+                                                                <h3 class="text-sm font-medium text-blue-800">Información</h3>
+                                                                <p class="text-sm text-blue-700 mt-1">Guarda la liga primero para ver el preview del impacto</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ');
+                                            })
+                                            ->visible(fn($record) => !$record),
+
+                                        // Sistema tradicional activo
+                                        Forms\Components\Placeholder::make('traditional_system')
+                                            ->label('')
+                                            ->content(function () {
+                                                return new HtmlString('
+                                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                                        <div class="flex items-start">
+                                                            <div class="flex-shrink-0">
+                                                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <div class="ml-3">
+                                                                <h3 class="text-sm font-medium text-gray-800">Sistema Tradicional Activo</h3>
+                                                                <p class="text-sm text-gray-600 mt-1">Configure categorías personalizadas para ver el impacto en las jugadoras.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ');
+                                            })
+                                            ->visible(fn($record) => $record && !$record->hasCustomCategories()),
+
+                                        // Métricas principales mejoradas
+                                        Forms\Components\Grid::make(4)
+                                            ->schema([
+                                                Forms\Components\Placeholder::make('sin_cambios')
+                                                    ->label('Sin cambios')
+                                                    ->content(function ($record) {
+                                                        if (!$record || !$record->hasCustomCategories()) return new HtmlString('<div class="text-2xl font-bold text-gray-400">0</div><div class="text-sm text-gray-500">Mantienen categoría</div>');
+                                                        $impact = static::calculateCategoryImpact($record);
+                                                        $count = $impact['summary']['no_change'];
+                                                        return new HtmlString('<div class="text-2xl font-bold text-success-600">' . $count . '</div><div class="text-sm text-gray-500">Mantienen categoría</div>');
+                                                    }),
+
+                                                Forms\Components\Placeholder::make('cambio_categoria')
+                                                    ->label('Cambio categoría')
+                                                    ->content(function ($record) {
+                                                        if (!$record || !$record->hasCustomCategories()) return new HtmlString('<div class="text-2xl font-bold text-gray-400">0</div><div class="text-sm text-gray-500">Categoría diferente</div>');
+                                                        $impact = static::calculateCategoryImpact($record);
+                                                        $count = $impact['summary']['category_change'];
+                                                        return new HtmlString('<div class="text-2xl font-bold text-warning-600">' . $count . '</div><div class="text-sm text-gray-500">Categoría diferente</div>');
+                                                    }),
+
+                                                Forms\Components\Placeholder::make('nueva_categoria')
+                                                    ->label('Nueva categoría')
+                                                    ->content(function ($record) {
+                                                        if (!$record || !$record->hasCustomCategories()) return new HtmlString('<div class="text-2xl font-bold text-gray-400">0</div><div class="text-sm text-gray-500">Primera asignación</div>');
+                                                        $impact = static::calculateCategoryImpact($record);
+                                                        $count = $impact['summary']['new_category'];
+                                                        return new HtmlString('<div class="text-2xl font-bold text-info-600">' . $count . '</div><div class="text-sm text-gray-500">Primera asignación</div>');
+                                                    }),
+
+                                                Forms\Components\Placeholder::make('sin_categoria')
+                                                    ->label('Sin categoría')
+                                                    ->content(function ($record) {
+                                                        if (!$record || !$record->hasCustomCategories()) return new HtmlString('<div class="text-2xl font-bold text-gray-400">0</div><div class="text-sm text-gray-500">Requieren atención</div>');
+                                                        $impact = static::calculateCategoryImpact($record);
+                                                        $count = $impact['summary']['no_category'];
+                                                        return new HtmlString('<div class="text-2xl font-bold text-danger-600">' . $count . '</div><div class="text-sm text-gray-500">Requieren atención</div>');
+                                                    }),
+                                            ])
+                                            ->visible(fn($record) => $record && $record->hasCustomCategories()),
+
+                                        // Alerta crítica mejorada
+                                        Forms\Components\Placeholder::make('alerta_critica')
+                                            ->content(function ($record) {
+                                                if (!$record || !$record->hasCustomCategories()) return new HtmlString('');
+                                                $impact = static::calculateCategoryImpact($record);
+                                                $count = $impact['summary']['no_category'];
+                                                if ($count === 0) return new HtmlString('');
+
+                                                return new HtmlString('
+                                                    <div class="bg-danger-50 border border-danger-200 rounded-lg p-4">
+                                                        <div class="flex items-start">
+                                                            <div class="flex-shrink-0">
+                                                                <svg class="h-5 w-5 text-danger-400" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                            </div>
+                                                            <div class="ml-3">
+                                                                <h3 class="text-sm font-medium text-danger-800">Atención requerida</h3>
+                                                                <p class="text-sm text-danger-700 mt-1">' . $count . ' jugadoras no tienen categoría asignada y necesitan configuración manual.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ');
+                                            })
+                                            ->visible(function ($record) {
+                                                if (!$record || !$record->hasCustomCategories()) return false;
+                                                $impact = static::calculateCategoryImpact($record);
+                                                return $impact['summary']['no_category'] > 0;
+                                            }),
+
+                                        // Sección de jugadoras afectadas mejorada
+                                        Forms\Components\Section::make('Jugadoras Afectadas')
+                                            ->description('Detalle de las jugadoras que requieren atención')
+                                            ->schema([
+                                                Forms\Components\Placeholder::make('affected_players_list')
+                                                    ->label('')
+                                                    ->content(function ($record) {
+                                                        if (!$record || !$record->hasCustomCategories()) {
+                                                            return new HtmlString('<p class="text-sm text-gray-500">No hay datos disponibles</p>');
+                                                        }
+
+                                                        $impact = static::calculateCategoryImpact($record);
+                                                        $players = array_slice($impact['affected_players'], 0, 5);
+
+                                                        if (empty($players)) {
+                                                            return new HtmlString('
+                                                                <div class="text-center py-6">
+                                                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">¡Excelente!</h3>
+                                                                    <p class="mt-1 text-sm text-gray-500">No hay jugadoras que requieran cambios</p>
+                                                                </div>
+                                                            ');
+                                                        }
+
+                                                        $html = '<div class="space-y-3">';
+                                                        foreach ($players as $player) {
+                                                            $changeText = match($player['change_type']) {
+                                                                'no_change' => 'Sin cambios',
+                                                                'category_change' => 'Cambio de categoría',
+                                                                'new_category' => 'Nueva categoría',
+                                                                'no_category' => 'Sin categoría'
+                                                            };
+
+                                                            $badgeColor = match($player['change_type']) {
+                                                                'no_change' => 'bg-green-100 text-green-800',
+                                                                'category_change' => 'bg-yellow-100 text-yellow-800',
+                                                                'new_category' => 'bg-blue-100 text-blue-800',
+                                                                'no_category' => 'bg-red-100 text-red-800'
+                                                            };
+
+                                                            $playerName = $player['player']->user->name ?? 'N/A';
+                                                            $clubName = $player['player']->currentClub->name ?? 'Sin club';
+                                                            $age = $player['player']->age ?? 'N/A';
+
+                                                            $html .= '
+                                                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                                    <div class="flex items-center space-x-3">
+                                                                        <div class="flex-shrink-0">
+                                                                            <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                                                                <svg class="h-5 w-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                                                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                                                                </svg>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="min-w-0 flex-1">
+                                                                            <p class="text-sm font-medium text-gray-900">' . htmlspecialchars($playerName) . '</p>
+                                                                            <p class="text-sm text-gray-500">' . $age . ' años • ' . htmlspecialchars($clubName) . '</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' . $badgeColor . '">
+                                                                        ' . $changeText . '
+                                                                    </span>
+                                                                </div>
+                                                            ';
+                                                        }
+
+                                                        $total = count($impact['affected_players']);
+                                                        if ($total > 5) {
+                                                            $html .= '<div class="text-center text-sm text-gray-500 mt-4">... y ' . ($total - 5) . ' jugadoras más</div>';
+                                                        }
+
+                                                        $html .= '</div>';
+
+                                                        return new HtmlString($html);
+                                                    }),
+
+                                                // Acciones mejoradas
+                                                Forms\Components\Actions::make([
+                                                    Forms\Components\Actions\Action::make('ver_todas')
+                                                        ->label('Ver todas las jugadoras afectadas')
+                                                        ->icon('heroicon-o-eye')
+                                                        ->color('primary')
+                                                        ->action(function ($record) {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->title('Funcionalidad en desarrollo')
+                                                                ->body('La vista detallada estará disponible próximamente')
+                                                                ->info()
+                                                                ->send();
+                                                        })
+                                                        ->visible(function ($record) {
+                                                            if (!$record || !$record->hasCustomCategories()) return false;
+                                                            $impact = static::calculateCategoryImpact($record);
+                                                            return count($impact['affected_players']) > 0;
+                                                        }),
+
+                                                    Forms\Components\Actions\Action::make('configurar_automatico')
+                                                        ->label('Aplicar configuración estándar')
+                                                        ->icon('heroicon-o-cog-6-tooth')
+                                                        ->color('success')
+                                                        ->action(function ($record) {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->title('Funcionalidad en desarrollo')
+                                                                ->body('La configuración automática estará disponible próximamente')
+                                                                ->info()
+                                                                ->send();
+                                                        })
+                                                        ->visible(function ($record) {
+                                                            if (!$record || !$record->hasCustomCategories()) return false;
+                                                            $impact = static::calculateCategoryImpact($record);
+                                                            return $impact['summary']['no_category'] > 0;
+                                                        }),
+                                                ]),
+                                            ])
+                                            ->collapsible()
+                                            ->collapsed(false)
+                                            ->visible(function ($record) {
+                                                if (!$record || !$record->hasCustomCategories()) return false;
+                                                $impact = static::calculateCategoryImpact($record);
+                                                return count($impact['affected_players']) > 0;
+                                            }),
+
+                                        // Distribución por categorías mejorada
+                                        Forms\Components\Section::make('Distribución por Categoría')
+                                            ->description('Cómo se distribuirán las jugadoras después de aplicar los cambios')
+                                            ->schema([
+                                                Forms\Components\Placeholder::make('distribucion')
+                                                    ->label('')
+                                                    ->content(function ($record) {
+                                                        if (!$record || !$record->hasCustomCategories()) {
+                                                            return new HtmlString('<p class="text-sm text-gray-500">Configure categorías personalizadas para ver la distribución</p>');
+                                                        }
+
+                                                        $impact = static::calculateCategoryImpact($record);
+                                                        $unassigned = $impact['summary']['no_category'];
+
+                                                        $html = '<div class="space-y-3">';
+
+                                                        // Sin categoría (prioritario)
+                                                        if ($unassigned > 0) {
+                                                            $html .= '
+                                                                <div class="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                                                    <div class="flex items-center">
+                                                                        <div class="w-3 h-3 bg-amber-500 rounded-full mr-3"></div>
+                                                                        <span class="text-sm font-medium text-amber-900">Sin categoría</span>
+                                                                    </div>
+                                                                    <span class="text-sm font-bold text-amber-900">' . $unassigned . ' jugadoras</span>
+                                                                </div>
+                                                            ';
+                                                        }
+
+                                                        // Obtener distribución por categorías tradicionales
+                                                        $stats = $record->getCategoryStats();
+                                                        foreach ($stats as $category => $count) {
+                                                            if ($count > 0) {
+                                                                $html .= '
+                                                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                                        <div class="flex items-center">
+                                                                            <div class="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+                                                                            <span class="text-sm text-gray-600">' . htmlspecialchars($category) . '</span>
+                                                                        </div>
+                                                                        <span class="text-sm text-gray-600">' . $count . ' jugadoras</span>
+                                                                    </div>
+                                                                ';
+                                                            }
+                                                        }
+
+                                                        if ($unassigned === 0 && empty($stats)) {
+                                                            $html .= '
+                                                                <div class="text-center py-4">
+                                                                    <p class="text-sm text-gray-500">No hay jugadoras registradas en esta liga</p>
+                                                                </div>
+                                                            ';
+                                                        }
+
+                                                        $html .= '</div>';
+
+                                                        return new HtmlString($html);
+                                                    }),
+                                            ])
+                                            ->collapsible()
+                                            ->visible(fn($record) => $record && $record->hasCustomCategories()),
+                                    ])
+                                    ->collapsible()
+                                    ->collapsed(false)
                                     ->visible(fn($record) => $record),
                             ]),
 
@@ -591,5 +901,71 @@ class LeagueResource extends Resource
             'edit' => Pages\EditLeague::route('/{record}/edit'),
             'configurations' => Pages\ManageLeagueConfigurations::route('/{record}/configurations'),
         ];
+    }
+
+    private static function calculateCategoryImpact(League $league): array
+    {
+        $players = Player::whereHas('currentClub', function ($query) use ($league) {
+            $query->where('league_id', $league->id);
+        })->with('currentClub', 'user')->get();
+
+        $impact = [
+            'total_players' => $players->count(),
+            'affected_players' => [],
+            'category_changes' => [],
+            'summary' => [
+                'no_change' => 0,
+                'category_change' => 0,
+                'new_category' => 0,
+                'no_category' => 0,
+            ],
+        ];
+
+        if (!$league->hasCustomCategories()) {
+            return $impact;
+        }
+
+        $customCategories = $league->getActiveCategories();
+
+        foreach ($players as $player) {
+            $currentAge = $player->age;
+            $gender = $player->user->gender ?? 'female';
+
+            // Categoría tradicional actual
+            $traditionalCategory = PlayerCategory::getForAge($currentAge, $gender);
+
+            // Buscar categoría personalizada que corresponde
+            $customCategory = $customCategories->first(function ($category) use ($currentAge) {
+                return $currentAge >= $category->min_age && $currentAge <= $category->max_age;
+            });
+
+            $changeType = 'no_change';
+            $changeDescription = '';
+
+            if (!$customCategory) {
+                $changeType = 'no_category';
+                $changeDescription = 'No tiene categoría en el sistema personalizado';
+            } elseif ($customCategory->code !== $traditionalCategory->value) {
+                $changeType = 'category_change';
+                $changeDescription = "Cambio de {$traditionalCategory->value} a {$customCategory->code}";
+            } else {
+                $changeType = 'no_change';
+                $changeDescription = 'Mantiene la misma categoría';
+            }
+
+            $impact['summary'][$changeType]++;
+
+            if ($changeType !== 'no_change') {
+                $impact['affected_players'][] = [
+                    'player' => $player,
+                    'change_type' => $changeType,
+                    'description' => $changeDescription,
+                    'traditional_category' => $traditionalCategory->value,
+                    'new_category' => $customCategory?->code,
+                ];
+            }
+        }
+
+        return $impact;
     }
 }
