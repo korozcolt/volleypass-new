@@ -8,15 +8,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
-class PlayerStatistic extends Model
+class TeamStatistic extends Model
 {
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
-        'player_id',
+        'team_id',
         'match_id',
         'tournament_id',
-        'team_id',
+        'season',
+        'sets_won',
+        'sets_lost',
+        'points_scored',
+        'points_conceded',
         'attacks',
         'attack_kills',
         'attack_errors',
@@ -33,26 +37,28 @@ class PlayerStatistic extends Model
         'block_errors',
         'digs',
         'dig_errors',
-        'points_scored',
-        'sets_played',
-        'minutes_played',
-        'match_date',
+        'matches_played',
+        'matches_won',
+        'matches_lost',
+        'win_percentage',
+        'performance_rating',
         'additional_stats',
         'notes',
     ];
 
     protected $casts = [
-        'match_date' => 'date',
         'additional_stats' => 'array',
         'attack_percentage' => 'decimal:2',
         'service_percentage' => 'decimal:2',
         'reception_percentage' => 'decimal:2',
+        'win_percentage' => 'decimal:2',
+        'performance_rating' => 'decimal:2',
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['player_id', 'match_id', 'points_scored', 'attack_percentage'])
+            ->logOnly(['team_id', 'match_id', 'points_scored', 'win_percentage'])
             ->logOnlyDirty();
     }
 
@@ -60,14 +66,14 @@ class PlayerStatistic extends Model
     // RELATIONSHIPS
     // =======================
 
-    public function player(): BelongsTo
+    public function team(): BelongsTo
     {
-        return $this->belongsTo(Player::class);
+        return $this->belongsTo(Team::class);
     }
 
     public function match(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\VolleyMatch::class);
+        return $this->belongsTo(\App\Models\VolleyMatch::class, 'match_id');
     }
 
     public function tournament(): BelongsTo
@@ -75,14 +81,19 @@ class PlayerStatistic extends Model
         return $this->belongsTo(Tournament::class);
     }
 
-    public function team(): BelongsTo
-    {
-        return $this->belongsTo(Team::class);
-    }
-
     // =======================
     // ACCESSORS & MUTATORS
     // =======================
+
+    public function getPointsDifferenceAttribute(): int
+    {
+        return $this->points_scored - $this->points_conceded;
+    }
+
+    public function getSetsDifferenceAttribute(): int
+    {
+        return $this->sets_won - $this->sets_lost;
+    }
 
     public function getEfficiencyRatingAttribute(): float
     {
@@ -106,9 +117,9 @@ class PlayerStatistic extends Model
     // SCOPES
     // =======================
 
-    public function scopeForPlayer($query, $playerId)
+    public function scopeForTeam($query, $teamId)
     {
-        return $query->where('player_id', $playerId);
+        return $query->where('team_id', $teamId);
     }
 
     public function scopeForTournament($query, $tournamentId)
@@ -119,14 +130,12 @@ class PlayerStatistic extends Model
     public function scopeForSeason($query, $season = null)
     {
         $season = $season ?? now()->year;
-        return $query->whereYear('match_date', $season);
+        return $query->where('season', $season);
     }
 
-    public function scopeByPosition($query, $position)
+    public function scopeByPerformance($query, $order = 'desc')
     {
-        return $query->whereHas('player', function ($q) use ($position) {
-            $q->where('position', $position);
-        });
+        return $query->orderBy('performance_rating', $order);
     }
 
     // =======================
@@ -146,14 +155,28 @@ class PlayerStatistic extends Model
         if ($this->receptions > 0) {
             $this->reception_percentage = round((($this->receptions - $this->reception_errors) / $this->receptions) * 100, 2);
         }
+        
+        if ($this->matches_played > 0) {
+            $this->win_percentage = round(($this->matches_won / $this->matches_played) * 100, 2);
+        }
     }
 
-    public static function getTopPerformers($metric = 'points_scored', $limit = 10, $season = null)
+    public function calculatePerformanceRating(): void
     {
-        $query = static::with('player.user')
-            ->selectRaw('player_id, SUM(' . $metric . ') as total_' . $metric)
-            ->groupBy('player_id')
-            ->orderBy('total_' . $metric, 'desc')
+        // Fórmula de rating basada en múltiples factores
+        $winFactor = $this->win_percentage * 0.3;
+        $attackFactor = $this->attack_percentage * 0.25;
+        $serviceFactor = $this->service_percentage * 0.2;
+        $receptionFactor = $this->reception_percentage * 0.15;
+        $pointsFactor = ($this->points_difference > 0 ? min($this->points_difference / 100, 10) : 0) * 0.1;
+        
+        $this->performance_rating = round($winFactor + $attackFactor + $serviceFactor + $receptionFactor + $pointsFactor, 2);
+    }
+
+    public static function getTopTeams($metric = 'performance_rating', $limit = 10, $season = null)
+    {
+        $query = static::with('team')
+            ->orderBy($metric, 'desc')
             ->limit($limit);
 
         if ($season) {
