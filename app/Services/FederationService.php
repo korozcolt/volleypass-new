@@ -17,26 +17,38 @@ class FederationService
     /**
      * Federar una jugadora con un pago específico
      */
-    public function federatePlayer(Player $player, Payment $payment): bool
+    public function federatePlayer(Player $player, Payment $payment = null): bool
     {
-        if ($payment->status !== PaymentStatus::Verified) {
-            throw new \Exception('El pago debe estar verificado para federar la jugadora');
+        if ($payment) {
+            if ($payment->status !== PaymentStatus::Verified) {
+                throw new \Exception('El pago debe estar verificado para federar la jugadora');
+            }
+
+            if ($payment->type !== PaymentType::Federation) {
+                throw new \Exception('El pago debe ser de tipo federación');
+            }
         }
 
-        if ($payment->type !== PaymentType::Federation) {
-            throw new \Exception('El pago debe ser de tipo federación');
-        }
-
-        $player->update([
+        $updateData = [
             'federation_status' => FederationStatus::Federated,
             'federation_date' => now(),
             'federation_expires_at' => now()->addYear(),
-            'federation_payment_id' => $payment->id,
-            'federation_notes' => $this->addFederationNote(
+        ];
+
+        if ($payment) {
+            $updateData['federation_payment_id'] = $payment->id;
+            $updateData['federation_notes'] = $this->addFederationNote(
                 $player->federation_notes,
                 "Federada con pago #{$payment->reference_number}"
-            ),
-        ]);
+            );
+        } else {
+            $updateData['federation_notes'] = $this->addFederationNote(
+                $player->federation_notes,
+                "Federada manualmente"
+            );
+        }
+
+        $player->update($updateData);
 
         return true;
     }
