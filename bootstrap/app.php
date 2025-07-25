@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'system.config' => \App\Http\Middleware\ApplySystemConfigMiddleware::class,
             'system.maintenance' => \App\Http\Middleware\SystemMaintenanceMiddleware::class,
+            'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Volt\Component;
+use App\Services\RoleRedirectionService;
 
 new #[Layout('components.layouts.auth')] class extends Component {
     #[Validate('required|string|email')]
@@ -40,7 +41,9 @@ new #[Layout('components.layouts.auth')] class extends Component {
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        // Redirigir basado en el rol del usuario autenticado
+        $redirectUrl = RoleRedirectionService::getRedirectUrl(Auth::user());
+        $this->redirectIntended(default: $redirectUrl, navigate: true);
     }
 
     /**
