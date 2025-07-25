@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\Player\Dashboard as PlayerDashboard;
 use App\Livewire\Coach\Dashboard as CoachDashboard;
-use App\Livewire\Public\Tournaments as PublicTournaments;
+use App\Livewire\Public\TournamentsDashboard as PublicTournamentsDashboard;
 
 // Ruta raíz redirige a torneos públicos como medida de seguridad
 Route::get('/', function () {
@@ -75,7 +75,10 @@ Route::middleware(['auth', 'role.redirect'])->group(function () {
 });
 
 // Public Routes
-Route::get('/tournaments/public', PublicTournaments::class)->name('tournaments.public');
+Route::get('/tournaments/public', function () {
+    return redirect()->route('tournaments.dashboard');
+})->name('tournaments.public');
+Route::get('/tournaments/dashboard', PublicTournamentsDashboard::class)->name('tournaments.dashboard');
 
 require __DIR__.'/auth.php';
 // Rutas de administración
