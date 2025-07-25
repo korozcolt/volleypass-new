@@ -1,8 +1,8 @@
-# 🏐 VolleyPass Sucre
+# 🏐 VolleyPass Software
 
 <div align="center">
 
-![VolleyPass Logo](resources/images/logo.png)
+![VolleyPass Logo](public/images/logo-volley_pass_black_back.png)
 
 **Plataforma Integral de Gestión para Ligas de Voleibol**  
 *Sistema de Digitalización y Carnetización Deportiva*
