@@ -36,14 +36,14 @@ class CreateClub extends CreateRecord
         // Log de la creación
         Log::info('Nuevo club creado', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
+            'name' => $club->name,
             'created_by' => Auth::id(),
         ]);
         
         // Notificación de éxito
         Notification::make()
             ->title('Club creado exitosamente')
-            ->body("El club '{$club->nombre}' ha sido registrado correctamente.")
+            ->body("El club '{$club->name}' ha sido registrado correctamente.")
             ->success()
             ->send();
     }
@@ -56,8 +56,8 @@ class CreateClub extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // Asegurar que el código de federación sea único si es federado
-        if ($data['es_federado'] && empty($data['codigo_federacion'])) {
-            $data['codigo_federacion'] = $this->generateFederationCode($data['nombre']);
+        if (isset($data['is_federated']) && $data['is_federated'] && empty($data['federation_code'])) {
+            $data['federation_code'] = $this->generateFederationCode($data['name']);
         }
         
         // Establecer valores por defecto
@@ -68,10 +68,10 @@ class CreateClub extends CreateRecord
         return $data;
     }
 
-    private function generateFederationCode(string $nombre): string
+    private function generateFederationCode(string $name): string
     {
-        $prefix = strtoupper(substr($nombre, 0, 3));
-        $suffix = str_pad(Club::where('es_federado', true)->count() + 1, 4, '0', STR_PAD_LEFT);
+        $prefix = strtoupper(substr($name, 0, 3));
+        $suffix = str_pad(Club::where('is_federated', true)->count() + 1, 4, '0', STR_PAD_LEFT);
         
         return $prefix . $suffix;
     }
@@ -81,9 +81,14 @@ class CreateClub extends CreateRecord
         $club = static::getModel()::create($data);
         
         // Crear directivo inicial si se proporcionó
-        if (!empty($data['directivos'])) {
-            foreach ($data['directivos'] as $directivo) {
-                $club->directivos()->create($directivo);
+        if (!empty($data['directors'])) {
+            foreach ($data['directors'] as $director) {
+                $club->directors()->attach($director['user_id'], [
+                    'role' => $director['role'],
+                    'is_active' => $director['is_active'] ?? true,
+                    'start_date' => $director['start_date'] ?? now(),
+                    'end_date' => $director['end_date'] ?? null,
+                ]);
             }
         }
         

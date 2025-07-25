@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use App\Enums\UserStatus;
+use App\Models\Player;
 
 class LeagueCategory extends Model
 {
@@ -56,6 +57,26 @@ class LeagueCategory extends Model
     public function league(): BelongsTo
     {
         return $this->belongsTo(League::class);
+    }
+
+    public function players()
+    {
+        return $this->hasManyThrough(
+            Player::class,
+            Club::class,
+            'league_id', // Foreign key en clubs table
+            'current_club_id', // Foreign key en players table
+            'league_id', // Local key en league_categories table
+            'id' // Local key en clubs table
+        )->whereHas('user', function($query) {
+            $query->where('status', UserStatus::Active)
+                ->whereRaw('(julianday("now") - julianday(birth_date)) / 365.25 BETWEEN ? AND ?', [$this->min_age, $this->max_age]);
+            
+            // Filtrar por género si no es mixed
+            if ($this->gender !== 'mixed') {
+                $query->where('gender', $this->gender);
+            }
+        });
     }
 
     // =======================

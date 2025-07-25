@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ClubResource\Pages;
 use App\Filament\Resources\ClubResource;
 use App\Models\Club;
 use App\Models\Player;
+use App\Enums\PlayerPosition;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\ManageRelatedRecords;
@@ -12,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class ManagePlayers extends ManageRelatedRecords
 {
@@ -24,6 +26,19 @@ class ManagePlayers extends ManageRelatedRecords
     public static function getNavigationLabel(): string
     {
         return 'Jugadoras';
+    }
+
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+    {
+        return Auth::user()->can('view_club', $ownerRecord);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function getDefaultProperties(): array
+    {
+        return [];
     }
 
     public function form(Form $form): Form
@@ -58,16 +73,13 @@ class ManagePlayers extends ManageRelatedRecords
                                     ->label('Teléfono')
                                     ->tel(),
 
-                                Forms\Components\Select::make('position')
-                                    ->label('Posición')
+                                Forms\Components\Select::make('gender')
+                                    ->label('Género')
                                     ->options([
-                                        'setter' => 'Armadora',
-                                        'outside_hitter' => 'Atacante Exterior',
-                                        'middle_blocker' => 'Central',
-                                        'opposite' => 'Opuesta',
-                                        'libero' => 'Líbero',
-                                        'defensive_specialist' => 'Especialista Defensiva',
-                                    ]),
+                                        'female' => 'Femenino',
+                                        'male' => 'Masculino',
+                                    ])
+                                    ->required(),
                             ]),
                     ]),
 
@@ -75,28 +87,23 @@ class ManagePlayers extends ManageRelatedRecords
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
-                                Forms\Components\DatePicker::make('joined_at')
+                                Forms\Components\DatePicker::make('join_date')
                                     ->label('Fecha de Ingreso')
                                     ->default(now())
                                     ->required(),
 
-                                Forms\Components\Select::make('status')
-                                    ->label('Estado')
-                                    ->options([
-                                        'active' => 'Activa',
-                                        'inactive' => 'Inactiva',
-                                        'suspended' => 'Suspendida',
-                                        'transferred' => 'Transferida',
-                                    ])
-                                    ->default('active')
-                                    ->required(),
+                                Forms\Components\Select::make('position')
+                                    ->label('Posición')
+                                    ->options(PlayerPosition::class),
+
+                                Forms\Components\TextInput::make('jersey_number')
+                                    ->label('Número de Camiseta')
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(99),
 
                                 Forms\Components\Toggle::make('is_captain')
                                     ->label('Es Capitana')
-                                    ->default(false),
-
-                                Forms\Components\Toggle::make('is_vice_captain')
-                                    ->label('Es Vice-capitana')
                                     ->default(false),
                             ]),
                     ]),
@@ -117,154 +124,52 @@ class ManagePlayers extends ManageRelatedRecords
                     ->label('Documento')
                     ->searchable(),
 
+                Tables\Columns\TextColumn::make('birth_date')
+                    ->label('Fecha de Nacimiento')
+                    ->date()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('position')
                     ->label('Posición')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'setter' => 'Armadora',
-                        'outside_hitter' => 'Atacante Exterior',
-                        'middle_blocker' => 'Central',
-                        'opposite' => 'Opuesta',
-                        'libero' => 'Líbero',
-                        'defensive_specialist' => 'Especialista Defensiva',
-                        default => $state,
-                    }),
+                    ->badge(),
+
+                Tables\Columns\TextColumn::make('jersey_number')
+                    ->label('Número')
+                    ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_captain')
                     ->label('Capitana')
                     ->boolean(),
 
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Estado')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'inactive' => 'gray',
-                        'suspended' => 'danger',
-                        'transferred' => 'warning',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('joined_at')
-                    ->label('Ingreso')
-                    ->date('d/m/Y')
+                Tables\Columns\TextColumn::make('join_date')
+                    ->label('Fecha de Ingreso')
+                    ->date()
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('federation_status')
-                    ->label('Federación')
-                    ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        'federated' => 'success',
-                        'pending' => 'warning',
-                        'expired' => 'danger',
-                        default => 'gray',
-                    }),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->label('Estado')
-                    ->options([
-                        'active' => 'Activa',
-                        'inactive' => 'Inactiva',
-                        'suspended' => 'Suspendida',
-                        'transferred' => 'Transferida',
-                    ]),
-
                 Tables\Filters\SelectFilter::make('position')
                     ->label('Posición')
-                    ->options([
-                        'setter' => 'Armadora',
-                        'outside_hitter' => 'Atacante Exterior',
-                        'middle_blocker' => 'Central',
-                        'opposite' => 'Opuesta',
-                        'libero' => 'Líbero',
-                        'defensive_specialist' => 'Especialista Defensiva',
-                    ]),
+                    ->options(PlayerPosition::class),
 
-                Tables\Filters\TernaryFilter::make('is_captain')
-                    ->label('Es Capitana'),
-
-                Tables\Filters\SelectFilter::make('federation_status')
-                    ->label('Estado de Federación')
-                    ->options([
-                        'federated' => 'Federada',
-                        'pending' => 'Pendiente',
-                        'expired' => 'Expirada',
-                    ]),
+                Tables\Filters\Filter::make('is_captain')
+                    ->label('Solo Capitanas')
+                    ->query(fn (Builder $query): Builder => $query->where('is_captain', true)),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->mutateFormDataUsing(function (array $data): array {
-                        $data['current_club_id'] = $this->getOwnerRecord()->id;
-                        return $data;
-                    }),
-                Tables\Actions\Action::make('import_players')
-                    ->label('Importar Jugadoras')
-                    ->icon('heroicon-o-arrow-up-tray')
-                    ->color('info')
-                    ->form([
-                        Forms\Components\FileUpload::make('file')
-                            ->label('Archivo Excel/CSV')
-                            ->acceptedFileTypes(['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'])
-                            ->required(),
-                    ])
-                    ->action(function (array $data) {
-                        // Lógica de importación
-                        \Filament\Notifications\Notification::make()
-                            ->title('Importación iniciada')
-                            ->body('Se está procesando el archivo de jugadoras')
-                            ->info()
-                            ->send();
-                    }),
+                    ->label('Nueva Jugadora'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('generate_card')
-                    ->label('Generar Carnet')
-                    ->icon('heroicon-o-identification')
-                    ->color('success')
-                    ->action(function (Player $record) {
-                        // Lógica para generar carnet individual
-                        \Filament\Notifications\Notification::make()
-                            ->title('Carnet generado')
-                            ->body("Se ha generado el carnet para {$record->name}")
-                            ->success()
-                            ->send();
-                    }),
+                Tables\Actions\EditAction::make()
+                    ->label('Editar'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Eliminar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('generate_cards')
-                        ->label('Generar Carnets')
-                        ->icon('heroicon-o-identification')
-                        ->color('success')
-                        ->requiresConfirmation()
-                        ->action(function (\Illuminate\Support\Collection $records) {
-                            // Lógica para generar carnets masivos
-                            \Filament\Notifications\Notification::make()
-                                ->title('Carnets generados')
-                                ->body("Se han generado {$records->count()} carnets")
-                                ->success()
-                                ->send();
-                        }),
-                    Tables\Actions\BulkAction::make('federate')
-                        ->label('Federar Jugadoras')
-                        ->icon('heroicon-o-check-circle')
-                        ->color('warning')
-                        ->requiresConfirmation()
-                        ->action(function (\Illuminate\Support\Collection $records) {
-                            // Lógica para federar jugadoras
-                            \Filament\Notifications\Notification::make()
-                                ->title('Jugadoras federadas')
-                                ->body("Se han federado {$records->count()} jugadoras")
-                                ->success()
-                                ->send();
-                        }),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Eliminar seleccionadas'),
                 ]),
-            ])
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('current_club_id', $this->getOwnerRecord()->id))
-            ->defaultSort('name');
+            ]);
     }
 }

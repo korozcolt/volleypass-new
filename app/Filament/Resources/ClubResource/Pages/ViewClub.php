@@ -45,68 +45,74 @@ class ViewClub extends ViewRecord
     {
         return $infolist
             ->schema([
-                Split::make([
-                    Grid::make(2)
-                        ->schema([
-                            Section::make('Información General')
-                                ->schema([
-                                    TextEntry::make('name')
-                                        ->label('Nombre del Club')
-                                        ->weight(FontWeight::Bold)
-                                        ->size('lg'),
-                                    TextEntry::make('short_name')
-                                        ->label('Nombre Corto'),
-                                    TextEntry::make('email')
-                                        ->label('Email')
-                                        ->copyable(),
-                                    TextEntry::make('phone')
-                                        ->label('Teléfono')
-                                        ->copyable(),
-                                    TextEntry::make('foundation_date')
-                                        ->label('Fecha de Fundación')
-                                        ->date(),
-                                    TextEntry::make('created_at')
-                                        ->label('Fecha de Registro')
-                                        ->dateTime(),
-                                ])
-                                ->columnSpan(1),
-                            
-                            Section::make('Estado y Federación')
-                                ->schema([
-                                    TextEntry::make('is_federated')
-                                        ->label('Estado de Federación')
-                                        ->formatStateUsing(fn (bool $state): string => $state ? 'Federado' : 'No Federado')
-                                        ->badge()
-                                        ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
-                                    TextEntry::make('federation_type')
-                                        ->label('Tipo de Federación')
-                                        ->badge()
-                                        ->color(fn (string $state): string => match ($state) {
-                                            'nacional' => 'success',
-                                            'departamental' => 'warning',
-                                            'municipal' => 'info',
-                                            default => 'gray',
-                                        })
-                                        ->visible(fn ($record) => $record->is_federated),
-                                    TextEntry::make('federation_code')
-                                        ->label('Código de Federación')
-                                        ->copyable()
-                                        ->visible(fn ($record) => $record->is_federated),
-                                    TextEntry::make('federation_expiry')
-                                        ->label('Vencimiento Federación')
-                                        ->date()
-                                        ->visible(fn ($record) => $record->is_federated),
-                                ])
-                                ->columnSpan(1),
-                        ]),
-                    
-                    ImageEntry::make('logo')
-                        ->label('Logo del Club')
-                        ->circular()
-                        ->size(120)
-                        ->defaultImageUrl('/images/default-club-logo.png'),
-                ])
-                ->from('lg'),
+                Grid::make(3)
+                    ->schema([
+                        Section::make('Información General')
+                            ->schema([
+                                TextEntry::make('name')
+                                    ->label('Nombre del Club')
+                                    ->weight(FontWeight::Bold)
+                                    ->size('lg'),
+                                TextEntry::make('short_name')
+                                    ->label('Nombre Corto'),
+                                TextEntry::make('email')
+                                    ->label('Email')
+                                    ->copyable(),
+                                TextEntry::make('phone')
+                                    ->label('Teléfono')
+                                    ->copyable(),
+                                TextEntry::make('foundation_date')
+                                    ->label('Fecha de Fundación')
+                                    ->date(),
+                                TextEntry::make('created_at')
+                                    ->label('Fecha de Registro')
+                                    ->dateTime(),
+                            ])
+                            ->columnSpan(1)
+                            ->extraAttributes(['class' => 'mb-6']),
+                        
+                        Section::make('Estado y Federación')
+                            ->schema([
+                                TextEntry::make('is_federated')
+                                    ->label('Estado de Federación')
+                                    ->formatStateUsing(fn (bool $state): string => $state ? 'Federado' : 'No Federado')
+                                    ->badge()
+                                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
+                                TextEntry::make('federation_type')
+                                    ->label('Tipo de Federación')
+                                    ->badge()
+                                    ->color(fn (string $state): string => match ($state) {
+                                        'nacional' => 'success',
+                                        'departamental' => 'warning',
+                                        'municipal' => 'info',
+                                        default => 'gray',
+                                    })
+                                    ->visible(fn ($record) => $record->is_federated),
+                                TextEntry::make('federation_code')
+                                    ->label('Código de Federación')
+                                    ->copyable()
+                                    ->visible(fn ($record) => $record->is_federated),
+                                TextEntry::make('federation_expiry')
+                                    ->label('Vencimiento Federación')
+                                    ->date()
+                                    ->visible(fn ($record) => $record->is_federated),
+                            ])
+                            ->columnSpan(1)
+                            ->extraAttributes(['class' => 'mb-6']),
+                        
+                        Section::make('Logo del Club')
+                            ->schema([
+                                ImageEntry::make('logo')
+                                    ->label('')
+                                    ->circular()
+                                    ->size(120)
+                                    ->defaultImageUrl('/images/default-club-logo.png')
+                                    ->alignCenter(),
+                            ])
+                            ->columnSpan(1)
+                            ->extraAttributes(['class' => 'mb-6 text-center']),
+                    ])
+                    ->extraAttributes(['class' => 'gap-6']),
                 
                 Grid::make(2)
                     ->schema([

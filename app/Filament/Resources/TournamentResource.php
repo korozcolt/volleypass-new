@@ -47,14 +47,8 @@ class TournamentResource extends Resource
 
                         Forms\Components\Select::make('status')
                             ->label('Estado')
-                            ->options([
-                                'draft' => 'Borrador',
-                                'published' => 'Publicado',
-                                'active' => 'Activo',
-                                'finished' => 'Finalizado',
-                                'cancelled' => 'Cancelado',
-                            ])
-                            ->default('draft')
+                            ->options(\App\Enums\TournamentStatus::class)
+                            ->default(\App\Enums\TournamentStatus::Draft)
                             ->required(),
                     ])->columns(2),
 
@@ -122,13 +116,7 @@ class TournamentResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'published' => 'info',
-                        'active' => 'success',
-                        'finished' => 'warning',
-                        'cancelled' => 'danger',
-                    }),
+                    ->color(fn ($state) => $state instanceof \App\Enums\TournamentStatus ? $state->getColor() : 'gray'),
 
                 Tables\Columns\TextColumn::make('teams_count')
                     ->label('Equipos')
@@ -158,13 +146,7 @@ class TournamentResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
-                    ->options([
-                        'draft' => 'Borrador',
-                        'published' => 'Publicado',
-                        'active' => 'Activo',
-                        'finished' => 'Finalizado',
-                        'cancelled' => 'Cancelado',
-                    ]),
+                    ->options(\App\Enums\TournamentStatus::class),
 
                 Tables\Filters\SelectFilter::make('league_id')
                     ->label('Liga')

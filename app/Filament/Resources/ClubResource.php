@@ -52,6 +52,13 @@ class ClubResource extends Resource
                     ->tabs([
                         Forms\Components\Tabs\Tab::make('Información General')
                             ->schema([
+                                Forms\Components\Select::make('league_id')
+                                    ->label('Liga')
+                                    ->relationship('league', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required()
+                                    ->columnSpanFull(),
                                 Forms\Components\Grid::make(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('name')
@@ -150,9 +157,8 @@ class ClubResource extends Resource
                                             ->schema([
                                                 Forms\Components\Select::make('user_id')
                                                     ->label('Usuario')
-                                                    ->relationship('user', 'name')
+                                                    ->options(User::all()->pluck('name', 'id'))
                                                     ->searchable()
-                                                    ->preload()
                                                     ->required()
                                                     ->columnSpan(1),
                                                 Forms\Components\Select::make('role')
@@ -482,7 +488,7 @@ class ClubResource extends Resource
     public static function getRelations(): array
     {
         return [
-            Pages\ManagePlayers::class,
+            //
         ];
     }
 
@@ -493,6 +499,7 @@ class ClubResource extends Resource
             'create' => Pages\CreateClub::route('/create'),
             'view' => Pages\ViewClub::route('/{record}'),
             'edit' => Pages\EditClub::route('/{record}/edit'),
+            'manage-players' => Pages\ManagePlayers::route('/{record}/players'),
         ];
     }
 
