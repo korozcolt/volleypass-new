@@ -9,7 +9,6 @@ use App\Livewire\Public\TournamentStandings;
 use App\Livewire\Public\TournamentSchedule;
 use App\Livewire\Public\TournamentResults;
 use App\Livewire\Player\PlayerDashboard;
-// use App\Livewire\Player\ProfileManagement; // No existe aún
 use App\Livewire\Player\DigitalCard;
 use App\Livewire\Player\PlayerStats;
 use App\Livewire\Player\MyTournaments;
@@ -18,19 +17,12 @@ use App\Livewire\Player\PlayerSettings;
 use App\Livewire\Player\PlayerNotifications;
 use App\Http\Controllers\PlayerController;
 
-// PANTALLA INICIAL (PÚBLICA)
+// RUTAS PÚBLICAS (NO REQUIEREN AUTENTICACIÓN)
 Route::get('/', PublicTournaments::class)->name('home');
-
-// Página de información
 Route::view('/about', 'pages.about')->name('about');
 
-// Dashboard general - redirige basado en rol
-Route::get('dashboard', function () {
-    return redirect(\App\Services\RoleRedirectionService::getRedirectUrl());
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// RUTAS PÚBLICAS (Sin Autenticación)
 Route::prefix('public')->name('public.')->group(function () {
+    Route::get('/tournaments', PublicTournaments::class)->name('tournaments');
     Route::get('/tournament/{tournament}', TournamentDetails::class)->name('tournament.show');
     Route::get('/team/{team}', TeamPublicProfile::class)->name('team.show');
     Route::get('/standings/{tournament}', TournamentStandings::class)->name('standings');
@@ -38,32 +30,49 @@ Route::prefix('public')->name('public.')->group(function () {
     Route::get('/results/{tournament}', TournamentResults::class)->name('results');
 });
 
-// RUTAS DE JUGADORAS (Usuario Final)
-Route::middleware(['auth'])->group(function () {
+// AUTENTICACIÓN WEB (SOLO USUARIOS FINALES)
+require __DIR__.'/auth.php';
+
+// DASHBOARD INTELIGENTE - REDIRIGE SEGÚN ROL
+Route::get('/dashboard', function () {
+    if (!auth('web')->check()) {
+        return redirect()->route('login');
+    }
+    
+    $user = auth('web')->user();
+    
+    // Roles administrativos → Panel admin
+    $adminRoles = ['admin', 'super_admin', 'league_director', 'club_director', 'coach', 'referee'];
+    
+    foreach ($adminRoles as $role) {
+        if ($user->hasRole($role)) {
+            return redirect('/admin');
+        }
+    }
+    
+    // Jugadoras → Dashboard específico
+    if ($user->hasRole('player')) {
+        return redirect()->route('player.dashboard');
+    }
+    
+    // Sin rol definido → Home
+    return redirect()->route('home');
+})->middleware(['auth:web', 'verified'])->name('dashboard');
+
+// RUTAS DE JUGADORAS
+Route::middleware(['auth:web', 'role:player'])->group(function () {
     Route::prefix('player')->name('player.')->group(function () {
-
-        // Dashboard principal - primera pantalla después del login
         Route::get('/dashboard', PlayerDashboard::class)->name('dashboard');
-
-        // Gestión de perfil personal
         Route::get('/profile', function () {
             return view('player.profile');
         })->name('profile');
         Route::post('/profile/update', [PlayerController::class, 'updateProfile'])->name('profile.update');
         Route::post('/profile/photo', [PlayerController::class, 'updatePhoto'])->name('profile.photo');
-
-        // Mi carnet digital
         Route::get('/card', DigitalCard::class)->name('card');
         Route::get('/card/download', [PlayerController::class, 'downloadCard'])->name('card.download');
-
-        // Mis estadísticas personales (solo lectura)
         Route::get('/stats', PlayerStats::class)->name('stats');
-
-        // Mis torneos (solo donde participo)
         Route::get('/tournaments', MyTournaments::class)->name('tournaments');
         Route::get('/tournaments/{tournament}', MyTournamentDetails::class)->name('tournaments.show');
-
-        // Configuraciones básicas
         Route::get('/settings', PlayerSettings::class)->name('settings');
         Route::get('/notifications', PlayerNotifications::class)->name('notifications');
     });
@@ -76,5 +85,3 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 });
-
-require __DIR__.'/auth.php';

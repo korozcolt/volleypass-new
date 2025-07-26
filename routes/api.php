@@ -5,9 +5,10 @@ use App\Http\Controllers\Api\QrVerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// RUTAS PÚBLICAS
+// RUTAS PÚBLICAS API (NO REQUIEREN TOKEN)
 Route::prefix('v1')->group(function () {
-
+    
+    // Health check
     Route::get('/health', function () {
         return response()->json([
             'status' => 'ok',
@@ -15,9 +16,9 @@ Route::prefix('v1')->group(function () {
             'version' => '1.0.0',
             'environment' => app()->environment()
         ]);
-    });
+    })->name('api.health');
 
-    // Verificación QR (sin middleware personalizado)
+    // Verificación QR (público para verificadores)
     Route::post('/verify-qr', [QrVerificationController::class, 'verify'])->name('api.verify-qr');
     Route::post('/qr-info', [QrVerificationController::class, 'getQrInfo'])->name('api.qr-info');
 
@@ -25,10 +26,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/card/verify/{token}', [\App\Http\Controllers\Api\CardVerificationController::class, 'verify'])->name('api.card.verify');
     Route::get('/card/number/{cardNumber}', [\App\Http\Controllers\Api\CardVerificationController::class, 'verifyByNumber'])->name('api.card.verify-number');
 
-    // Autenticación
-    Route::prefix('auth')->group(function () {
-        Route::post('/login', [AuthController::class, 'login'])->name('api.auth.login');
-
+    // Autenticación para verificadores
+    Route::prefix('auth')->name('api.auth.')->group(function () {
+        Route::post('/login', [AuthController::class, 'login'])->name('login');
         Route::post('/check-email', function (Request $request) {
             $request->validate(['email' => 'required|email']);
             $exists = \App\Models\User::where('email', $request->email)
@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () {
                 })
                 ->exists();
             return response()->json(['exists' => $exists]);
-        });
+        })->name('check-email');
     });
 
     // API Pública
@@ -71,27 +71,23 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-// RUTAS AUTENTICADAS
+// RUTAS PROTEGIDAS API (REQUIEREN TOKEN)
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
-    // Autenticación
-    Route::prefix('auth')->group(function () {
-        Route::get('/user', [AuthController::class, 'user'])->name('api.auth.user');
-        Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
-        Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('api.auth.logout-all');
-        Route::get('/tokens', [AuthController::class, 'listTokens'])->name('api.auth.tokens.list');
-        Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('api.auth.tokens.revoke');
+    // Gestión de tokens y usuario
+    Route::prefix('auth')->name('api.auth.')->group(function () {
+        Route::get('/user', [AuthController::class, 'user'])->name('user');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');
+        Route::get('/tokens', [AuthController::class, 'listTokens'])->name('tokens.list');
+        Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('tokens.revoke');
     });
     
-    // Gestión de categorías de jugadores
-    Route::prefix('players')->group(function () {
-        Route::get('/{player}/category', [\App\Http\Controllers\Api\PlayerCategoryController::class, 'show'])->name('api.players.category.show');
-        Route::put('/{player}/category', [\App\Http\Controllers\Api\PlayerCategoryController::class, 'update'])->name('api.players.category.update');
+    // Verificadores avanzados
+    Route::middleware(['api.role:Verifier,LeagueAdmin,SuperAdmin'])->group(function () {
+        Route::post('/verify-batch', [QrVerificationController::class, 'verifyBatch'])->name('api.verify-batch');
+        Route::get('/stats/dashboard', [QrVerificationController::class, 'getStats'])->name('api.stats.dashboard');
     });
-
-    // Verificadores
-    Route::post('/verify-batch', [QrVerificationController::class, 'verifyBatch'])->name('api.verify-batch');
-    Route::get('/stats/dashboard', [QrVerificationController::class, 'getStats'])->name('api.stats.dashboard');
 
     // Rutas autenticadas de verificación de carnets
     Route::get('/card/details/{token}', [\App\Http\Controllers\Api\CardVerificationController::class, 'details'])->name('api.card.details');

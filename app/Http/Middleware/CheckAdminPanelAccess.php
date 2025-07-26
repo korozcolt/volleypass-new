@@ -13,28 +13,31 @@ class CheckAdminPanelAccess
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip middleware for login routes
-        if ($request->routeIs('filament.admin.auth.login')) {
+        // Excluir rutas de login/logout de Filament
+        if ($request->routeIs('filament.admin.auth.login') || 
+            $request->routeIs('filament.admin.auth.logout') ||
+            str_starts_with($request->route()->getName() ?? '', 'filament.admin.auth.')) {
             return $next($request);
         }
 
-        if (!auth()->check()) {
-            return redirect()->route('login');
+        // Verificar autenticación web
+        if (!auth('web')->check()) {
+            return redirect()->route('filament.admin.auth.login');
         }
 
+        $user = auth('web')->user();
+        
+        // Roles permitidos en panel admin
         $adminRoles = [
-            'admin',
-            'super_admin',
-            'league_director',
-            'club_director',
-            'coach',
+            'admin', 
+            'super_admin', 
+            'league_director', 
+            'club_director', 
+            'coach', 
             'referee'
         ];
-
-        $user = auth()->user();
+        
         $hasAdminRole = false;
-
-        // Verificar si el usuario tiene alguno de los roles administrativos
         foreach ($adminRoles as $role) {
             if ($user->hasRole($role)) {
                 $hasAdminRole = true;
@@ -43,6 +46,11 @@ class CheckAdminPanelAccess
         }
 
         if (!$hasAdminRole) {
+            // Redirigir jugadoras a su dashboard
+            if ($user->hasRole('player')) {
+                return redirect()->route('player.dashboard');
+            }
+            
             abort(403, 'No tienes permisos para acceder al panel administrativo.');
         }
 

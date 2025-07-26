@@ -36,18 +36,19 @@ return [
     */
 
     'guards' => [
+        // Guard para usuarios web (jugadoras)
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'admin' => [
-            'driver' => 'session',
-            'provider' => 'users', // Mismo provider, diferentes roles
-        ],
+        
+        // Guard para API móvil (verificadores)
         'sanctum' => [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
+        
+        // NOTA: Filament usará 'web' guard
     ],
 
     /*

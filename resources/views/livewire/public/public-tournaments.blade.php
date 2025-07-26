@@ -1,80 +1,173 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white py-20">
-        <div class="container mx-auto px-4 lg:px-6">
-            <div class="text-center max-w-4xl mx-auto">
-                <h1 class="text-4xl md:text-6xl font-bold mb-6">
-                    Torneos de Voleibol
-                    <span class="block text-blue-200">en Vivo</span>
-                </h1>
-                <p class="text-xl md:text-2xl text-blue-100 mb-8">
-                    Sigue todos los torneos, resultados y estadísticas en tiempo real
-                </p>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
+    <!-- Sports Header with Live Ticker -->
+    <div class="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white py-2 overflow-hidden">
+        <div class="animate-marquee whitespace-nowrap">
+            <span class="mx-8 font-semibold">🔴 EN VIVO:</span>
+            @foreach($liveMatches->take(3) as $match)
+                <span class="mx-8">{{ $match->homeTeam->name }} {{ $match->home_sets ?? 0 }}-{{ $match->away_sets ?? 0 }} {{ $match->awayTeam->name }}</span>
+            @endforeach
+            <span class="mx-8 font-semibold">📊 {{ $stats['active_tournaments'] }} Torneos Activos</span>
+            <span class="mx-8">⚡ {{ $stats['live_matches'] }} Partidos en Vivo</span>
+        </div>
+    </div>
 
-                <!-- Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">{{ $stats['active_tournaments'] }}</div>
-                        <div class="text-blue-200">Torneos Activos</div>
+    <!-- Hero Section with ESPN-style Design -->
+    <section class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white py-16 overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1"><circle cx="30" cy="30" r="2"/></g></g></svg>'); background-size: 60px 60px;"></div>
+        </div>
+        
+        <div class="container mx-auto px-4 lg:px-6 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Main Content -->
+                <div>
+                    <div class="inline-flex items-center px-4 py-2 bg-red-500/20 border border-red-400/30 rounded-full text-red-300 text-sm font-medium mb-6">
+                        <span class="w-2 h-2 bg-red-400 rounded-full mr-2 animate-pulse"></span>
+                        TRANSMISIÓN EN VIVO
                     </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">{{ $stats['live_matches'] }}</div>
-                        <div class="text-blue-200">Partidos en Vivo</div>
+                    <h1 class="text-4xl lg:text-6xl font-black mb-6 leading-tight">
+                        <span class="bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent">
+                            VolleyPass
+                        </span>
+                        <span class="block text-3xl lg:text-5xl text-blue-300 font-bold">
+                            Sucre 2024
+                        </span>
+                    </h1>
+                    <p class="text-xl text-slate-300 mb-8 leading-relaxed">
+                        La experiencia deportiva más completa. Resultados en vivo, estadísticas avanzadas y cobertura total de todos los torneos.
+                    </p>
+                    
+                    <!-- Quick Actions -->
+                    <div class="flex flex-wrap gap-4">
+                        <button class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            🔴 Ver en Vivo
+                        </button>
+                        <button class="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 px-6 py-3 rounded-lg font-semibold transition-all duration-200">
+                            📊 Estadísticas
+                        </button>
                     </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">{{ $stats['registered_teams'] }}</div>
-                        <div class="text-blue-200">Equipos</div>
+                </div>
+                
+                <!-- Live Stats Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/15 transition-all duration-200">
+                        <div class="text-3xl font-black text-blue-300">{{ $stats['active_tournaments'] }}</div>
+                        <div class="text-slate-300 font-medium">Torneos Activos</div>
+                        <div class="text-xs text-green-400 mt-1">↗ +2 esta semana</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold">{{ $stats['total_players'] }}</div>
-                        <div class="text-blue-200">Jugadoras</div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/15 transition-all duration-200">
+                        <div class="text-3xl font-black text-red-400">{{ $stats['live_matches'] }}</div>
+                        <div class="text-slate-300 font-medium">En Vivo</div>
+                        <div class="text-xs text-red-400 mt-1 animate-pulse">🔴 LIVE</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/15 transition-all duration-200">
+                        <div class="text-3xl font-black text-yellow-400">{{ $stats['registered_teams'] }}</div>
+                        <div class="text-slate-300 font-medium">Equipos</div>
+                        <div class="text-xs text-slate-400 mt-1">Registrados</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 text-center hover:bg-white/15 transition-all duration-200">
+                        <div class="text-3xl font-black text-purple-400">{{ $stats['total_players'] }}</div>
+                        <div class="text-slate-300 font-medium">Jugadoras</div>
+                        <div class="text-xs text-slate-400 mt-1">Activas</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Live Matches Section -->
+    <!-- Live Matches Section - ESPN Style -->
     @if($liveMatches->count() > 0)
-    <section class="py-16">
+    <section class="py-12 bg-white dark:bg-slate-800">
         <div class="container mx-auto px-4 lg:px-6">
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-                🔴 Partidos en Vivo
-            </h2>
+            <!-- Section Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center space-x-3">
+                    <div class="w-1 h-8 bg-gradient-to-b from-red-500 to-red-600 rounded-full"></div>
+                    <h2 class="text-2xl font-black text-slate-900 dark:text-white">
+                        PARTIDOS EN VIVO
+                    </h2>
+                    <div class="flex items-center space-x-2 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                        <span class="w-2 h-2 bg-white rounded-full"></span>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+                <button class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1">
+                    <span>Ver todos</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
 
-            <div class="grid md:grid-cols-3 gap-6">
+            <!-- Live Matches Grid -->
+            <div class="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 @foreach($liveMatches as $match)
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-                    <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                        {{ $match->tournament->name }}
-                    </div>
-
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="text-center">
-                            <div class="font-semibold text-gray-900 dark:text-white">
-                                {{ $match->homeTeam->name }}
-                            </div>
-                        </div>
-
-                        <div class="text-center px-4">
-                            <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ $match->home_sets ?? 0 }} - {{ $match->away_sets ?? 0 }}
-                            </div>
-                            <div class="text-sm text-red-500 font-medium">EN VIVO</div>
-                        </div>
-
-                        <div class="text-center">
-                            <div class="font-semibold text-gray-900 dark:text-white">
-                                {{ $match->awayTeam->name }}
+                <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-700 hover:border-red-300 dark:hover:border-red-600">
+                    <!-- Tournament Badge -->
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wide">{{ Str::limit($match->tournament->name, 20) }}</span>
+                            <div class="flex items-center space-x-1 text-red-400">
+                                <span class="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>
+                                <span class="text-xs font-bold">LIVE</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="text-center">
-                        <a href="{{ route('public.tournament.show', $match->tournament) }}"
-                           class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                            Ver detalles →
-                        </a>
+                    
+                    <!-- Match Content -->
+                    <div class="p-6">
+                        <!-- Teams and Score -->
+                        <div class="space-y-4">
+                            <!-- Home Team -->
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 flex-1">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                        {{ substr($match->homeTeam->name, 0, 2) }}
+                                    </div>
+                                    <span class="font-bold text-slate-900 dark:text-white text-lg">{{ $match->homeTeam->name }}</span>
+                                </div>
+                                <div class="text-3xl font-black text-slate-900 dark:text-white">
+                                    {{ $match->home_sets ?? 0 }}
+                                </div>
+                            </div>
+                            
+                            <!-- VS Divider -->
+                            <div class="flex items-center justify-center">
+                                <div class="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1"></div>
+                                <span class="px-4 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-full">VS</span>
+                                <div class="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent flex-1"></div>
+                            </div>
+                            
+                            <!-- Away Team -->
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3 flex-1">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                        {{ substr($match->awayTeam->name, 0, 2) }}
+                                    </div>
+                                    <span class="font-bold text-slate-900 dark:text-white text-lg">{{ $match->awayTeam->name }}</span>
+                                </div>
+                                <div class="text-3xl font-black text-slate-900 dark:text-white">
+                                    {{ $match->away_sets ?? 0 }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Match Info -->
+                        <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <div class="flex items-center justify-between">
+                                <div class="text-xs text-slate-500 dark:text-slate-400">
+                                    Set {{ ($match->home_sets ?? 0) + ($match->away_sets ?? 0) + 1 }}
+                                </div>
+                                <a href="{{ route('public.tournament.show', $match->tournament) }}"
+                                   class="inline-flex items-center space-x-1 text-sm font-semibold text-blue-600 hover:text-blue-700 group-hover:translate-x-1 transition-all duration-200">
+                                    <span>Ver detalles</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 @endforeach

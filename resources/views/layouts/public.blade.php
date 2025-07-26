@@ -52,10 +52,10 @@
                 <a href="{{ route('about') }}" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
                     Acerca de
                 </a>
-                <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
+                <a href="#teams" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
                     Equipos
                 </a>
-                <a href="#" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
+                <a href="#stats" class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
                     Estadísticas
                 </a>
             </nav>

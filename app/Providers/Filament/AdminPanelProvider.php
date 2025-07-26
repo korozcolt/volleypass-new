@@ -27,10 +27,12 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->authGuard('web') // USAR GUARD WEB
             ->colors([
                 'primary' => Color::Amber,
             ])
             ->brandName('VolleyPass Admin')
+            ->brandLogo(asset('images/logo.png'))
             ->favicon(asset('favicon.ico'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -55,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\CheckAdminPanelAccess::class, // VERIFICACIÓN DE ROLES
             ]);
     }
 }
