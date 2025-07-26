@@ -27,14 +27,15 @@ class CheckAdminPanelAccess
 
         $user = auth('web')->user();
         
-        // Roles permitidos en panel admin
+        // Roles permitidos en panel admin (usando los nombres correctos de los roles)
         $adminRoles = [
-            'admin', 
-            'super_admin', 
-            'league_director', 
-            'club_director', 
-            'coach', 
-            'referee'
+            'SuperAdmin', 
+            'LeagueAdmin', 
+            'ClubDirector', 
+            'Coach', 
+            'SportsDoctor',
+            'Referee',
+            'Verifier'
         ];
         
         $hasAdminRole = false;
@@ -47,7 +48,7 @@ class CheckAdminPanelAccess
 
         if (!$hasAdminRole) {
             // Redirigir jugadoras a su dashboard
-            if ($user->hasRole('player')) {
+            if ($user->hasRole('Player')) {
                 return redirect()->route('player.dashboard');
             }
             
