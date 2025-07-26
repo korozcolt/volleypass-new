@@ -15,6 +15,14 @@ class PlayerCard extends Component
     public function mount()
     {
         $this->player = Auth::user()->player;
+        
+        // Verificar si el usuario tiene un perfil de jugador
+        if (!$this->player) {
+            session()->flash('error', 'No tienes un perfil de jugador asociado a tu cuenta.');
+            $this->redirect(route('dashboard'));
+            return;
+        }
+        
         $this->loadCardData();
     }
 
@@ -23,13 +31,13 @@ class PlayerCard extends Component
         $this->cardStatus = [
             'status' => 'active', // active, expired, restricted
             'expiry_date' => '2024-12-31',
-            'federation_number' => 'VS-2024-' . str_pad($this->player->id ?? 1, 4, '0', STR_PAD_LEFT),
+            'federation_number' => 'VS-2024-' . str_pad($this->player->id, 4, '0', STR_PAD_LEFT),
             'last_updated' => now()->format('Y-m-d')
         ];
 
         $this->qrCode = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . 
                        urlencode(json_encode([
-                           'player_id' => $this->player->id ?? 1,
+                           'player_id' => $this->player->id,
                            'federation_number' => $this->cardStatus['federation_number'],
                            'status' => $this->cardStatus['status']
                        ]));

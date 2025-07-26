@@ -20,108 +20,76 @@ class RedirectBasedOnRole
 
         $user = Auth::user();
         $currentRoute = $request->route()->getName();
-        
-        // Definir las rutas permitidas para cada rol
-        $roleRoutes = [
-            'Player' => [
-                'player.dashboard',
-                'player.profile', 
-                'player.card',
-                'player.stats',
-                'player.matches',
-                'settings.profile',
-                'settings.password',
-                'settings.appearance'
-            ],
-            'Coach' => [
-                'coach.dashboard',
-                'settings.profile',
-                'settings.password', 
-                'settings.appearance'
-            ],
-            'Referee' => [
-                'referee.dashboard',
-                'settings.profile',
-                'settings.password',
-                'settings.appearance'
-            ],
-            'ClubDirector' => [
-                'club.dashboard',
-                'settings.profile',
-                'settings.password',
-                'settings.appearance'
-            ],
-            'LeagueAdmin' => [
-                'league.dashboard',
-                'settings.profile',
-                'settings.password',
-                'settings.appearance'
-            ],
-            'SuperAdmin' => [
-                'admin.dashboard',
-                'settings.profile',
-                'settings.password',
-                'settings.appearance'
-            ]
+
+        // Roles que van al panel administrativo
+        $adminRoles = [
+            'admin',
+            'super_admin',
+            'league_director',
+            'club_director',
+            'coach',
+            'referee'
         ];
 
-        // Obtener el rol principal del usuario
-        $userRole = $this->getUserPrimaryRole($user);
-        
-        // Si el usuario no tiene rol definido, redirigir a tournaments public
-        if (!$userRole) {
-            return redirect()->route('tournaments.public');
+        // Verificar si el usuario tiene rol administrativo
+        $hasAdminRole = false;
+        foreach ($adminRoles as $role) {
+            if ($user->hasRole($role)) {
+                $hasAdminRole = true;
+                break;
+            }
         }
 
-        // Verificar si la ruta actual está permitida para el rol del usuario
-        $allowedRoutes = $roleRoutes[$userRole] ?? [];
-        
-        // Si la ruta actual no está permitida para el rol, redirigir al dashboard correspondiente
-        if (!in_array($currentRoute, $allowedRoutes) && !$this->isPublicRoute($currentRoute)) {
-            return redirect()->route($this->getDefaultDashboardRoute($userRole));
+        // Si tiene rol administrativo y no está en rutas admin o públicas
+        if ($hasAdminRole && !$this->isAdminRoute($currentRoute) && !$this->isPublicRoute($currentRoute)) {
+            return redirect()->to('/admin');
+        }
+
+        // Solo jugadores van al dashboard de usuario final
+        if ($user->hasRole('player') && !$this->isPlayerRoute($currentRoute) && !$this->isPublicRoute($currentRoute)) {
+            return redirect()->route('player.dashboard');
+        }
+
+        // Si no tiene rol específico, redirigir a home
+        if (!$hasAdminRole && !$user->hasRole('player')) {
+            return redirect()->route('home');
         }
 
         return $next($request);
     }
 
     /**
-     * Obtener el rol principal del usuario
+     * Verificar si es una ruta del panel administrativo
      */
-    private function getUserPrimaryRole($user): ?string
+    private function isAdminRoute(string $routeName): bool
     {
-        // Orden de prioridad de roles
-        $rolePriority = [
-            'SuperAdmin',
-            'LeagueAdmin', 
-            'ClubDirector',
-            'Coach',
-            'Referee',
-            'Player'
-        ];
-
-        foreach ($rolePriority as $role) {
-            if ($user->hasRole($role)) {
-                return $role;
-            }
-        }
-
-        return null;
+        return str_starts_with($routeName, 'filament.') ||
+               str_starts_with($routeName, 'admin.') ||
+               $routeName === 'settings.profile' ||
+               $routeName === 'settings.password' ||
+               $routeName === 'settings.appearance';
     }
 
     /**
-     * Obtener la ruta del dashboard por defecto según el rol
+     * Verificar si es una ruta de jugador
      */
-    private function getDefaultDashboardRoute(string $role): string
+    private function isPlayerRoute(string $routeName): bool
     {
-        return match($role) {
-            'Player' => 'player.dashboard',
-            'Coach' => 'coach.dashboard', 
-            'Referee' => 'referee.dashboard',
-            'ClubDirector' => 'club.dashboard',
-            'LeagueAdmin' => 'league.dashboard',
-            'SuperAdmin' => 'admin.dashboard',
-            default => 'tournaments.public'
-        };
+        $playerRoutes = [
+            'player.dashboard',
+            'player.profile',
+            'player.card',
+            'player.stats',
+            'player.tournaments',
+            'player.tournaments.show',
+            'player.settings',
+            'player.notifications',
+            'settings.profile',
+            'settings.password',
+            'settings.appearance'
+        ];
+
+        return in_array($routeName, $playerRoutes);
     }
 
     /**
@@ -131,7 +99,13 @@ class RedirectBasedOnRole
     {
         $publicRoutes = [
             'home',
+            'public.tournament.show',
+            'public.team.show',
+            'public.standings',
+            'public.schedule',
+            'public.results',
             'tournaments.public',
+            'tournaments.dashboard',
             'login',
             'register',
             'password.request',

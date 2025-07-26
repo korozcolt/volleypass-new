@@ -20,10 +20,13 @@ class RoleMiddleware
 
         // Si no hay usuario autenticado
         if (!$user) {
-            return response()->json([
-                'error' => 'No autenticado',
-                'message' => 'Debes iniciar sesión para acceder a este recurso'
-            ], 401);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'No autenticado',
+                    'message' => 'Debes iniciar sesión para acceder a este recurso'
+                ], 401);
+            }
+            return redirect()->route('login');
         }
 
         // Verificar si el usuario tiene alguno de los roles requeridos
@@ -36,12 +39,17 @@ class RoleMiddleware
         }
 
         if (!$hasRole) {
-            return response()->json([
-                'error' => 'Sin permisos',
-                'message' => 'No tienes permisos para acceder a este recurso',
-                'required_roles' => $roles,
-                'user_roles' => $user->getRoleNames()
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Sin permisos',
+                    'message' => 'No tienes permisos para acceder a este recurso',
+                    'required_roles' => $roles,
+                    'user_roles' => $user->getRoleNames()
+                ], 403);
+            }
+
+            // Para rutas web, redirigir según el rol del usuario
+            return redirect(\App\Services\RoleRedirectionService::getRedirectUrl($user));
         }
 
         return $next($request);

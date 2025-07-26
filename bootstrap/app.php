@@ -28,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'system.config' => \App\Http\Middleware\ApplySystemConfigMiddleware::class,
             'system.maintenance' => \App\Http\Middleware\SystemMaintenanceMiddleware::class,
             'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'check.admin.panel.access' => \App\Http\Middleware\CheckAdminPanelAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

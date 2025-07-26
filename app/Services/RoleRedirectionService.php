@@ -15,29 +15,35 @@ class RoleRedirectionService
     {
         /** @var User|null $user */
         $user = $user ?? Auth::user();
-        
+
         if (!$user) {
-            return route('tournaments.public');
+            return route('home');
         }
 
-        // Orden de prioridad de roles
-        $rolePriority = [
-            'SuperAdmin' => 'admin.dashboard',
-            'LeagueAdmin' => 'league.dashboard',
-            'ClubDirector' => 'club.dashboard',
-            'Coach' => 'coach.dashboard',
-            'Referee' => 'referee.dashboard',
-            'Player' => 'player.dashboard'
+        // Roles que van al panel administrativo
+        $adminRoles = [
+            'admin',
+            'super_admin',
+            'league_director',
+            'club_director',
+            'coach',
+            'referee'
         ];
 
-        foreach ($rolePriority as $role => $route) {
+        // Verificar si tiene rol administrativo
+        foreach ($adminRoles as $role) {
             if ($user->hasRole($role)) {
-                return route($route);
+                return '/admin';
             }
         }
 
-        // Si no tiene ningún rol específico, redirigir a tournaments public
-        return route('tournaments.public');
+        // Solo jugadores van al dashboard de usuario final
+        if ($user->hasRole('player')) {
+            return route('player.dashboard');
+        }
+
+        // Si no tiene rol específico, redirigir a home
+        return route('home');
     }
 
     /**
@@ -47,7 +53,7 @@ class RoleRedirectionService
     {
         /** @var User|null $user */
         $user = $user ?? Auth::user();
-        
+
         if (!$user) {
             return self::isPublicRoute($routeName);
         }
@@ -57,7 +63,7 @@ class RoleRedirectionService
             'Player' => [
                 'player.dashboard',
                 'player.profile',
-                'player.card', 
+                'player.card',
                 'player.stats',
                 'player.matches'
             ],
@@ -114,6 +120,7 @@ class RoleRedirectionService
         $publicRoutes = [
             'home',
             'tournaments.public',
+            'tournaments.dashboard',
             'login',
             'register',
             'password.request',
@@ -133,7 +140,7 @@ class RoleRedirectionService
     {
         /** @var User|null $user */
         $user = $user ?? Auth::user();
-        
+
         if (!$user) {
             return null;
         }
@@ -142,7 +149,7 @@ class RoleRedirectionService
         $rolePriority = [
             'SuperAdmin',
             'LeagueAdmin',
-            'ClubDirector', 
+            'ClubDirector',
             'Coach',
             'Referee',
             'Player'

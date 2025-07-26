@@ -2,84 +2,79 @@
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
-use App\Livewire\Player\Dashboard as PlayerDashboard;
-use App\Livewire\Coach\Dashboard as CoachDashboard;
-use App\Livewire\Public\TournamentsDashboard as PublicTournamentsDashboard;
+use App\Livewire\Public\PublicTournaments;
+use App\Livewire\Public\TournamentDetails;
+use App\Livewire\Public\TeamPublicProfile;
+use App\Livewire\Public\TournamentStandings;
+use App\Livewire\Public\TournamentSchedule;
+use App\Livewire\Public\TournamentResults;
+use App\Livewire\Player\PlayerDashboard;
+// use App\Livewire\Player\ProfileManagement; // No existe aún
+use App\Livewire\Player\DigitalCard;
+use App\Livewire\Player\PlayerStats;
+use App\Livewire\Player\MyTournaments;
+use App\Livewire\Player\MyTournamentDetails;
+use App\Livewire\Player\PlayerSettings;
+use App\Livewire\Player\PlayerNotifications;
+use App\Http\Controllers\PlayerController;
 
-// Ruta raíz redirige a torneos públicos como medida de seguridad
-Route::get('/', function () {
-    return redirect()->route('tournaments.public');
-})->name('home');
+// PANTALLA INICIAL (PÚBLICA)
+Route::get('/', PublicTournaments::class)->name('home');
+
+// Página de información
+Route::view('/about', 'pages.about')->name('about');
 
 // Dashboard general - redirige basado en rol
 Route::get('dashboard', function () {
     return redirect(\App\Services\RoleRedirectionService::getRedirectUrl());
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'role.redirect'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
+// RUTAS PÚBLICAS (Sin Autenticación)
+Route::prefix('public')->name('public.')->group(function () {
+    Route::get('/tournament/{tournament}', TournamentDetails::class)->name('tournament.show');
+    Route::get('/team/{team}', TeamPublicProfile::class)->name('team.show');
+    Route::get('/standings/{tournament}', TournamentStandings::class)->name('standings');
+    Route::get('/schedule/{tournament}', TournamentSchedule::class)->name('schedule');
+    Route::get('/results/{tournament}', TournamentResults::class)->name('results');
+});
 
+// RUTAS DE JUGADORAS (Usuario Final)
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('player')->name('player.')->group(function () {
+
+        // Dashboard principal - primera pantalla después del login
+        Route::get('/dashboard', PlayerDashboard::class)->name('dashboard');
+
+        // Gestión de perfil personal
+        Route::get('/profile', function () {
+            return view('player.profile');
+        })->name('profile');
+        Route::post('/profile/update', [PlayerController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/profile/photo', [PlayerController::class, 'updatePhoto'])->name('profile.photo');
+
+        // Mi carnet digital
+        Route::get('/card', DigitalCard::class)->name('card');
+        Route::get('/card/download', [PlayerController::class, 'downloadCard'])->name('card.download');
+
+        // Mis estadísticas personales (solo lectura)
+        Route::get('/stats', PlayerStats::class)->name('stats');
+
+        // Mis torneos (solo donde participo)
+        Route::get('/tournaments', MyTournaments::class)->name('tournaments');
+        Route::get('/tournaments/{tournament}', MyTournamentDetails::class)->name('tournaments.show');
+
+        // Configuraciones básicas
+        Route::get('/settings', PlayerSettings::class)->name('settings');
+        Route::get('/notifications', PlayerNotifications::class)->name('notifications');
+    });
+});
+
+// Settings comunes para usuarios autenticados
+Route::middleware(['auth'])->group(function () {
+    Route::redirect('settings', 'settings/profile');
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');
     Volt::route('settings/password', 'settings.password')->name('settings.password');
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 });
 
-Route::middleware(['auth', 'role.redirect'])->group(function () {
-    // Player Routes
-    Route::prefix('dashboard/player')->group(function () {
-        Route::get('/', PlayerDashboard::class)->name('player.dashboard');
-        Route::get('/profile', function () {
-            return view('player.profile');
-        })->name('player.profile');
-        Route::get('/card', function () {
-            return view('player.card');
-        })->name('player.card');
-        Route::get('/stats', function () {
-            return view('player.stats');
-        })->name('player.stats');
-        Route::get('/matches', function () {
-            return view('player.matches');
-        })->name('player.matches');
-    });
-
-    // Coach Routes
-    Route::prefix('dashboard/coach')->group(function () {
-        Route::get('/', CoachDashboard::class)->name('coach.dashboard');
-    });
-
-    // Referee Routes
-    Route::prefix('dashboard/referee')->group(function () {
-        Route::get('/', \App\Livewire\Referee\Dashboard::class)->name('referee.dashboard');
-    });
-
-    // Club Director Routes
-    Route::prefix('dashboard/club')->group(function () {
-        Route::get('/', function () {
-            return view('club.dashboard');
-        })->name('club.dashboard');
-    });
-
-    // League Admin Routes
-    Route::prefix('dashboard/league')->group(function () {
-        Route::get('/', function () {
-            return view('league.dashboard');
-        })->name('league.dashboard');
-    });
-
-    // Super Admin Routes
-    Route::prefix('dashboard/admin')->group(function () {
-        Route::get('/', function () {
-            return view('admin.dashboard');
-        })->name('admin.dashboard');
-    });
-});
-
-// Public Routes
-Route::get('/tournaments/public', function () {
-    return redirect()->route('tournaments.dashboard');
-})->name('tournaments.public');
-Route::get('/tournaments/dashboard', PublicTournamentsDashboard::class)->name('tournaments.dashboard');
-
 require __DIR__.'/auth.php';
-// Rutas de administración
-require __DIR__.'/admin.php';

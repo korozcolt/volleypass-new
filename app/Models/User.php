@@ -580,14 +580,21 @@ class User extends Authenticatable implements HasMedia, FilamentUser
     {
         // Para el panel admin, permitir acceso a usuarios activos
         if ($panel->getId() === 'admin') {
-            // En testing, permitir acceso a usuarios activos
-            if (app()->environment('testing')) {
-                return $this->status === UserStatus::Active;
-            }
+            // Verificar roles administrativos
+            $adminRoles = [
+                'admin',
+                'super_admin',
+                'league_director',
+                'club_director',
+                'coach',
+                'referee'
+            ];
 
-            // En producción, verificar roles
-            return $this->status === UserStatus::Active &&
-                   $this->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'ClubDirector']);
+            foreach ($adminRoles as $role) {
+                if ($this->hasRole($role)) {
+                    return true;
+                }
+            }
         }
 
         return false;

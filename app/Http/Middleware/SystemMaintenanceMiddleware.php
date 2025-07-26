@@ -16,13 +16,13 @@ class SystemMaintenanceMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Permitir acceso completo a rutas de Filament admin sin verificar mantenimiento
+        if ($request->is('admin') || $request->is('admin/*')) {
+            return $next($request);
+        }
+
         // Verificar si el modo mantenimiento está activo
         if (is_maintenance_mode()) {
-            // Permitir acceso a rutas de admin para super administradores
-            if ($request->is('admin*') && Auth::check() && Auth::user()->hasRole('SuperAdmin')) {
-                return $next($request);
-            }
-
             // Permitir acceso a API de verificación de estado
             if ($request->is('api/status') || $request->is('up')) {
                 return $next($request);

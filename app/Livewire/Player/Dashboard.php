@@ -3,8 +3,10 @@
 namespace App\Livewire\Player;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
 
+#[Layout('layouts.player-dashboard')]
 class Dashboard extends Component
 {
     public $player;
@@ -17,6 +19,14 @@ class Dashboard extends Component
     public function mount()
     {
         $this->player = Auth::user()->player;
+        
+        // Verificar si el usuario tiene un perfil de jugador
+        if (!$this->player) {
+            session()->flash('error', 'No tienes un perfil de jugador asociado a tu cuenta.');
+            $this->redirect(route('dashboard'));
+            return;
+        }
+        
         $this->loadDashboardData();
     }
 
@@ -82,7 +92,6 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('livewire.player.dashboard')
-            ->layout('layouts.app.player');
+        return view('livewire.player.dashboard');
     }
 }
