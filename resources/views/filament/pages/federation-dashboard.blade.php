@@ -110,7 +110,7 @@
             });
             
             // Trigger Livewire refresh for all widgets
-            Livewire.emit('refreshWidget');
+            window.dispatchEvent(new CustomEvent('refreshWidget'));
             
             // Show refresh feedback
             const button = event.target.closest('button');

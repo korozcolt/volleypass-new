@@ -8,6 +8,7 @@ use App\Livewire\Public\TeamPublicProfile;
 use App\Livewire\Public\TournamentStandings;
 use App\Livewire\Public\TournamentSchedule;
 use App\Livewire\Public\TournamentResults;
+use App\Livewire\Public\Standings;
 use App\Livewire\Player\PlayerDashboard;
 use App\Livewire\Player\DigitalCard;
 use App\Livewire\Player\PlayerStats;
@@ -20,9 +21,12 @@ use App\Http\Controllers\PlayerController;
 // RUTAS PÚBLICAS (NO REQUIEREN AUTENTICACIÓN)
 Route::get('/', PublicTournaments::class)->name('home');
 Route::view('/about', 'pages.about')->name('about');
+Route::get('/teams', \App\Livewire\Public\Teams::class)->name('teams');
+Route::get('/standings', Standings::class)->name('standings');
+Route::get('/schedule', \App\Livewire\Public\Schedule::class)->name('schedule');
 
 // Demo de componentes UI deportivos
-Route::view('/demo-components', 'demo-components')->name('demo.components');
+Route::get('/demo-components', \App\Livewire\Public\DemoComponents::class)->name('demo.components');
 
 Route::prefix('public')->name('public.')->group(function () {
     Route::get('/tournaments', PublicTournaments::class)->name('tournaments');
@@ -79,6 +83,12 @@ Route::middleware(['auth:web', 'role:player'])->group(function () {
         Route::get('/settings', PlayerSettings::class)->name('settings');
         Route::get('/notifications', PlayerNotifications::class)->name('notifications');
     });
+});
+
+// RUTAS DE ÁRBITROS
+Route::middleware(['auth', 'role:referee'])->prefix('referee')->name('referee.')->group(function () {
+    Route::get('/dashboard', \App\Livewire\Referee\Dashboard::class)->name('dashboard');
+    Route::get('/match-control/{match}', \App\Livewire\Referee\MatchControl::class)->name('match-control');
 });
 
 // Settings comunes para usuarios autenticados

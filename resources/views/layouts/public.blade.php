@@ -163,7 +163,7 @@
         // Auto-refresh every 30 seconds for live updates
         setInterval(() => {
             if (typeof Livewire !== 'undefined') {
-                Livewire.emit('refreshData');
+                window.dispatchEvent(new CustomEvent('refreshData'));
             }
         }, 30000);
 

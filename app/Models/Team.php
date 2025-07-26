@@ -85,4 +85,24 @@ class Team extends Model
     {
         return $this->belongsTo(LeagueCategory::class);
     }
+
+    public function tournaments()
+    {
+        return $this->belongsToMany(Tournament::class, 'tournament_teams');
+    }
+
+    public function homeMatches(): HasMany
+    {
+        return $this->hasMany(VolleyMatch::class, 'home_team_id');
+    }
+
+    public function awayMatches(): HasMany
+    {
+        return $this->hasMany(VolleyMatch::class, 'away_team_id');
+    }
+
+    public function matches()
+    {
+        return $this->homeMatches()->union($this->awayMatches());
+    }
 }

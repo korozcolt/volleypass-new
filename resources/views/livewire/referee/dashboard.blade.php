@@ -117,10 +117,10 @@
                                     Ver detalles
                                 </button>
                                 @if($match['status'] === 'scheduled')
-                                <button wire:click="startMatch({{ $match['id'] }})" 
-                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors">
-                                    Iniciar Partido
-                                </button>
+                                <a href="{{ route('referee.match-control', $match['id']) }}"
+                                   class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors inline-block">
+                                    Control de Partido
+                                </a>
                                 @endif
                             </div>
                         </div>
@@ -179,12 +179,22 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acciones Rápidas</h3>
                 <div class="space-y-3">
-                    <button class="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-2a2 2 0 011-1.732l-1 1.732zM12 18V16m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6-8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-2a2 2 0 011-1.732l-1 1.732z"></path>
-                        </svg>
-                        Tablero de Control
-                    </button>
+                    @if(count($assignedMatches) > 0)
+                        <a href="{{ route('referee.match-control', $assignedMatches[0]['id']) }}"
+                           class="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-2a2 2 0 011-1.732l-1 1.732zM12 18V16m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6-8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-2a2 2 0 011-1.732l-1 1.732z"></path>
+                            </svg>
+                            Tablero de Control
+                        </a>
+                    @else
+                        <button disabled class="w-full flex items-center justify-center px-4 py-3 bg-gray-400 text-white rounded-lg font-medium">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-2a2 2 0 011-1.732l-1 1.732zM12 18V16m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6-8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-2a2 2 0 011-1.732l-1 1.732z"></path>
+                            </svg>
+                            Sin Partidos Asignados
+                        </button>
+                    @endif
                     
                     <button class="w-full flex items-center justify-center px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -15,7 +15,7 @@
     <section class="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white py-16 overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-10">
-            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1"><circle cx="30" cy="30" r="2"/></g></g></svg>'); background-size: 60px 60px;"></div>
+            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml;charset=utf-8,<svg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;><g fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;><g fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.1&quot;><circle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/></g></g></svg>'); background-size: 60px 60px;"></div>
         </div>
         
         <div class="container mx-auto px-4 lg:px-6 relative z-10">
