@@ -21,6 +21,9 @@ use App\Http\Controllers\PlayerController;
 Route::get('/', PublicTournaments::class)->name('home');
 Route::view('/about', 'pages.about')->name('about');
 
+// Demo de componentes UI deportivos
+Route::view('/demo-components', 'demo-components')->name('demo.components');
+
 Route::prefix('public')->name('public.')->group(function () {
     Route::get('/tournaments', PublicTournaments::class)->name('tournaments');
     Route::get('/tournament/{tournament}', TournamentDetails::class)->name('tournament.show');

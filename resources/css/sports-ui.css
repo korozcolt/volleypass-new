@@ -1,0 +1,723 @@
+/* ========================================
+   VOLLEYPASS SPORTS UI SYSTEM
+   Sistema completo de UI deportiva profesional
+   WCAG 2.1 AA Compliant | Responsive | Performance Optimized
+   ======================================== */
+
+/* ========================================
+   IMPORTS - Design Tokens y Componentes
+   ======================================== */
+
+@import url('./design-tokens.css');
+@import url('./components/tournament-card.css');
+@import url('./components/live-scoreboard.css');
+@import url('./components/sports-table.css');
+@import url('./components/sports-header.css');
+@import url('./components/sports-hero.css');
+
+/* ========================================
+   CRITICAL CSS - Above the fold
+   ======================================== */
+
+/* Reset mejorado para deportes */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--vp-font-body);
+  font-size: 16px;
+  line-height: var(--vp-leading-normal);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  font-family: inherit;
+  line-height: inherit;
+  color: var(--vp-gray-900);
+  background: var(--vp-gray-50);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ========================================
+   WCAG 2.1 AA COMPLIANCE
+   ======================================== */
+
+/* Focus Management - Nivel AA */
+:focus {
+  outline: 2px solid var(--vp-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--vp-radius);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--vp-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--vp-radius);
+}
+
+/* Skip Links para navegación por teclado */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--vp-primary-600);
+  color: white;
+  padding: var(--vp-space-2) var(--vp-space-4);
+  text-decoration: none;
+  font-weight: var(--vp-font-semibold);
+  border-radius: var(--vp-radius);
+  z-index: var(--vp-z-modal);
+  transition: top var(--vp-duration-200) var(--vp-ease-out);
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: inherit !important;
+}
+
+/* Contraste mejorado para textos */
+.text-high-contrast {
+  color: var(--vp-gray-900);
+  font-weight: var(--vp-font-semibold);
+}
+
+.text-medium-contrast {
+  color: var(--vp-gray-700);
+  font-weight: var(--vp-font-medium);
+}
+
+/* ========================================
+   LANDMARKS ARIA Y SEMÁNTICA
+   ======================================== */
+
+/* Regiones principales */
+main {
+  min-height: 50vh;
+  outline: none;
+}
+
+main:focus {
+  outline: 2px solid var(--vp-primary-500);
+  outline-offset: -2px;
+}
+
+/* Navegación */
+nav[role="navigation"] {
+  position: relative;
+}
+
+nav[role="navigation"]:focus-within {
+  outline: 2px solid var(--vp-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--vp-radius);
+}
+
+/* Contenido complementario */
+aside[role="complementary"] {
+  background: var(--vp-gray-100);
+  border-radius: var(--vp-radius-lg);
+  padding: var(--vp-space-4);
+}
+
+/* Banners y headers */
+header[role="banner"] {
+  position: relative;
+}
+
+/* Footer */
+footer[role="contentinfo"] {
+  background: var(--vp-gray-900);
+  color: white;
+  padding: var(--vp-space-8) 0;
+}
+
+/* ========================================
+   TIPOGRAFÍA DEPORTIVA PROFESIONAL
+   ======================================== */
+
+/* Jerarquía de títulos */
+h1, .h1 {
+  font-size: clamp(var(--vp-text-3xl), 5vw, var(--vp-text-5xl));
+  font-weight: var(--vp-font-black);
+  line-height: var(--vp-leading-tight);
+  color: var(--vp-gray-900);
+  margin-bottom: var(--vp-space-6);
+  letter-spacing: -0.025em;
+}
+
+h2, .h2 {
+  font-size: clamp(var(--vp-text-2xl), 4vw, var(--vp-text-4xl));
+  font-weight: var(--vp-font-bold);
+  line-height: var(--vp-leading-tight);
+  color: var(--vp-gray-900);
+  margin-bottom: var(--vp-space-4);
+  letter-spacing: -0.025em;
+}
+
+h3, .h3 {
+  font-size: clamp(var(--vp-text-xl), 3vw, var(--vp-text-2xl));
+  font-weight: var(--vp-font-bold);
+  line-height: var(--vp-leading-snug);
+  color: var(--vp-gray-900);
+  margin-bottom: var(--vp-space-3);
+}
+
+h4, .h4 {
+  font-size: var(--vp-text-lg);
+  font-weight: var(--vp-font-semibold);
+  line-height: var(--vp-leading-snug);
+  color: var(--vp-gray-900);
+  margin-bottom: var(--vp-space-2);
+}
+
+h5, .h5 {
+  font-size: var(--vp-text-base);
+  font-weight: var(--vp-font-semibold);
+  line-height: var(--vp-leading-normal);
+  color: var(--vp-gray-900);
+  margin-bottom: var(--vp-space-2);
+}
+
+h6, .h6 {
+  font-size: var(--vp-text-sm);
+  font-weight: var(--vp-font-semibold);
+  line-height: var(--vp-leading-normal);
+  color: var(--vp-gray-700);
+  margin-bottom: var(--vp-space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Párrafos y texto */
+p {
+  margin-bottom: var(--vp-space-4);
+  line-height: var(--vp-leading-relaxed);
+  color: var(--vp-gray-700);
+}
+
+.lead {
+  font-size: var(--vp-text-lg);
+  font-weight: var(--vp-font-medium);
+  line-height: var(--vp-leading-relaxed);
+  color: var(--vp-gray-600);
+}
+
+.small {
+  font-size: var(--vp-text-sm);
+  color: var(--vp-gray-600);
+}
+
+/* Enlaces */
+a {
+  color: var(--vp-primary-600);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  transition: all var(--vp-duration-200) var(--vp-ease-out);
+}
+
+a:hover {
+  color: var(--vp-primary-700);
+  text-decoration-thickness: 3px;
+}
+
+a:focus {
+  outline: 2px solid var(--vp-primary-500);
+  outline-offset: 2px;
+  border-radius: var(--vp-radius);
+}
+
+/* ========================================
+   SISTEMA DE BOTONES DEPORTIVOS
+   ======================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vp-space-2);
+  padding: var(--vp-space-3) var(--vp-space-6);
+  font-size: var(--vp-text-base);
+  font-weight: var(--vp-font-semibold);
+  line-height: var(--vp-leading-none);
+  text-decoration: none;
+  border: var(--vp-border-2) solid transparent;
+  border-radius: var(--vp-radius-lg);
+  cursor: pointer;
+  transition: all var(--vp-duration-200) var(--vp-ease-out);
+  position: relative;
+  overflow: hidden;
+  min-height: 44px; /* WCAG touch target */
+  min-width: 44px;
+}
+
+.btn:focus {
+  outline: 3px solid var(--vp-primary-500);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Variantes de botones */
+.btn--primary {
+  background: linear-gradient(135deg, var(--vp-primary-500), var(--vp-primary-600));
+  color: white;
+  box-shadow: var(--vp-shadow-md);
+}
+
+.btn--primary:hover {
+  background: linear-gradient(135deg, var(--vp-primary-600), var(--vp-primary-700));
+  transform: translateY(-1px);
+  box-shadow: var(--vp-shadow-lg);
+}
+
+.btn--secondary {
+  background: var(--vp-gray-100);
+  color: var(--vp-gray-900);
+  border-color: var(--vp-gray-300);
+}
+
+.btn--secondary:hover {
+  background: var(--vp-gray-200);
+  border-color: var(--vp-gray-400);
+  transform: translateY(-1px);
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--vp-primary-600);
+  border-color: var(--vp-primary-500);
+}
+
+.btn--outline:hover {
+  background: var(--vp-primary-50);
+  color: var(--vp-primary-700);
+  border-color: var(--vp-primary-600);
+}
+
+.btn--success {
+  background: var(--vp-sport-victory);
+  color: white;
+}
+
+.btn--success:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn--danger {
+  background: var(--vp-sport-defeat);
+  color: white;
+}
+
+.btn--danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.btn--live {
+  background: var(--vp-sport-live);
+  color: white;
+  animation: live-pulse 2s infinite;
+}
+
+/* Tamaños de botones */
+.btn--sm {
+  padding: var(--vp-space-2) var(--vp-space-4);
+  font-size: var(--vp-text-sm);
+  min-height: 36px;
+}
+
+.btn--lg {
+  padding: var(--vp-space-4) var(--vp-space-8);
+  font-size: var(--vp-text-lg);
+  min-height: 52px;
+}
+
+.btn--xl {
+  padding: var(--vp-space-5) var(--vp-space-10);
+  font-size: var(--vp-text-xl);
+  min-height: 60px;
+}
+
+/* ========================================
+   SISTEMA DE FORMULARIOS ACCESIBLES
+   ======================================== */
+
+.form-group {
+  margin-bottom: var(--vp-space-4);
+}
+
+.form-label {
+  display: block;
+  font-size: var(--vp-text-sm);
+  font-weight: var(--vp-font-semibold);
+  color: var(--vp-gray-700);
+  margin-bottom: var(--vp-space-2);
+}
+
+.form-label--required::after {
+  content: ' *';
+  color: var(--vp-sport-defeat);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  display: block;
+  width: 100%;
+  padding: var(--vp-space-3);
+  font-size: var(--vp-text-base);
+  line-height: var(--vp-leading-normal);
+  color: var(--vp-gray-900);
+  background: white;
+  border: var(--vp-border-2) solid var(--vp-gray-300);
+  border-radius: var(--vp-radius-lg);
+  transition: all var(--vp-duration-200) var(--vp-ease-out);
+  min-height: 44px; /* WCAG touch target */
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--vp-primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input:invalid,
+.form-select:invalid,
+.form-textarea:invalid {
+  border-color: var(--vp-sport-defeat);
+}
+
+.form-input:invalid:focus,
+.form-select:invalid:focus,
+.form-textarea:invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-help {
+  font-size: var(--vp-text-sm);
+  color: var(--vp-gray-600);
+  margin-top: var(--vp-space-1);
+}
+
+.form-error {
+  font-size: var(--vp-text-sm);
+  color: var(--vp-sport-defeat);
+  margin-top: var(--vp-space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--vp-space-1);
+}
+
+.form-success {
+  font-size: var(--vp-text-sm);
+  color: var(--vp-sport-victory);
+  margin-top: var(--vp-space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--vp-space-1);
+}
+
+/* ========================================
+   UTILIDADES RESPONSIVE
+   ======================================== */
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--vp-space-6);
+}
+
+.container--sm {
+  max-width: 640px;
+}
+
+.container--md {
+  max-width: 768px;
+}
+
+.container--lg {
+  max-width: 1024px;
+}
+
+.container--xl {
+  max-width: 1280px;
+}
+
+/* Grid System */
+.grid {
+  display: grid;
+  gap: var(--vp-space-6);
+}
+
+.grid--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.grid--auto {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 var(--vp-space-4);
+  }
+  
+  .grid--2,
+  .grid--3,
+  .grid--4 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid--auto {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Flexbox utilities */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: var(--vp-space-2);
+}
+
+.gap-4 {
+  gap: var(--vp-space-4);
+}
+
+.gap-6 {
+  gap: var(--vp-space-6);
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Lazy loading images */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity var(--vp-duration-300) var(--vp-ease-out);
+}
+
+img[loading="lazy"].loaded {
+  opacity: 1;
+}
+
+/* GPU acceleration para animaciones */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Contenido crítico */
+.critical-content {
+  contain: layout style paint;
+}
+
+/* ========================================
+   MODO OSCURO
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: var(--vp-gray-100);
+    background: var(--vp-gray-900);
+  }
+  
+  h1, h2, h3, h4, h5, .h1, .h2, .h3, .h4, .h5 {
+    color: var(--vp-gray-100);
+  }
+  
+  h6, .h6 {
+    color: var(--vp-gray-300);
+  }
+  
+  p {
+    color: var(--vp-gray-300);
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    background: var(--vp-gray-800);
+    border-color: var(--vp-gray-600);
+    color: var(--vp-gray-100);
+  }
+  
+  .btn--secondary {
+    background: var(--vp-gray-700);
+    color: var(--vp-gray-100);
+    border-color: var(--vp-gray-600);
+  }
+}
+
+.dark {
+  color: var(--vp-gray-100);
+  background: var(--vp-gray-900);
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5,
+.dark .h1, .dark .h2, .dark .h3, .dark .h4, .dark .h5 {
+  color: var(--vp-gray-100);
+}
+
+.dark h6, .dark .h6 {
+  color: var(--vp-gray-300);
+}
+
+.dark p {
+  color: var(--vp-gray-300);
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  
+  .sports-header,
+  .sports-hero__actions,
+  .btn {
+    display: none !important;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+}
+
+/* ========================================
+   REDUCIR MOVIMIENTO
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   ALTO CONTRASTE
+   ======================================== */
+
+@media (prefers-contrast: high) {
+  :root {
+    --vp-primary-500: #0000ff;
+    --vp-sport-victory: #008000;
+    --vp-sport-defeat: #ff0000;
+  }
+  
+  .btn,
+  .form-input,
+  .form-select,
+  .form-textarea {
+    border-width: 2px;
+  }
+  
+  a {
+    text-decoration-thickness: 3px;
+  }
+}

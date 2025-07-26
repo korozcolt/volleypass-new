@@ -1,64 +1,363 @@
+/* ========================================
+   VOLLEYPASS - MAIN APPLICATION STYLES
+   Sistema híbrido: Design Tokens + Tailwind CSS
+   Performance optimizado con Critical CSS
+   ======================================== */
+
+/* Critical CSS - Above the fold */
+@import url('./sports-ui.css');
+
+/* Tailwind CSS - Utility classes */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Sports-style animations */
-@keyframes marquee {
-    0% {
-        transform: translateX(100%);
-    }
-    100% {
-        transform: translateX(-100%);
-    }
+/* ========================================
+   INTEGRACIÓN TAILWIND + DESIGN TOKENS
+   ======================================== */
+
+@layer base {
+  /* Override Tailwind con nuestros design tokens */
+  :root {
+    --tw-color-primary-50: var(--vp-primary-50);
+    --tw-color-primary-500: var(--vp-primary-500);
+    --tw-color-primary-600: var(--vp-primary-600);
+    --tw-color-secondary-500: var(--vp-secondary-500);
+    --tw-color-secondary-600: var(--vp-secondary-600);
+    --tw-color-gray-50: var(--vp-gray-50);
+    --tw-color-gray-100: var(--vp-gray-100);
+    --tw-color-gray-900: var(--vp-gray-900);
+  }
 }
 
-.animate-marquee {
-    animation: marquee 30s linear infinite;
-}
-
-/* ESPN-style hover effects */
-.sports-card {
-    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
-}
-
-/* Live indicator pulse */
-@keyframes live-pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
-}
-
-.live-indicator {
+@layer components {
+  /* ========================================
+     COMPONENTES HÍBRIDOS TAILWIND + TOKENS
+     ======================================== */
+  
+  /* Cards deportivas mejoradas */
+  .sports-card {
+    @apply transition-all duration-300 hover:scale-105;
+    background: linear-gradient(135deg, var(--vp-gray-50) 0%, var(--vp-gray-100) 100%);
+    border: var(--vp-border) solid var(--vp-gray-200);
+    border-radius: var(--vp-radius-xl);
+    box-shadow: var(--vp-shadow-md);
+  }
+  
+  .sports-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--vp-shadow-xl), var(--vp-shadow-sport);
+    border-color: var(--vp-primary-300);
+  }
+  
+  /* Indicadores en vivo mejorados */
+  .live-indicator {
+    @apply inline-flex items-center gap-2;
     animation: live-pulse 2s ease-in-out infinite;
-}
-
-/* Team color coding */
-.team-home {
-    @apply bg-gradient-to-r from-blue-500 to-blue-600;
-}
-
-.team-away {
-    @apply bg-gradient-to-r from-purple-500 to-purple-600;
-}
-
-/* Score emphasis */
-.score-large {
-    @apply text-4xl font-black tracking-tight;
+    color: var(--vp-sport-live);
+    font-weight: var(--vp-font-bold);
+  }
+  
+  .live-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--vp-sport-live);
+    border-radius: var(--vp-radius-full);
+    animation: live-pulse 1.5s infinite;
+    box-shadow: 0 0 10px var(--vp-sport-live-pulse);
+  }
+  
+  /* Equipos con colores colombianos */
+  .team-home {
+    background: linear-gradient(135deg, var(--vp-primary-500), var(--vp-primary-600));
+    color: white;
+    padding: var(--vp-space-2) var(--vp-space-4);
+    border-radius: var(--vp-radius-lg);
+    font-weight: var(--vp-font-semibold);
+  }
+  
+  .team-away {
+    background: linear-gradient(135deg, var(--vp-secondary-500), var(--vp-secondary-600));
+    color: white;
+    padding: var(--vp-space-2) var(--vp-space-4);
+    border-radius: var(--vp-radius-lg);
+    font-weight: var(--vp-font-semibold);
+  }
+  
+  /* Marcadores grandes */
+  .score-large {
+    font-size: clamp(var(--vp-text-3xl), 6vw, var(--vp-text-5xl));
+    font-weight: var(--vp-font-black);
+    line-height: var(--vp-leading-none);
+    color: var(--vp-primary-600);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* Efecto cristal mejorado */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: var(--vp-border) solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--vp-radius-xl);
+  }
+  
+  /* Divisor deportivo colombiano */
+  .sports-divider {
+    width: 4px;
+    height: var(--vp-space-8);
+    background: linear-gradient(180deg, var(--vp-primary-500), var(--vp-secondary-600), var(--vp-accent-600));
+    border-radius: var(--vp-radius-full);
+    box-shadow: var(--vp-shadow-md);
+  }
+  
+  /* Navegación deportiva */
+  .sports-nav {
+    @apply sticky top-0 z-50;
+    background: linear-gradient(135deg, var(--vp-gray-900) 0%, var(--vp-gray-800) 100%);
+    backdrop-filter: blur(20px);
+    border-bottom: var(--vp-border) solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--vp-shadow-lg);
+  }
+  
+  /* Botones deportivos */
+  .btn-sports {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl transition-all duration-200;
+    background: linear-gradient(135deg, var(--vp-primary-500), var(--vp-primary-600));
+    color: white;
+    box-shadow: var(--vp-shadow-md);
+    min-height: 44px; /* WCAG touch target */
+  }
+  
+  .btn-sports:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--vp-shadow-lg);
+    background: linear-gradient(135deg, var(--vp-primary-600), var(--vp-primary-700));
+  }
+  
+  .btn-sports:focus {
+    outline: 3px solid var(--vp-primary-500);
+    outline-offset: 2px;
+  }
+  
+  /* Tablas responsivas */
+  .table-responsive {
+    @apply overflow-x-auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--vp-gray-300) var(--vp-gray-100);
+  }
+  
+  .table-responsive::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .table-responsive::-webkit-scrollbar-track {
+    background: var(--vp-gray-100);
+  }
+  
+  .table-responsive::-webkit-scrollbar-thumb {
+    background: var(--vp-gray-300);
+    border-radius: var(--vp-radius-full);
+  }
 }
 
-/* Modern glass effect */
-.glass-effect {
-    @apply bg-white/10 backdrop-blur-sm border border-white/20;
+@layer utilities {
+  /* ========================================
+     UTILIDADES DEPORTIVAS PERSONALIZADAS
+     ======================================== */
+  
+  /* Animaciones deportivas */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  
+  .animate-score-update {
+    animation: score-update 0.6s ease-out;
+  }
+  
+  .animate-live-pulse {
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+  
+  /* Estados deportivos */
+  .status-live {
+    color: var(--vp-sport-live);
+    font-weight: var(--vp-font-bold);
+  }
+  
+  .status-upcoming {
+    color: var(--vp-sport-upcoming);
+    font-weight: var(--vp-font-medium);
+  }
+  
+  .status-finished {
+    color: var(--vp-sport-finished);
+    font-weight: var(--vp-font-medium);
+  }
+  
+  .status-victory {
+    color: var(--vp-sport-victory);
+    font-weight: var(--vp-font-bold);
+  }
+  
+  .status-defeat {
+    color: var(--vp-sport-defeat);
+    font-weight: var(--vp-font-bold);
+  }
+  
+  /* Espaciado deportivo */
+  .space-sports {
+    gap: var(--vp-space-4);
+  }
+  
+  .space-sports-lg {
+    gap: var(--vp-space-6);
+  }
+  
+  /* Tipografía deportiva */
+  .text-sports-title {
+    font-size: clamp(var(--vp-text-2xl), 4vw, var(--vp-text-4xl));
+    font-weight: var(--vp-font-black);
+    line-height: var(--vp-leading-tight);
+    letter-spacing: -0.025em;
+  }
+  
+  .text-sports-score {
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--vp-font-black);
+  }
+  
+  /* Colores colombianos */
+  .bg-colombia-yellow {
+    background: var(--vp-primary-500);
+  }
+  
+  .bg-colombia-blue {
+    background: var(--vp-secondary-600);
+  }
+  
+  .bg-colombia-red {
+    background: var(--vp-accent-600);
+  }
+  
+  .text-colombia-yellow {
+    color: var(--vp-primary-500);
+  }
+  
+  .text-colombia-blue {
+    color: var(--vp-secondary-600);
+  }
+  
+  .text-colombia-red {
+    color: var(--vp-accent-600);
+  }
+  
+  /* Sombras deportivas */
+  .shadow-sports {
+    box-shadow: var(--vp-shadow-sport);
+  }
+  
+  .shadow-victory {
+    box-shadow: var(--vp-shadow-victory);
+  }
+  
+  .shadow-live {
+    box-shadow: var(--vp-shadow-live);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--vp-shadow-glow);
+  }
 }
 
-/* Sports section divider */
-.sports-divider {
-    @apply w-1 h-8 bg-gradient-to-b from-red-500 to-red-600 rounded-full;
+/* ========================================
+   ANIMACIONES DEPORTIVAS GLOBALES
+   ======================================== */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
-@tailwind variants;
+
+/* ========================================
+   PROGRESSIVE ENHANCEMENT
+   ======================================== */
+
+/* Carga progresiva de imágenes */
+.progressive-image {
+  background: linear-gradient(90deg, var(--vp-gray-200) 25%, var(--vp-gray-100) 50%, var(--vp-gray-200) 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+.progressive-image.loaded {
+  animation: none;
+  background: none;
+}
+
+/* Lazy loading para componentes */
+.lazy-component {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all var(--vp-duration-500) var(--vp-ease-out);
+}
+
+.lazy-component.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================
+   OPTIMIZACIONES DE RENDIMIENTO
+   ======================================== */
+
+/* Contenido crítico above-the-fold */
+.critical-content {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* GPU acceleration para animaciones */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Optimización de scroll */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smooth-scroll {
+    scroll-behavior: auto;
+  }
+}
+
+/* ========================================
+   COMPATIBILIDAD Y FALLBACKS
+   ======================================== */
+
+/* Fallback para navegadores sin soporte de CSS Grid */
+@supports not (display: grid) {
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .grid > * {
+    flex: 1 1 300px;
+  }
+}
+
+/* Fallback para backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
