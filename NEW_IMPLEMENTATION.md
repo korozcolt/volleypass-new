@@ -1,1606 +1,2631 @@
-# VolleyPass - Sistema de Autenticación Triple y UI/UX Frontend
+# 🏐 VolleyPass - Documentación Completa del Proyecto
 
-## 🔐 ARQUITECTURA DE AUTENTICACIÓN
+## Arquitectura y Estructura del Sistema
 
-VolleyPass implementa **tres sistemas de autenticación independientes** para diferentes tipos de usuarios:
+### Inspiración y Diseño
 
-### 1. **Sistema Web (Jugadoras)**
-- **Guard**: `web` (session-based)
-- **Login**: `/login`
-- **Dashboard**: `/player/dashboard`
-- **Roles**: `player`
-- **Propósito**: Interface simplificada para jugadoras
+La plataforma está inspirada en plataformas deportivas modernas como **ESPN**, **Liga MX App**, y **UEFA.com**, adaptada específicamente para voleibol amateur/regional. El diseño es profesional pero accesible, priorizando la claridad de información sobre efectos visuales complejos.
 
-### 2. **Panel Admin (Gestores)**
-- **Guard**: `web` (session-based, mismo provider)
-- **Login**: `/admin/login`
-- **Dashboard**: `/admin`
-- **Roles**: `admin`, `super_admin`, `league_director`, `club_director`, `coach`, `referee`
-- **Propósito**: Gestión completa del sistema
+### Características del Diseño
 
-### 3. **API Móvil (Verificadores)**
-- **Guard**: `sanctum` (token-based)
-- **Login**: `POST /api/v1/auth/login`
-- **Authentication**: Bearer tokens
-- **Roles**: `Verifier`, `LeagueAdmin`, `SuperAdmin`
-- **Propósito**: Apps móviles para verificación QR
+- **Sistema de design tokens consistente** con colores de la bandera colombiana
+- **Tipografía legible** en todos los tamaños de pantalla
+- **Esquema de colores** que refleja la identidad del voleibol colombiano
+- **Interfaz funcional sin JavaScript** para usuarios con conectividad limitada
+- **Experiencia mejorada** cuando JavaScript está disponible
+- **Componentes en tiempo real** con Livewire y Alpine.js
 
----
+## Estructura de Archivos del Proyecto
 
-## 🛠️ CONFIGURACIÓN TÉCNICA
+### 1. Layouts Principales
 
-### Guards Configurados (`config/auth.php`)
-
-```php
-'guards' => [
-    // Guard para usuarios web (jugadoras)
-    'web' => [
-        'driver' => 'session',
-        'provider' => 'users',
-    ],
-    
-    // Guard para API móvil (verificadores)
-    'sanctum' => [
-        'driver' => 'sanctum',
-        'provider' => 'users',
-    ],
-    
-    // NOTA: Filament usará 'web' guard
-],
+```
+resources/views/layouts/
+├── app.blade.php           # Layout principal con Alpine stores
+├── public.blade.php        # Layout para páginas públicas
+├── auth.blade.php          # Layout para autenticación
+└── dashboard.blade.php     # Layout base para dashboards
 ```
 
-### Middleware Personalizado
+### 2. Vistas Principales
 
-#### CheckAdminPanelAccess.php
-```php
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-
-class CheckAdminPanelAccess
-{
-    public function handle(Request $request, Closure $next): Response
-    {
-        // Excluir rutas de login/logout de Filament
-        if ($request->routeIs('filament.admin.auth.login') || 
-            $request->routeIs('filament.admin.auth.logout') ||
-            str_starts_with($request->route()->getName() ?? '', 'filament.admin.auth.')) {
-            return $next($request);
-        }
-
-        // Verificar autenticación web
-        if (!auth('web')->check()) {
-            return redirect()->route('filament.admin.auth.login');
-        }
-
-        $user = auth('web')->user();
-        
-        // Roles permitidos en panel admin
-        $adminRoles = [
-            'admin', 
-            'super_admin', 
-            'league_director', 
-            'club_director', 
-            'coach', 
-            'referee'
-        ];
-        
-        $hasAdminRole = false;
-        foreach ($adminRoles as $role) {
-            if ($user->hasRole($role)) {
-                $hasAdminRole = true;
-                break;
-            }
-        }
-
-        if (!$hasAdminRole) {
-            // Redirigir jugadoras a su dashboard
-            if ($user->hasRole('player')) {
-                return redirect()->route('player.dashboard');
-            }
-            
-            abort(403, 'No tienes permisos para acceder al panel administrativo.');
-        }
-
-        return $next($request);
-    }
-}
+```
+resources/views/
+├── welcome.blade.php       # Página de inicio con información general
+├── pages/
+│   ├── admin/
+│   │   └── dashboard.blade.php    # Dashboard administrativo
+│   ├── coach/
+│   │   └── dashboard.blade.php    # Dashboard de entrenador
+│   ├── player/
+│   │   └── dashboard.blade.php    # Dashboard de jugadora
+│   ├── referee/
+│   │   └── dashboard.blade.php    # Dashboard de árbitro
+│   └── medical/
+│       └── dashboard.blade.php    # Dashboard médico
 ```
 
-#### ApiRoleMiddleware.php
-```php
-<?php
+### 3. Componentes de Navegación
 
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-
-class ApiRoleMiddleware
-{
-    public function handle(Request $request, Closure $next, ...$roles): Response
-    {
-        // Verificar autenticación Sanctum
-        if (!auth('sanctum')->check()) {
-            return response()->json([
-                'error' => 'Token de acceso requerido',
-                'message' => 'Debes autenticarte para acceder a este endpoint'
-            ], 401);
-        }
-
-        $user = auth('sanctum')->user();
-        
-        // Verificar roles requeridos
-        $hasRole = false;
-        foreach ($roles as $role) {
-            if ($user->hasRole($role)) {
-                $hasRole = true;
-                break;
-            }
-        }
-
-        if (!$hasRole) {
-            return response()->json([
-                'error' => 'Permisos insuficientes',
-                'message' => 'No tienes permisos para acceder a este recurso',
-                'required_roles' => $roles,
-                'user_roles' => $user->getRoleNames()
-            ], 403);
-        }
-
-        return $next($request);
-    }
-}
+```
+resources/views/components/navigation/
+├── header.blade.php         # Header principal con menús responsive
+├── footer.blade.php         # Footer con información de contacto
+├── public-header.blade.php  # Header para páginas públicas
+├── public-footer.blade.php  # Footer para páginas públicas
+├── auth-menu.blade.php      # Menú para usuarios autenticados
+├── guest-menu.blade.php     # Menú para invitados
+├── mobile-menu.blade.php    # Menú móvil responsive
+└── user-dropdown.blade.php  # Dropdown del usuario
 ```
 
-### Configuración Filament (`AdminPanelProvider.php`)
+### 4. CSS y Design Tokens
 
-```php
-public function panel(Panel $panel): Panel
-{
-    return $panel
-        ->default()
-        ->id('admin')
-        ->path('admin')
-        ->login()
-        ->authGuard('web') // USAR GUARD WEB
-        ->colors([
-            'primary' => Color::Amber,
-        ])
-        ->brandName('VolleyPass Admin')
-        ->brandLogo(asset('images/logo.png'))
-        ->favicon(asset('favicon.ico'))
-        ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-        ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-        ->pages([
-            Pages\Dashboard::class,
-        ])
-        ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-        ->widgets([
-            Widgets\AccountWidget::class,
-            Widgets\FilamentInfoWidget::class,
-        ])
-        ->middleware([
-            EncryptCookies::class,
-            AddQueuedCookiesToResponse::class,
-            StartSession::class,
-            AuthenticateSession::class,
-            ShareErrorsFromSession::class,
-            VerifyCsrfToken::class,
-            SubstituteBindings::class,
-            DisableBladeIconComponents::class,
-            DispatchServingFilamentEvent::class,
-        ])
-        ->authMiddleware([
-            Authenticate::class,
-            CheckAdminPanelAccess::class, // VERIFICACIÓN DE ROLES
-        ]);
-}
-```
-
-### Registro de Middleware (`bootstrap/app.php`)
-
-```php
-->withMiddleware(function (Middleware $middleware) {
-    $middleware->alias([
-        'role' => RoleMiddleware::class,
-        'admin.access' => CheckAdminPanelAccess::class,
-        'api.role' => ApiRoleMiddleware::class,
-    ]);
-})
-```
-
----
-
-## 🛣️ ESTRUCTURA DE RUTAS
-
-### Rutas Web (`routes/web.php`)
-
-```php
-// RUTAS PÚBLICAS (NO REQUIEREN AUTENTICACIÓN)
-Route::get('/', PublicTournaments::class)->name('home');
-
-Route::prefix('public')->name('public.')->group(function () {
-    Route::get('/tournaments', PublicTournaments::class)->name('tournaments');
-    Route::get('/tournament/{tournament}', TournamentDetails::class)->name('tournament.show');
-    Route::get('/team/{team}', TeamPublicProfile::class)->name('team.show');
-    Route::get('/standings/{tournament}', TournamentStandings::class)->name('standings');
-    Route::get('/schedule/{tournament}', TournamentSchedule::class)->name('schedule');
-    Route::get('/results/{tournament}', TournamentResults::class)->name('results');
-});
-
-// AUTENTICACIÓN WEB (SOLO USUARIOS FINALES)
-require __DIR__.'/auth.php';
-
-// DASHBOARD INTELIGENTE - REDIRIGE SEGÚN ROL
-Route::get('/dashboard', function () {
-    if (!auth('web')->check()) {
-        return redirect()->route('login');
-    }
-    
-    $user = auth('web')->user();
-    
-    // Roles administrativos → Panel admin
-    $adminRoles = ['admin', 'super_admin', 'league_director', 'club_director', 'coach', 'referee'];
-    
-    foreach ($adminRoles as $role) {
-        if ($user->hasRole($role)) {
-            return redirect('/admin');
-        }
-    }
-    
-    // Jugadoras → Dashboard específico
-    if ($user->hasRole('player')) {
-        return redirect()->route('player.dashboard');
-    }
-    
-    // Sin rol definido → Home
-    return redirect()->route('home');
-})->middleware(['auth:web', 'verified'])->name('dashboard');
-
-// RUTAS DE JUGADORAS
-Route::middleware(['auth:web', 'role:player'])->group(function () {
-    Route::prefix('player')->name('player.')->group(function () {
-        Route::get('/dashboard', PlayerDashboard::class)->name('dashboard');
-        Route::get('/profile', function () {
-            return view('player.profile');
-        })->name('profile');
-        Route::post('/profile/update', [PlayerController::class, 'updateProfile'])->name('profile.update');
-        Route::post('/profile/photo', [PlayerController::class, 'updatePhoto'])->name('profile.photo');
-        Route::get('/card', DigitalCard::class)->name('card');
-        Route::get('/card/download', [PlayerController::class, 'downloadCard'])->name('card.download');
-        Route::get('/stats', PlayerStats::class)->name('stats');
-        Route::get('/tournaments', MyTournaments::class)->name('tournaments');
-        Route::get('/tournaments/{tournament}', MyTournamentDetails::class)->name('tournaments.show');
-        Route::get('/settings', PlayerSettings::class)->name('settings');
-        Route::get('/notifications', PlayerNotifications::class)->name('notifications');
-    });
-});
-```
-
-### Rutas API (`routes/api.php`)
-
-```php
-// RUTAS PÚBLICAS API (NO REQUIEREN TOKEN)
-Route::prefix('v1')->group(function () {
-    
-    // Health check
-    Route::get('/health', function () {
-        return response()->json([
-            'status' => 'ok',
-            'timestamp' => now()->toISOString(),
-            'version' => '1.0.0',
-            'environment' => app()->environment()
-        ]);
-    })->name('api.health');
-
-    // Verificación QR (público para verificadores)
-    Route::post('/verify-qr', [QrVerificationController::class, 'verify'])->name('api.verify-qr');
-    Route::post('/qr-info', [QrVerificationController::class, 'getQrInfo'])->name('api.qr-info');
-
-    // Autenticación para verificadores
-    Route::prefix('auth')->name('api.auth.')->group(function () {
-        Route::post('/login', [AuthController::class, 'login'])->name('login');
-        Route::post('/check-email', function (Request $request) {
-            $request->validate(['email' => 'required|email']);
-            $exists = \App\Models\User::where('email', $request->email)
-                ->whereHas('roles', function($q) {
-                    $q->whereIn('name', ['Verifier', 'LeagueAdmin', 'SuperAdmin']);
-                })
-                ->exists();
-            return response()->json(['exists' => $exists]);
-        })->name('check-email');
-    });
-});
-
-// RUTAS PROTEGIDAS API (REQUIEREN TOKEN)
-Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
-
-    // Gestión de tokens y usuario
-    Route::prefix('auth')->name('api.auth.')->group(function () {
-        Route::get('/user', [AuthController::class, 'user'])->name('user');
-        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-        Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');
-        Route::get('/tokens', [AuthController::class, 'listTokens'])->name('tokens.list');
-        Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('tokens.revoke');
-    });
-    
-    // Verificadores avanzados
-    Route::middleware(['api.role:Verifier,LeagueAdmin,SuperAdmin'])->group(function () {
-        Route::post('/verify-batch', [QrVerificationController::class, 'verifyBatch'])->name('api.verify-batch');
-        Route::get('/stats/dashboard', [QrVerificationController::class, 'getStats'])->name('api.stats.dashboard');
-    });
-});
-```
-
----
-
-## 🎨 UI/UX ESPECIFICACIONES FRONTEND PÚBLICO
-
-### Diseño General del Sistema Público
-
-#### **Principios de Diseño**
-- **Mobile First**: Diseño prioritario para dispositivos móviles
-- **Performance First**: Carga rápida y optimizada
-- **Accessibility**: WCAG 2.1 AA compliant
-- **Progressive Enhancement**: Funciona sin JavaScript, mejora con él
-
-#### **Paleta de Colores**
 ```css
+/* resources/css/app.css */
+
+/* Variables CSS para design tokens */
 :root {
-  /* Colores Principales */
-  --primary-blue: #1e40af;     /* Azul profesional */
-  --primary-orange: #ea580c;   /* Naranja voleibol */
-  --success-green: #16a34a;    /* Verde éxito */
-  --warning-yellow: #ca8a04;   /* Amarillo advertencia */
-  --error-red: #dc2626;        /* Rojo error */
+  /* Colores Primarios - Bandera Colombiana */
+  --vp-primary-50: #fef3c7;
+  --vp-primary-500: #f59e0b;  /* Amarillo Colombia */
+  --vp-primary-600: #d97706;
   
-  /* Colores Neutrales */
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
+  /* Colores Secundarios - Azul Voleibol */
+  --vp-secondary-500: #3b82f6;
+  --vp-secondary-600: #2563eb;
   
-  /* Modo Oscuro */
-  --dark-bg: #0f172a;
-  --dark-surface: #1e293b;
-  --dark-border: #334155;
-  --dark-text: #e2e8f0;
+  /* Colores de Acento - Rojo Pasión */
+  --vp-accent-500: #ef4444;   /* Rojo Colombia */
+  --vp-accent-600: #dc2626;
   
-  /* Colores Deportivos Específicos */
-  --volley-court: #d97706;    /* Naranja cancha */
-  --volley-net: #374151;      /* Gris red */
-  --winner-gold: #f59e0b;     /* Oro ganador */
-  --colombia-yellow: #fbbf24; /* Amarillo Colombia */
-  --colombia-blue: #1d4ed8;   /* Azul Colombia */
-  --colombia-red: #dc2626;    /* Rojo Colombia */
+  /* Estados */
+  --vp-success: #10b981;
+  --vp-warning: #f59e0b;
+  --vp-error: #ef4444;
+  --vp-live: #ff0000;
+}
+
+/* Fuentes del Sistema */
+.font-primary {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+.font-display {
+  font-family: "Poppins", system-ui, -apple-system, sans-serif;
 }
 ```
 
-#### **Tipografía**
-```css
-/* Fuentes */
---font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
---font-display: 'Poppins', sans-serif;
---font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+## Componentes Livewire por Desarrollar
 
-/* Tamaños Responsivos */
---text-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.875rem);   /* 12-14px */
---text-sm: clamp(0.875rem, 0.8rem + 0.3vw, 1rem);      /* 14-16px */
---text-base: clamp(1rem, 0.9rem + 0.4vw, 1.125rem);    /* 16-18px */
---text-lg: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);     /* 18-20px */
---text-xl: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);     /* 20-24px */
---text-2xl: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);   /* 24-30px */
---text-3xl: clamp(1.875rem, 1.6rem + 1vw, 2.25rem);    /* 30-36px */
---text-4xl: clamp(2.25rem, 2rem + 1.2vw, 3rem);        /* 36-48px */
---text-5xl: clamp(3rem, 2.5rem + 2vw, 4rem);           /* 48-64px */
+### Componentes Públicos
+- `public.live-matches` - Muestra partidos en vivo en la página principal
+- `public.recent-results` - Últimos resultados de partidos
+- `public.league-stats` - Estadísticas generales de la liga
 
-/* Pesos y espaciado */
---font-light: 300;
---font-normal: 400;
---font-medium: 500;
---font-semibold: 600;
---font-bold: 700;
---font-extrabold: 800;
+### Componentes Administrativos
+- `admin.stats-overview` - Overview estadístico para administradores
+- `admin.live-matches-management` - Gestión de partidos en vivo
+- `admin.recent-activity` - Actividad reciente del sistema
+- `admin.tournament-management` - Gestión de torneos
+- `admin.quick-actions` - Acciones rápidas administrativas
+- `admin.system-status` - Estado del sistema
+- `admin.pending-approvals` - Aprobaciones pendientes
 
---line-height-tight: 1.25;
---line-height-normal: 1.5;
---line-height-relaxed: 1.75;
+### Componentes de Jugadora
+- `player.profile-header` - Header del perfil de jugadora
+- `player.upcoming-matches` - Próximos partidos de la jugadora
+- `player.performance-stats` - Estadísticas de rendimiento
+- `player.recent-activity` - Actividad reciente de la jugadora
+- `player.medical-status` - Estado médico actual
+- `player.team-info` - Información del equipo
+
+### Componentes de Entrenador
+- `coach.team-overview` - Overview del equipo
+- `coach.team-schedule` - Calendario del equipo
+- `coach.player-management` - Gestión de jugadoras
+- `coach.team-statistics` - Estadísticas del equipo
+- `coach.team-health-status` - Estado de salud del equipo
+- `coach.notifications` - Notificaciones del entrenador
+
+### Componentes de Árbitro
+- `referee.stats-overview` - Estadísticas del árbitro
+- `referee.assigned-matches` - Partidos asignados
+- `referee.match-reports` - Reportes de partidos
+- `referee.performance-history` - Historial de rendimiento
+- `referee.certification-status` - Estado de certificación
+- `referee.recent-assignments` - Asignaciones recientes
+
+### Componentes Médicos
+- `medical.stats-overview` - Estadísticas médicas
+- `medical.active-injuries` - Lesiones activas
+- `medical.medical-reports` - Reportes médicos
+- `medical.player-health-monitoring` - Monitoreo de salud de jugadoras
+- `medical.emergency-contacts` - Contactos de emergencia
+- `medical.medical-alerts` - Alertas médicas
+
+### Componentes Compartidos
+- `shared.notifications-dropdown` - Dropdown de notificaciones
+- `shared.search-component` - Componente de búsqueda global
+- `shared.match-card` - Tarjeta de partido reutilizable
+- `shared.player-card` - Tarjeta de jugadora reutilizable
+
+## Funcionalidades en Tiempo Real
+
+### Con Livewire + Alpine.js
+- **Actualizaciones de marcador en vivo** durante partidos
+- **Notificaciones en tiempo real** de eventos importantes
+- **Estado de salud de jugadoras** actualizado instantáneamente
+- **Cambios de alineación** reflejados inmediatamente
+- **Alertas médicas** con prioridad alta
+- **Verificación QR** con validación instantánea
+
+### Alpine.js Stores Globales
+```javascript
+// En app.blade.php
+Alpine.store('app', {
+  darkMode: false,
+  sidebarOpen: false,
+  toggleDarkMode() { /* lógica */ },
+  toggleSidebar() { /* lógica */ }
+});
+
+Alpine.store('notifications', {
+  items: [],
+  add(notification) { /* lógica */ },
+  remove(id) { /* lógica */ }
+});
 ```
 
-### Especificaciones por Componente
+## Responsive Design
 
-#### **1. Header Principal**
-```html
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 dark:bg-dark-bg/95 dark:border-dark-border transition-all duration-200">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
-      <!-- Logo y Navegación -->
-      <div class="flex items-center space-x-8">
-        <div class="flex-shrink-0">
-          <img class="h-10 w-auto" src="/images/volleypass-logo.svg" alt="VolleyPass">
-          <span class="sr-only">VolleyPass - Sistema de Gestión de Voleibol</span>
-        </div>
-        <nav class="hidden md:flex space-x-6" role="navigation" aria-label="Navegación principal">
-          <a href="/" 
-             class="text-gray-900 hover:text-primary-blue font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 rounded-md px-2 py-1"
-             aria-current="page">
-            Torneos
-          </a>
-          <a href="/public/standings" 
-             class="text-gray-600 hover:text-primary-blue transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 rounded-md px-2 py-1">
-            Posiciones
-          </a>
-          <a href="/public/schedule" 
-             class="text-gray-600 hover:text-primary-blue transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 rounded-md px-2 py-1">
-            Calendario
-          </a>
-          <a href="/public/results" 
-             class="text-gray-600 hover:text-primary-blue transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 rounded-md px-2 py-1">
-            Resultados
-          </a>
-        </nav>
-      </div>
-      
-      <!-- Acciones -->
-      <div class="flex items-center space-x-3">
-        <!-- Toggle modo oscuro -->
-        <button 
-          class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-surface focus:outline-none focus:ring-2 focus:ring-primary-blue"
-          aria-label="Cambiar tema">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <!-- Sun/Moon icon -->
-            <path d="M10 2L13.09 8.26L20 9L14 14.74L15.18 21.02L10 17.77L4.82 21.02L6 14.74L0 9L6.91 8.26L10 2Z"/>
-          </svg>
-        </button>
-        
-        <!-- CTA Login -->
-        <a href="/login" 
-           class="bg-primary-blue text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-blue focus:ring-offset-2 shadow-sm hover:shadow-md">
-          Iniciar Sesión
-        </a>
-        
-        <!-- Menú móvil -->
-        <button class="md:hidden p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                aria-label="Abrir menú de navegación">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
-      </div>
+### Breakpoints
+- **Mobile**: 320px - 768px
+- **Tablet**: 768px - 1024px  
+- **Desktop**: 1024px+
+
+### Estrategia Mobile-First
+Todos los componentes están diseñados primero para móvil y luego se expanden para pantallas más grandes usando clases de Tailwind CSS.
+
+## Estados de Desarrollo
+
+### ✅ Completado
+- Estructura de layouts base
+- Sistema de design tokens
+- Navegación responsive
+- Configuración de Alpine.js stores
+
+### 🔄 En Desarrollo
+- Componentes Livewire individuales
+- Implementación de tiempo real
+- Integración con base de datos
+
+### 📋 Por Desarrollar
+- Todos los componentes Livewire listados
+- Sistema de notificaciones push
+- Optimizaciones de rendimiento
+- Tests unitarios y de integración
+
+# 🏐 VolleyPass - Vistas Principales y Layouts
+
+## 1. Vista Principal (welcome.blade.php)
+
+### Estructura y Contenido
+
+```php
+<x-public-layout>
+    @section('title', 'Inicio - Liga de Voleibol de Sucre')
+    @section('description', 'Plataforma oficial de la Liga de Voleibol de Sucre.')
+
+    <div x-data="welcomeData()" x-init="init()">
+        <!-- Hero Section con gradiente de colores colombianos -->
+        <section class="relative bg-gradient-to-br from-vp-primary-500 via-vp-secondary-500 to-vp-accent-500">
+            <!-- Patrón de voleibol en SVG -->
+            <div class="absolute inset-0 opacity-10">
+                <!-- SVG con líneas de cancha de voleibol -->
+            </div>
+            
+            <!-- Contenido principal del hero -->
+            <div class="relative max-w-7xl mx-auto px-4 py-24">
+                <h1 class="font-display font-bold text-4xl lg:text-6xl text-white">
+                    Liga de Voleibol
+                    <span class="block text-vp-primary-200">de Sucre</span>
+                </h1>
+                <p class="text-xl text-white/90 mb-8">
+                    La plataforma digital oficial para seguir todos los partidos, 
+                    estadísticas y noticias del voleibol sucreño
+                </p>
+                <!-- CTAs principales -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{{ route('register') }}" class="btn-primary">Únete Ahora</a>
+                    <a href="#live-matches" class="btn-outline">Ver Partidos en Vivo</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Partidos en Vivo -->
+        <section id="live-matches" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="font-display font-bold text-3xl text-center mb-12">
+                    Partidos en Vivo
+                </h2>
+                @livewire('public.live-matches')
+            </div>
+        </section>
+
+        <!-- Sección de Últimos Resultados -->
+        <section class="py-16 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="font-display font-bold text-3xl text-center mb-12">
+                    Últimos Resultados
+                </h2>
+                @livewire('public.recent-results')
+            </div>
+        </section>
+
+        <!-- Sección de Estadísticas -->
+        <section class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4">
+                <h2 class="font-display font-bold text-3xl text-center mb-12">
+                    Estadísticas de la Liga
+                </h2>
+                @livewire('public.league-stats')
+            </div>
+        </section>
+
+        <!-- CTA Final -->
+        <section class="py-16 bg-gradient-to-r from-vp-secondary-600 to-vp-primary-600">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <h2 class="font-display font-bold text-3xl text-white mb-4">
+                    ¿Listo para formar parte?
+                </h2>
+                <p class="text-xl text-white/90 mb-8">
+                    Únete a la comunidad de voleibol más grande de Sucre
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ route('register') }}" class="btn-secondary">Registrarse Gratis</a>
+                    <a href="{{ route('login') }}" class="btn-outline">Iniciar Sesión</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function welcomeData() {
+            return {
+                init() {
+                    // Smooth scroll para enlaces de anclaje
+                    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                        anchor.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            const target = document.querySelector(this.getAttribute('href'));
+                            if (target) {
+                                target.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        });
+                    });
+                }
+            }
+        }
+    </script>
+</x-public-layout>
+```
+
+## 2. Layout Principal (app.blade.php)
+
+### Estructura Completa
+
+```php
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}" x-data="appData()" :class="{ 'dark': $store.app.darkMode }">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <title>{{ config('app.name', 'VolleyPass') }} - @yield('title', 'Plataforma Integral de Voleibol')</title>
+    
+    <!-- Fuentes optimizadas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos -->
+    @vite(['resources/css/app.css'])
+    @livewireStyles
+    
+    <!-- Alpine.js Stores -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('app', {
+                darkMode: localStorage.getItem('darkMode') === 'true',
+                sidebarOpen: false,
+                
+                toggleDarkMode() {
+                    this.darkMode = !this.darkMode;
+                    localStorage.setItem('darkMode', this.darkMode);
+                },
+                
+                toggleSidebar() {
+                    this.sidebarOpen = !this.sidebarOpen;
+                }
+            });
+            
+            Alpine.store('notifications', {
+                items: [],
+                
+                add(notification) {
+                    const id = Date.now();
+                    this.items.push({ id, ...notification });
+                    setTimeout(() => this.remove(id), 5000);
+                },
+                
+                remove(id) {
+                    this.items = this.items.filter(item => item.id !== id);
+                }
+            });
+        });
+    </script>
+</head>
+<body class="font-inter antialiased bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <!-- Header Component -->
+    @include('components.navigation.header')
+    
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {{ $slot }}
+    </main>
+    
+    <!-- Footer Component -->
+    @include('components.navigation.footer')
+    
+    <!-- Sistema de Notificaciones en Tiempo Real -->
+    <div x-data class="fixed top-4 right-4 z-50 space-y-2" x-show="$store.notifications.items.length > 0">
+        <template x-for="notification in $store.notifications.items" :key="notification.id">
+            <div x-show="true" 
+                 x-transition:enter="transform ease-out duration-300"
+                 x-transition:enter-start="translate-y-2 opacity-0"
+                 x-transition:enter-end="translate-y-0 opacity-100"
+                 class="max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg ring-1 ring-black ring-opacity-5">
+                <div class="p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <!-- Iconos dinámicos según tipo de notificación -->
+                            <svg x-show="notification.type === 'success'" class="h-6 w-6 text-green-400">
+                                <!-- Icono de éxito -->
+                            </svg>
+                            <svg x-show="notification.type === 'error'" class="h-6 w-6 text-red-400">
+                                <!-- Icono de error -->
+                            </svg>
+                        </div>
+                        <div class="ml-3 w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="notification.title"></p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400" x-text="notification.message"></p>
+                        </div>
+                        <button @click="$store.notifications.remove(notification.id)" class="ml-4 flex-shrink-0">
+                            <!-- Icono de cerrar -->
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
     
-    <!-- Menú móvil desplegable -->
-    <div class="md:hidden border-t border-gray-200 dark:border-dark-border mt-2 py-3 space-y-2">
-      <a href="/" class="block px-3 py-2 text-gray-900 dark:text-white font-medium">Torneos</a>
-      <a href="/public/standings" class="block px-3 py-2 text-gray-600 dark:text-gray-300">Posiciones</a>
-      <a href="/public/schedule" class="block px-3 py-2 text-gray-600 dark:text-gray-300">Calendario</a>
-      <a href="/public/results" class="block px-3 py-2 text-gray-600 dark:text-gray-300">Resultados</a>
+    <!-- Scripts -->
+    @livewireScripts
+    @vite(['resources/js/app.js'])
+    
+    <script>
+        function appData() {
+            return {
+                init() {
+                    // Inicializar modo oscuro desde localStorage
+                    if (localStorage.getItem('darkMode') === 'true') {
+                        document.documentElement.classList.add('dark');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+```
+
+## 3. Layout Público (public.blade.php)
+
+### Para páginas sin autenticación
+
+```php
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}" x-data="publicData()">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <title>{{ config('app.name', 'VolleyPass') }} - @yield('title', 'Liga de Voleibol de Sucre')</title>
+    <meta name="description" content="@yield('description', 'Plataforma integral para la gestión de la Liga de Voleibol de Sucre, Colombia.')">
+    
+    <!-- Fuentes y estilos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    @vite(['resources/css/app.css'])
+    @livewireStyles
+</head>
+<body class="font-inter antialiased bg-gray-50">
+    <!-- Public Header -->
+    @include('components.navigation.public-header')
+    
+    <!-- Main Content -->
+    <main>
+        {{ $slot }}
+    </main>
+    
+    <!-- Public Footer -->
+    @include('components.navigation.public-footer')
+    
+    <!-- Scripts -->
+    @livewireScripts
+    @vite(['resources/js/app.js'])
+    
+    <script>
+        function publicData() {
+            return {
+                mobileMenuOpen: false,
+                
+                toggleMobileMenu() {
+                    this.mobileMenuOpen = !this.mobileMenuOpen;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+```
+
+## 4. Layout de Autenticación (auth.blade.php)
+
+### Para páginas de login/registro
+
+```php
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <title>{{ config('app.name', 'VolleyPass') }} - @yield('title', 'Autenticación')</title>
+    
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    @vite(['resources/css/app.css'])
+    @livewireStyles
+</head>
+<body class="font-inter antialiased bg-gradient-to-br from-vp-primary-50 to-vp-secondary-50 min-h-screen">
+    <!-- Patrón de fondo de voleibol -->
+    <div class="absolute inset-0 opacity-5">
+        <div class="w-full h-full" style="background-image: url('data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot;><circle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;25&quot; fill=&quot;none&quot; stroke=&quot;%23000&quot; stroke-width=&quot;1&quot;/><path d=&quot;M5 30 L55 30 M30 5 L30 55 M15 15 L45 45 M45 15 L15 45&quot; stroke=&quot;%23000&quot; stroke-width=&quot;0.5&quot;/></svg>'); background-size: 60px 60px;"></div>
     </div>
-  </div>
+    
+    <div class="relative min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <!-- Logo -->
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="flex justify-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-vp-primary-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Icono de voleibol -->
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="font-display font-bold text-2xl text-gray-900">VolleyPass</h1>
+                        <p class="text-sm text-gray-600">Liga de Voleibol de Sucre</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenido del formulario -->
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10">
+                {{ $slot }}
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-8 text-center">
+            <p class="text-sm text-gray-600">
+                © {{ date('Y') }} VolleyPass Software. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+    
+    @livewireScripts
+    @vite(['resources/js/app.js'])
+</body>
+</html>
+```
+
+## CSS Personalizado Requerido
+
+### Ubicación: `resources/css/app.css`
+
+```css
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* VolleyPass Design Tokens */
+:root {
+  /* Colores Primarios - Bandera Colombiana */
+  --vp-primary-50: #fef3c7;
+  --vp-primary-100: #fde68a;
+  --vp-primary-500: #f59e0b; /* Amarillo Colombia */
+  --vp-primary-600: #d97706;
+  --vp-primary-900: #78350f;
+
+  /* Colores Secundarios - Azul Voleibol */
+  --vp-secondary-50: #eff6ff;
+  --vp-secondary-500: #3b82f6;
+  --vp-secondary-600: #2563eb;
+  --vp-secondary-900: #1e3a8a;
+
+  /* Colores de Acento - Rojo Pasión */
+  --vp-accent-500: #ef4444;
+  --vp-accent-600: #dc2626;
+
+  /* Estados */
+  --vp-success: #10b981;
+  --vp-warning: #f59e0b;
+  --vp-error: #ef4444;
+  --vp-live: #ff0000;
+}
+
+/* Componentes Base */
+@layer components {
+  .btn-primary {
+    @apply bg-vp-primary-500 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-vp-primary-600 transition-colors shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-vp-secondary-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg;
+  }
+
+  .btn-outline {
+    @apply border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white/10 transition-colors;
+  }
+
+  .live-indicator {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800;
+  }
+
+  .live-indicator::before {
+    content: "";
+    @apply w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse;
+  }
+}
+
+/* Animaciones personalizadas */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-live {
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+```
+
+## JavaScript Alpine.js Stores
+
+### Configuración Global
+
+```javascript
+// En app.blade.php dentro del <script>
+document.addEventListener('alpine:init', () => {
+    // Store principal de la aplicación
+    Alpine.store('app', {
+        darkMode: localStorage.getItem('darkMode') === 'true',
+        sidebarOpen: false,
+        
+        toggleDarkMode() {
+            this.darkMode = !this.darkMode;
+            localStorage.setItem('darkMode', this.darkMode);
+        },
+        
+        toggleSidebar() {
+            this.sidebarOpen = !this.sidebarOpen;
+        }
+    });
+    
+    // Store de notificaciones en tiempo real
+    Alpine.store('notifications', {
+        items: [],
+        
+        add(notification) {
+            const id = Date.now();
+            this.items.push({ id, ...notification });
+            setTimeout(() => this.remove(id), 5000);
+        },
+        
+        remove(id) {
+            this.items = this.items.filter(item => item.id !== id);
+        }
+    });
+    
+    // Store para partidos en vivo
+    Alpine.store('liveMatches', {
+        matches: [],
+        
+        updateMatch(matchId, data) {
+            const index = this.matches.findIndex(m => m.id === matchId);
+            if (index !== -1) {
+                this.matches[index] = { ...this.matches[index], ...data };
+            }
+        }
+    });
+});
+```
+# 🏐 VolleyPass - Dashboards de Usuarios Finales
+
+## 1. Dashboard de Jugadora
+
+### Ubicación: `resources/views/pages/player/dashboard.blade.php`
+
+```php
+<x-app-layout>
+    @section('title', 'Mi Dashboard - Jugadora')
+
+    <div class="py-6" x-data="playerDashboard()" x-init="init()">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header del perfil de jugadora con gradiente -->
+            <div class="bg-gradient-to-r from-vp-primary-500 to-vp-secondary-500 rounded-xl shadow-lg overflow-hidden mb-8">
+                @livewire('player.profile-header')
+            </div>
+
+            <!-- Grid principal del dashboard -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Contenido principal (2/3 del ancho) -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Próximos Partidos -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                    Próximos Partidos
+                                </h3>
+                                <span class="bg-vp-primary-100 text-vp-primary-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ auth()->user()->upcomingMatches()->count() }} partidos
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            @livewire('player.upcoming-matches')
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas de Rendimiento -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Estadísticas de Rendimiento
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('player.performance-stats')
+                        </div>
+                    </div>
+
+                    <!-- Actividad Reciente -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Actividad Reciente
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('player.recent-activity')
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar (1/3 del ancho) -->
+                <div class="space-y-8">
+                    <!-- Acciones Rápidas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <button @click="updateAvailability()" 
+                                    class="w-full bg-vp-primary-500 text-white px-4 py-3 rounded-lg hover:bg-vp-primary-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Actualizar Disponibilidad
+                            </button>
+                            <button @click="viewTeammates()" 
+                                    class="w-full bg-vp-secondary-500 text-white px-4 py-3 rounded-lg hover:bg-vp-secondary-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Ver Compañeras de Equipo
+                            </button>
+                            <button @click="reportInjury()" 
+                                    class="w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                Reportar Lesión
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estado Médico -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Estado Médico
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('player.medical-status')
+                        </div>
+                    </div>
+
+                    <!-- Información del Equipo -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Mi Equipo
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('player.team-info')
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function playerDashboard() {
+            return {
+                init() {
+                    console.log('Player dashboard initialized');
+                },
+                
+                updateAvailability() {
+                    Livewire.dispatch('open-availability-modal');
+                },
+                
+                viewTeammates() {
+                    window.location.href = '/player/teammates';
+                },
+                
+                reportInjury() {
+                    Livewire.dispatch('open-injury-modal');
+                }
+            }
+        }
+    </script>
+</x-app-layout>
+```
+
+## 2. Dashboard de Entrenador
+
+### Ubicación: `resources/views/pages/coach/dashboard.blade.php`
+
+```php
+<x-app-layout>
+    @section('title', 'Dashboard - Entrenador')
+
+    <div class="py-6" x-data="coachDashboard()" x-init="init()">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header con configuración del equipo -->
+            <div class="mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 class="font-display font-bold text-3xl text-gray-900 dark:text-white">
+                            Panel de Entrenador
+                        </h1>
+                        <p class="mt-2 text-gray-600 dark:text-gray-400">
+                            Gestiona tu equipo y jugadoras
+                        </p>
+                    </div>
+                    <div class="mt-4 sm:mt-0 flex space-x-3">
+                        <button @click="openTeamSettings()" 
+                                class="bg-vp-secondary-500 text-white px-4 py-2 rounded-lg hover:bg-vp-secondary-600 transition-colors">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Configurar Equipo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overview del Equipo con gradiente -->
+            <div class="bg-gradient-to-r from-vp-secondary-500 to-vp-primary-500 rounded-xl shadow-lg overflow-hidden mb-8">
+                @livewire('coach.team-overview')
+            </div>
+
+            <!-- Grid principal del dashboard -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Contenido principal -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Calendario del Equipo -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Calendario del Equipo
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('coach.team-schedule')
+                        </div>
+                    </div>
+
+                    <!-- Gestión de Jugadoras -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                    Gestión de Jugadoras
+                                </h3>
+                                <button @click="addPlayer()" 
+                                        class="bg-vp-primary-500 text-white px-4 py-2 rounded-lg hover:bg-vp-primary-600 transition-colors text-sm">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Agregar Jugadora
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            @livewire('coach.player-management')
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas del Equipo -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Estadísticas del Equipo
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('coach.team-statistics')
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-8">
+                    <!-- Acciones Rápidas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <button @click="scheduleTraining()" 
+                                    class="w-full bg-vp-primary-500 text-white px-4 py-3 rounded-lg hover:bg-vp-primary-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Programar Entrenamiento
+                            </button>
+                            <button @click="createLineup()" 
+                                    class="w-full bg-vp-secondary-500 text-white px-4 py-3 rounded-lg hover:bg-vp-secondary-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                Crear Alineación
+                            </button>
+                            <button @click="sendMessage()" 
+                                    class="w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                Mensaje al Equipo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estado de Salud del Equipo -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Estado de Salud del Equipo
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('coach.team-health-status')
+                        </div>
+                    </div>
+
+                    <!-- Notificaciones -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Notificaciones
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('coach.notifications')
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function coachDashboard() {
+            return {
+                init() {
+                    console.log('Coach dashboard initialized');
+                },
+                
+                openTeamSettings() {
+                    Livewire.dispatch('open-team-settings');
+                },
+                
+                addPlayer() {
+                    Livewire.dispatch('open-add-player-modal');
+                },
+                
+                scheduleTraining() {
+                    Livewire.dispatch('open-training-modal');
+                },
+                
+                createLineup() {
+                    window.location.href = '/coach/lineup';
+                },
+                
+                sendMessage() {
+                    Livewire.dispatch('open-message-modal');
+                }
+            }
+        }
+    </script>
+</x-app-layout>
+```
+
+## 3. Dashboard de Árbitro
+
+### Ubicación: `resources/views/pages/referee/dashboard.blade.php`
+
+```php
+<x-app-layout>
+    @section('title', 'Dashboard - Árbitro')
+
+    <div class="py-6" x-data="refereeDashboard()" x-init="init()">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 class="font-display font-bold text-3xl text-gray-900 dark:text-white">
+                            Panel de Árbitro
+                        </h1>
+                        <p class="mt-2 text-gray-600 dark:text-gray-400">
+                            Gestiona tus asignaciones y reportes de partidos
+                        </p>
+                    </div>
+                    <div class="mt-4 sm:mt-0 flex space-x-3">
+                        <button @click="updateAvailability()" 
+                                class="bg-vp-primary-500 text-white px-4 py-2 rounded-lg hover:bg-vp-primary-600 transition-colors">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Actualizar Disponibilidad
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas del Árbitro -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                @livewire('referee.stats-overview')
+            </div>
+
+            <!-- Grid principal del dashboard -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Contenido principal -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Partidos Asignados -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                    Partidos Asignados
+                                </h3>
+                                <span class="bg-vp-primary-100 text-vp-primary-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ auth()->user()->assignedMatches()->upcoming()->count() }} próximos
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            @livewire('referee.assigned-matches')
+                        </div>
+                    </div>
+
+                    <!-- Reportes de Partidos -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                    Reportes de Partidos
+                                </h3>
+                                <button @click="createReport()" 
+                                        class="bg-vp-secondary-500 text-white px-4 py-2 rounded-lg hover:bg-vp-secondary-600 transition-colors text-sm">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Nuevo Reporte
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            @livewire('referee.match-reports')
+                        </div>
+                    </div>
+
+                    <!-- Historial de Rendimiento -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Historial de Rendimiento
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('referee.performance-history')
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-8">
+                    <!-- Acciones Rápidas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <button @click="startMatch()" 
+                                    class="w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-9V3m0 0V1m0 2h4M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Iniciar Partido
+                            </button>
+                            <button @click="submitScore()" 
+                                    class="w-full bg-vp-primary-500 text-white px-4 py-3 rounded-lg hover:bg-vp-primary-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Registrar Marcador
+                            </button>
+                            <button @click="reportIncident()" 
+                                    class="w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                Reportar Incidente
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estado de Certificación -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Estado de Certificación
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('referee.certification-status')
+                        </div>
+                    </div>
+
+                    <!-- Asignaciones Recientes -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Asignaciones Recientes
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('referee.recent-assignments')
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function refereeDashboard() {
+            return {
+                init() {
+                    console.log('Referee dashboard initialized');
+                },
+                
+                updateAvailability() {
+                    Livewire.dispatch('open-availability-modal');
+                },
+                
+                createReport() {
+                    Livewire.dispatch('open-report-modal');
+                },
+                
+                startMatch() {
+                    Livewire.dispatch('open-match-control');
+                },
+                
+                submitScore() {
+                    Livewire.dispatch('open-score-modal');
+                },
+                
+                reportIncident() {
+                    Livewire.dispatch('open-incident-modal');
+                }
+            }
+        }
+    </script>
+</x-app-layout>
+```
+
+## 4. Dashboard Médico Deportivo
+
+### Ubicación: `resources/views/pages/medical/dashboard.blade.php`
+
+```php
+<x-app-layout>
+    @section('title', 'Dashboard - Médico Deportivo')
+
+    <div class="py-6" x-data="medicalDashboard()" x-init="init()">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 class="font-display font-bold text-3xl text-gray-900 dark:text-white">
+                            Panel Médico Deportivo
+                        </h1>
+                        <p class="mt-2 text-gray-600 dark:text-gray-400">
+                            Monitorea la salud y bienestar de las jugadoras
+                        </p>
+                    </div>
+                    <div class="mt-4 sm:mt-0 flex space-x-3">
+                        <button @click="emergencyProtocol()" 
+                                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            Protocolo de Emergencia
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas Médicas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                @livewire('medical.stats-overview')
+            </div>
+
+            <!-- Grid principal del dashboard -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Contenido principal -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Lesiones Activas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                    Lesiones Activas
+                                </h3>
+                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ auth()->user()->activeInjuries()->count() }} casos
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            @livewire('medical.active-injuries')
+                        </div>
+                    </div>
+
+                    <!-- Reportes Médicos -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                    Reportes Médicos
+                                </h3>
+                                <button @click="createReport()" 
+                                        class="bg-vp-primary-500 text-white px-4 py-2 rounded-lg hover:bg-vp-primary-600 transition-colors text-sm">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Nuevo Reporte
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            @livewire('medical.medical-reports')
+                        </div>
+                    </div>
+
+                    <!-- Monitoreo de Salud de Jugadoras -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Monitoreo de Salud de Jugadoras
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('medical.player-health-monitoring')
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-8">
+                    <!-- Acciones Rápidas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Acciones Rápidas
+                            </h3>
+                        </div>
+                        <div class="p-6 space-y-3">
+                            <button @click="recordInjury()" 
+                                    class="w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                Registrar Lesión
+                            </button>
+                            <button @click="clearPlayer()" 
+                                    class="w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Dar Alta Médica
+                            </button>
+                            <button @click="scheduleCheckup()" 
+                                    class="w-full bg-vp-secondary-500 text-white px-4 py-3 rounded-lg hover:bg-vp-secondary-600 transition-colors text-left">
+                                <svg class="w-5 h-5 inline mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Programar Revisión
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contactos de Emergencia -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Contactos de Emergencia
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('medical.emergency-contacts')
+                        </div>
+                    </div>
+
+                    <!-- Alertas Médicas -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 class="font-semibold text-lg text-gray-900 dark:text-white">
+                                Alertas Médicas
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            @livewire('medical.medical-alerts')
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function medicalDashboard() {
+            return {
+                init() {
+                    console.log('Medical dashboard initialized');
+                },
+                
+                emergencyProtocol() {
+                    Livewire.dispatch('activate-emergency-protocol');
+                },
+                
+                createReport() {
+                    Livewire.dispatch('open-medical-report-modal');
+                },
+                
+                recordInjury() {
+                    Livewire.dispatch('open-injury-record-modal');
+                },
+                
+                clearPlayer() {
+                    Livewire.dispatch('open-medical-clearance-modal');
+                },
+                
+                scheduleCheckup() {
+                    Livewire.dispatch('open-checkup-schedule-modal');
+                }
+            }
+        }
+    </script>
+</x-app-layout>
+```
+
+## Características Comunes de los Dashboards
+
+### 1. Estructura Visual Consistente
+- **Header**: Título del rol + descripción + botones de acción principales
+- **Stats Overview**: Tarjetas con métricas clave (4 columnas en desktop)
+- **Grid Layout**: 2/3 contenido principal + 1/3 sidebar
+- **Acciones Rápidas**: Sidebar con botones de funciones frecuentes
+
+### 2. Componentes Livewire en Tiempo Real
+- **Actualizaciones automáticas**: Sin refresh manual
+- **Notificaciones push**: Para eventos críticos
+- **Estados dinámicos**: Cambian según la actividad
+
+### 3. Responsive Design
+- **Mobile-first**: Funciona perfecto en móviles
+- **Tablet optimizado**: Layout adaptativo
+- **Desktop completo**: Máximo aprovechamiento del espacio
+
+### 4. Alpine.js para Interactividad
+- **Stores globales**: Estado compartido entre componentes
+- **Eventos personalizados**: Comunicación entre componentes
+- **Transiciones suaves**: Mejor experiencia de usuario
+
+### 5. Accesibilidad
+- **Navegación por teclado**: Totalmente accesible
+- **Lectores de pantalla**: Semántica correcta
+- **Contraste adecuado**: Colores legibles
+
+## Estados de Desarrollo por Dashboard
+
+### ✅ Estructuras Completadas
+- Layouts base de todos los dashboards
+- Sistemas de navegación responsive
+- Integración con Alpine.js stores
+
+### 🔄 En Desarrollo
+- Componentes Livewire individuales
+- Funcionalidades en tiempo real
+- Modales y formularios
+
+### 📋 Por Desarrollar
+- Todos los componentes `@livewire()` referenciados
+- Sistema de notificaciones push
+- Integración completa con WebSockets
+- Tests de cada dashboard
+
+# 🏐 VolleyPass - Componentes de Navegación
+
+## 1. Header Principal (header.blade.php)
+
+### Ubicación: `resources/views/components/navigation/header.blade.php`
+
+```php
+<header class="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50 transition-colors duration-200"
+        x-data="headerData()"
+        x-init="init()">
+    
+    <!-- Navegación Desktop -->
+    <nav class="hidden lg:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <a href="{{ route('home') }}" class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-vp-primary-500 to-vp-secondary-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M2 12h20M12 2v20M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="font-display font-bold text-xl text-gray-900 dark:text-white">
+                            VolleyPass
+                        </span>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 -mt-1">
+                            Liga de Sucre
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Navegación Principal -->
+            <div class="hidden lg:flex space-x-8">
+                @auth
+                    @include('components.navigation.auth-menu')
+                @else
+                    @include('components.navigation.guest-menu')
+                @endauth
+            </div>
+
+            <!-- Acciones del lado derecho -->
+            <div class="flex items-center space-x-4">
+                <!-- Toggle Modo Oscuro -->
+                <button @click="$store.app.toggleDarkMode()" 
+                        class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                    <svg x-show="!$store.app.darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                    <svg x-show="$store.app.darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </button>
+
+                @auth
+                    <!-- Notificaciones -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors relative">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM10.07 2.82l-.03.03a1.51 1.51 0 000 2.13l1.06 1.06 8.49 8.48a1.51 1.51 0 002.12 0l.03-.03a1.51 1.51 0 000-2.12L12.25 2.88a1.51 1.51 0 00-2.13 0l-.05.05z" />
+                            </svg>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                3
+                            </span>
+                        </button>
+                        
+                        <!-- Dropdown de Notificaciones -->
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                            @livewire('shared.notifications-dropdown')
+                        </div>
+                    </div>
+
+                    <!-- Menú de Usuario -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <img class="h-8 w-8 rounded-full object-cover" 
+                                 src="{{ auth()->user()->avatar_url ?? '/placeholder.svg?height=32&width=32' }}" 
+                                 alt="{{ auth()->user()->name }}">
+                            <div class="hidden sm:block text-left">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ auth()->user()->name }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ ucfirst(auth()->user()->role) }}
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown de Usuario -->
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
+                            @include('components.navigation.user-dropdown')
+                        </div>
+                    </div>
+                @else
+                    <!-- Acciones para Invitados -->
+                    <div class="flex items-center space-x-3">
+                        <a href="{{ route('login') }}" 
+                           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 font-medium transition-colors">
+                            Iniciar Sesión
+                        </a>
+                        <a href="{{ route('register') }}" 
+                           class="bg-vp-primary-500 text-white px-4 py-2 rounded-lg hover:bg-vp-primary-600 transition-colors font-medium">
+                            Registrarse
+                        </a>
+                    </div>
+                @endauth
+            </div>
+        </div>
+    </nav>
+
+    <!-- Navegación Móvil -->
+    <div class="lg:hidden">
+        <div class="flex items-center justify-between h-16 px-4">
+            <!-- Logo Móvil -->
+            <a href="{{ route('home') }}" class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-vp-primary-500 to-vp-secondary-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M2 12h20M12 2v20M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1"/>
+                    </svg>
+                </div>
+                <span class="font-display font-bold text-lg text-gray-900 dark:text-white">
+                    VolleyPass
+                </span>
+            </a>
+
+            <!-- Botón Menú Móvil -->
+            <button @click="mobileMenuOpen = !mobileMenuOpen" 
+                    class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <svg x-show="!mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg x-show="mobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Menú Móvil -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-1"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-1"
+             class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            @include('components.navigation.mobile-menu')
+        </div>
+    </div>
+
+    <script>
+        function headerData() {
+            return {
+                mobileMenuOpen: false,
+                
+                init() {
+                    // Cerrar menú móvil al hacer clic fuera
+                    document.addEventListener('click', (e) => {
+                        if (!this.$el.contains(e.target)) {
+                            this.mobileMenuOpen = false;
+                        }
+                    });
+                }
+            }
+        }
+    </script>
 </header>
 ```
 
-**Características:**
-- **Sticky positioning** para navegación siempre visible
-- **Backdrop blur** para efecto moderno tipo ESPN/UEFA
-- **Responsive collapse** en móviles con menú hamburguesa
-- **Theme toggle** para modo oscuro/claro
-- **CTA prominente** para login
-- **Accessibility compliant** con aria-labels y focus states
+## 2. Footer Principal (footer.blade.php)
 
-#### **2. Hero Section (Página Principal)**
-```html
-<section class="relative overflow-hidden bg-gradient-to-br from-colombia-blue via-primary-blue to-blue-900 min-h-[70vh] flex items-center">
-  <!-- Patrón de fondo sutil -->
-  <div class="absolute inset-0 bg-[url('/images/volleyball-pattern.svg')] opacity-5"></div>
-  
-  <!-- Elementos decorativos -->
-  <div class="absolute top-20 left-10 w-32 h-32 bg-primary-orange/10 rounded-full blur-xl"></div>
-  <div class="absolute bottom-20 right-10 w-48 h-48 bg-colombia-yellow/10 rounded-full blur-xl"></div>
-  
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
-      <div class="lg:col-span-7">
-        <!-- Badge superior -->
-        <div class="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white mb-6">
-          <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-          <span class="text-sm font-medium">En vivo: 12 partidos activos</span>
-        </div>
-        
-        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-          Voleibol de 
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-orange to-colombia-yellow">
-            Sucre
-          </span>
-          <br>en Tiempo Real
-        </h1>
-        
-        <p class="text-xl text-blue-100 mb-8 leading-relaxed max-w-2xl">
-          Sigue todos los torneos, resultados y estadísticas del voleibol departamental. 
-          Información oficial actualizada al instante desde las canchas.
-        </p>
-        
-        <!-- Stats rápidas -->
-        <div class="grid grid-cols-3 gap-4 mb-8">
-          <div class="text-center">
-            <div class="text-2xl sm:text-3xl font-bold text-white">24</div>
-            <div class="text-sm text-blue-200">Equipos Activos</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl sm:text-3xl font-bold text-white">147</div>
-            <div class="text-sm text-blue-200">Jugadoras</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl sm:text-3xl font-bold text-white">5</div>
-            <div class="text-sm text-blue-200">Torneos</div>
-          </div>
-        </div>
-        
-        <!-- CTAs -->
-        <div class="flex flex-col sm:flex-row gap-4">
-          <a href="#torneos-activos" 
-             class="bg-primary-orange text-white px-8 py-4 rounded-xl font-semibold hover:bg-orange-600 transition-all duration-200 text-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-            <span class="flex items-center justify-center">
-              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/>
-              </svg>
-              Ver Torneos en Vivo
-            </span>
-          </a>
-          <a href="/public/schedule" 
-             class="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-primary-blue transition-all duration-200 text-center">
-            Ver Calendario Completo
-          </a>
-        </div>
-      </div>
-      
-      <div class="lg:col-span-5 mt-12 lg:mt-0">
-        <div class="relative">
-          <!-- Imagen principal -->
-          <div class="relative z-10">
-            <img src="/images/hero-volleyball-team.webp" 
-                 alt="Equipo de voleibol femenino de Sucre celebrando" 
-                 class="w-full h-auto rounded-2xl shadow-2xl">
-          </div>
-          
-          <!-- Cards flotantes con estadísticas -->
-          <div class="absolute -bottom-6 -left-6 bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-2xl z-20 max-w-xs">
-            <div class="flex items-center space-x-3">
-              <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-              </div>
-              <div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-white">98%</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Partidos Verificados</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="absolute -top-6 -right-6 bg-gradient-to-r from-primary-orange to-yellow-500 rounded-2xl p-6 shadow-2xl text-white z-20">
-            <div class="text-center">
-              <div class="text-3xl font-bold">⭐</div>
-              <div class="text-sm font-medium mt-1">Liga Oficial</div>
-              <div class="text-xs opacity-90">Sucre 2024</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-```
+### Ubicación: `resources/views/components/navigation/footer.blade.php`
 
-**Características:**
-- **Gradiente patriótico** con colores de Colombia
-- **Elementos decorativos** sutiles pero modernos
-- **Live badge** para mostrar actividad en tiempo real
-- **Stats rápidas** para credibilidad inmediata
-- **CTAs contrastantes** para diferentes acciones
-- **Responsive images** con lazy loading
-- **Cards flotantes** tipo ESPN para información destacada
-
-#### **3. Cards de Torneos**
-```html
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <article class="group bg-white dark:bg-dark-surface rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-dark-border">
-    <!-- Header con imagen y estado -->
-    <div class="relative h-48 overflow-hidden">
-      <img src="/images/tournament-banner.webp" 
-           alt="Copa Departamental Sucre - Voleibol Femenino" 
-           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-      
-      <!-- Overlay gradient -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-      
-      <!-- Estado del torneo -->
-      <div class="absolute top-4 right-4 flex space-x-2">
-        <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center">
-          <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-          En Vivo
-        </span>
-        <button class="bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-colors">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
-          </svg>
-        </button>
-      </div>
-      
-      <!-- Información superpuesta -->
-      <div class="absolute bottom-4 left-4 text-white">
-        <div class="text-xs font-medium bg-black/30 backdrop-blur-sm px-2 py-1 rounded-md mb-1">
-          Femenino • Categoría A
-        </div>
-        <div class="text-sm font-semibold">15 equipos participantes</div>
-      </div>
+```php
+<footer class="bg-gray-900 text-white relative overflow-hidden">
+    <!-- Patrón de fondo de voleibol -->
+    <div class="absolute inset-0 opacity-5">
+        <div class="w-full h-full" style="background-image: url('data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot;><circle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;25&quot; fill=&quot;none&quot; stroke=&quot;%23fff&quot; stroke-width=&quot;1&quot;/><path d=&quot;M5 30 L55 30 M30 5 L30 55 M15 15 L45 45 M45 15 L15 45&quot; stroke=&quot;%23fff&quot; stroke-width=&quot;0.5&quot;/></svg>'); background-size: 60px 60px;"></div>
     </div>
     
-    <!-- Contenido principal -->
-    <div class="p-6">
-      <div class="flex items-start justify-between mb-3">
-        <div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1 group-hover:text-primary-blue transition-colors line-clamp-2">
-            Copa Departamental Sucre 2024
-          </h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Liga Departamental de Sucre</p>
-        </div>
-        <div class="flex-shrink-0 ml-3">
-          <img src="/images/liga-sucre-logo.png" alt="Liga Sucre" class="w-10 h-10 rounded-lg">
-        </div>
-      </div>
-      
-      <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-        Torneo oficial con la participación de los mejores equipos de voleibol femenino del departamento.
-      </p>
-      
-      <!-- Progreso del torneo -->
-      <div class="mb-4">
-        <div class="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400 mb-2">
-          <span class="font-medium">Fase de Grupos</span>
-          <span>12 de 20 partidos</span>
-        </div>
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div class="bg-gradient-to-r from-primary-blue to-primary-orange h-2 rounded-full transition-all duration-500" 
-               style="width: 60%">
-          </div>
-        </div>
-        <div class="text-xs text-gray-500 mt-1">60% completado</div>
-      </div>
-      
-      <!-- Información clave en grid -->
-      <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-        <div class="flex items-center text-gray-600 dark:text-gray-400">
-          <svg class="w-4 h-4 mr-2 text-primary-orange" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 9h12v7H4V9z"/>
-          </svg>
-          <span>15 Dic - 22 Dic</span>
-        </div>
-        <div class="flex items-center text-gray-600 dark:text-gray-400">
-          <svg class="w-4 h-4 mr-2 text-primary-orange" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
-          </svg>
-          <span>Sincelejo</span>
-        </div>
-        <div class="flex items-center text-gray-600 dark:text-gray-400">
-          <svg class="w-4 h-4 mr-2 text-primary-orange" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-          </svg>
-          <span>15 equipos</span>
-        </div>
-        <div class="flex items-center text-gray-600 dark:text-gray-400">
-          <svg class="w-4 h-4 mr-2 text-primary-orange" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/>
-            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/>
-          </svg>
-          <span>$50.000 premio</span>
-        </div>
-      </div>
-      
-      <!-- Próximo partido destacado -->
-      <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 mb-4">
-        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Próximo partido</div>
-        <div class="flex items-center justify-between text-sm">
-          <div class="flex items-center space-x-2">
-            <img src="/images/team-logo-1.png" alt="Águilas" class="w-6 h-6 rounded">
-            <span class="font-medium">Águilas vs Panteras</span>
-            <img src="/images/team-logo-2.png" alt="Panteras" class="w-6 h-6 rounded">
-          </div>
-          <span class="text-primary-blue font-medium">Hoy 7:00 PM</span>
-        </div>
-      </div>
-      
-      <!-- Acciones -->
-      <div class="flex gap-2">
-        <a href="/public/tournament/123" 
-           class="flex-1 bg-primary-blue text-white text-center py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-          Ver Detalles
-        </a>
-        <button class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
-          <svg class="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
-          </svg>
-        </button>
-        <button class="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </article>
-</div>
-```
-
-**Características:**
-- **Visual hierarchy** clara inspirada en ESPN
-- **Live indicators** prominentes
-- **Progress bars** para mostrar avance
-- **Next match preview** tipo Liga MX App
-- **Hover effects** sutiles pero atractivos
-- **Information density** balanceada
-- **Action buttons** claros y accesibles
-
-#### **4. Marcadores en Vivo (Estilo UEFA.com)**
-```html
-<div class="bg-gradient-to-r from-green-500 via-green-600 to-emerald-600 rounded-2xl text-white p-6 mb-8 shadow-xl">
-  <!-- Header del partido en vivo -->
-  <div class="flex items-center justify-between mb-6">
-    <div class="flex items-center space-x-3">
-      <div class="flex items-center space-x-2">
-        <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-        <span class="font-bold text-lg">EN VIVO</span>
-      </div>
-      <div class="hidden sm:block w-px h-6 bg-white/30"></div>
-      <div class="hidden sm:flex items-center space-x-2 text-sm">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"/>
-        </svg>
-        <span>Copa Departamental • Final</span>
-      </div>
-    </div>
-    <div class="text-right">
-      <div class="text-sm opacity-90">Set 3</div>
-      <div class="text-lg font-bold">12:45 min</div>
-    </div>
-  </div>
-  
-  <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">
-    <!-- Equipo Local -->
-    <div class="lg:col-span-2">
-      <div class="flex items-center justify-center lg:justify-end space-x-4">
-        <div class="text-center lg:text-right order-2 lg:order-1">
-          <h3 class="text-xl lg:text-2xl font-bold mb-1">Águilas Doradas</h3>
-          <p class="text-sm opacity-90 mb-2">Sincelejo FC</p>
-          <div class="flex justify-center lg:justify-end space-x-1">
-            <span class="px-2 py-1 bg-white/20 rounded text-xs">Local</span>
-            <span class="px-2 py-1 bg-yellow-500/80 rounded text-xs">Líder</span>
-          </div>
-        </div>
-        <div class="order-1 lg:order-2">
-          <img src="/images/team-logo-aguilas.png" 
-               alt="Escudo Águilas Doradas" 
-               class="w-16 h-16 lg:w-20 lg:h-20 rounded-full border-4 border-white/30 shadow-lg">
-        </div>
-      </div>
-    </div>
-    
-    <!-- Marcador Central -->
-    <div class="lg:col-span-1">
-      <div class="text-center">
-        <!-- Sets ganados -->
-        <div class="bg-white/15 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
-          <div class="flex justify-center items-center space-x-8">
-            <div class="text-center">
-              <div class="text-4xl lg:text-5xl font-bold">2</div>
-              <div class="text-xs opacity-75 mt-1">SETS</div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <!-- Grid de contenido del footer -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            <!-- Sección de Marca -->
+            <div class="lg:col-span-2">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-vp-primary-500 to-vp-secondary-500 rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M2 12h20M12 2v20M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-2xl">VolleyPass</h3>
+                        <p class="text-gray-400">Liga de Voleibol de Sucre</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-6 max-w-md">
+                    La plataforma digital oficial para la gestión integral de la Liga de Voleibol de Sucre, Colombia. 
+                    Conectando jugadoras, equipos y aficionados en una sola plataforma.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Icono de Twitter -->
+                            <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Icono de Facebook -->
+                            <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Icono de Instagram -->
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Icono de YouTube -->
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
-            <div class="text-3xl font-light opacity-60">-</div>
-            <div class="text-center">
-              <div class="text-4xl lg:text-5xl font-bold">1</div>
-              <div class="text-xs opacity-75 mt-1">SETS</div>
+            
+            <!-- Enlaces Rápidos -->
+            <div>
+                <h4 class="font-semibold text-lg mb-6">Enlaces Rápidos</h4>
+                <ul class="space-y-3">
+                    <li><a href="{{ route('home') }}" class="text-gray-300 hover:text-white transition-colors">Inicio</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Partidos en Vivo</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Resultados</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Estadísticas</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Equipos</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Jugadoras</a></li>
+                </ul>
             </div>
-          </div>
+            
+            <!-- Información de Contacto -->
+            <div>
+                <h4 class="font-semibold text-lg mb-6">Contacto</h4>
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-5 h-5 text-vp-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="text-gray-300">Sucre, Colombia</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-5 h-5 text-vp-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-gray-300">info@volleypass.co</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-5 h-5 text-vp-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span class="text-gray-300">+57 300 123 4567</span>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <!-- Puntos del set actual -->
-        <div class="flex justify-center items-center space-x-4">
-          <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl font-bold text-xl">18</div>
-          <div class="text-sm opacity-75 px-3">Set 3</div>
-          <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl font-bold text-xl">15</div>
-        </div>
-        
-        <!-- Indicador de saque -->
-        <div class="mt-3 flex justify-center">
-          <div class="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-bold">
-            ← Saque Águilas
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Equipo Visitante -->
-    <div class="lg:col-span-2">
-      <div class="flex items-center justify-center lg:justify-start space-x-4">
-        <img src="/images/team-logo-panteras.png" 
-             alt="Escudo Panteras FC" 
-             class="w-16 h-16 lg:w-20 lg:h-20 rounded-full border-4 border-white/30 shadow-lg">
-        <div class="text-center lg:text-left">
-          <h3 class="text-xl lg:text-2xl font-bold mb-1">Panteras FC</h3>
-          <p class="text-sm opacity-90 mb-2">Corozal</p>
-          <div class="flex justify-center lg:justify-start space-x-1">
-            <span class="px-2 py-1 bg-white/20 rounded text-xs">Visitante</span>
-            <span class="px-2 py-1 bg-orange-500/80 rounded text-xs">Defensor</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Historial de sets -->
-  <div class="mt-6 pt-4 border-t border-white/20">
-    <div class="grid grid-cols-3 lg:grid-cols-5 gap-4 text-center">
-      <div class="lg:col-start-2">
-        <div class="text-xs opacity-75 mb-1">SET 1</div>
-        <div class="bg-white/10 rounded-lg py-2 px-3">
-          <span class="font-bold">25</span>
-          <span class="mx-1 opacity-60">-</span>
-          <span class="font-bold">22</span>
-        </div>
-      </div>
-      <div>
-        <div class="text-xs opacity-75 mb-1">SET 2</div>
-        <div class="bg-white/10 rounded-lg py-2 px-3">
-          <span class="font-bold">23</span>
-          <span class="mx-1 opacity-60">-</span>
-          <span class="font-bold">25</span>
-        </div>
-      </div>
-      <div>
-        <div class="text-xs opacity-75 mb-1">SET 3</div>
-        <div class="bg-yellow-400/20 border border-yellow-400/50 rounded-lg py-2 px-3">
-          <span class="font-bold">18</span>
-          <span class="mx-1 opacity-60">-</span>
-          <span class="font-bold">15</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Acciones rápidas -->
-  <div class="mt-4 flex justify-center space-x-3">
-    <button class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-      📊 Estadísticas
-    </button>
-    <button class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-      📱 Compartir
-    </button>
-    <button class="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-      🔔 Alertas
-    </button>
-  </div>
-</div>
-```
-
-#### **5. Tabla de Posiciones (Estilo Liga MX)**
-```html
-<div class="bg-white dark:bg-dark-surface rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-dark-border">
-  <!-- Header con controles -->
-  <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Tabla de Posiciones</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Actualizada hace 2 minutos</p>
-      </div>
-      <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-        <select class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-dark-surface">
-          <option>Grupo A</option>
-          <option>Grupo B</option>
-          <option>Clasificación General</option>
-        </select>
-        <button class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Tabla responsive -->
-  <div class="overflow-x-auto">
-    <table class="w-full">
-      <thead class="bg-gray-50 dark:bg-gray-700">
-        <tr>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            Pos
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            Equipo
-          </th>
-          <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            PJ
-          </th>
-          <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            PG
-          </th>
-          <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            PP
-          </th>
-          <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            Sets
-          </th>
-          <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            Pts
-          </th>
-          <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-            Racha
-          </th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-        <!-- Fila 1 - Líder -->
-        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-          <td class="px-4 py-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                1
-              </div>
-              <div class="ml-2 w-1 h-8 bg-green-500 rounded-full"></div>
+        <!-- Barra inferior -->
+        <div class="border-t border-gray-800 mt-12 pt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div class="text-gray-400 text-sm">
+                    © {{ date('Y') }} VolleyPass Software. Todos los derechos reservados.
+                </div>
+                <div class="mt-4 md:mt-0 flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Política de Privacidad</a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Términos de Servicio</a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Soporte</a>
+                </div>
             </div>
-          </td>
-          <td class="px-6 py-4">
-            <div class="flex items-center space-x-3">
-              <img src="/images/team-logo-aguilas.png" alt="Águilas" class="w-10 h-10 rounded-full">
-              <div>
-                <div class="text-sm font-medium text-gray-900 dark:text-white">Águilas Doradas</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Sincelejo FC</div>
-              </div>
-            </div>
-          </td>
-          <td class="px-3 py-4 text-center text-sm text-gray-900 dark:text-white font-medium">8</td>
-          <td class="px-3 py-4 text-center text-sm text-gray-900 dark:text-white font-medium">7</td>
-          <td class="px-3 py-4 text-center text-sm text-gray-900 dark:text-white font-medium">1</td>
-          <td class="px-3 py-4 text-center text-sm text-gray-600 dark:text-gray-400">21-8</td>
-          <td class="px-3 py-4 text-center">
-            <span class="text-lg font-bold text-gray-900 dark:text-white">21</span>
-          </td>
-          <td class="px-3 py-4 text-center">
-            <div class="flex justify-center space-x-1">
-              <span class="w-2 h-2 bg-green-500 rounded-full" title="Victoria"></span>
-              <span class="w-2 h-2 bg-green-500 rounded-full" title="Victoria"></span>
-              <span class="w-2 h-2 bg-green-500 rounded-full" title="Victoria"></span>
-              <span class="w-2 h-2 bg-red-500 rounded-full" title="Derrota"></span>
-              <span class="w-2 h-2 bg-green-500 rounded-full" title="Victoria"></span>
-            </div>
-          </td>
-        </tr>
-        
-        <!-- Fila 2 - Clasificado -->
-        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-          <td class="px-4 py-4">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full flex items-center justify-center text-sm font-bold">
-                2
-              </div>
-              <div class="ml-2 w-1 h-8 bg-green-500 rounded-full"></div>
-            </div>
-          </td>
-          <td class="px-6 py-4">
-            <div class="flex items-center space-x-3">
-              <img src="/images/team-logo-panteras.png" alt="Panteras" class="w-10 h-10 rounded-full">
-              <div>
-                <div class="text-sm font-medium text-gray-900 dark:text-white">Panteras FC</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Corozal</div>
-              </div>
-            </div>
-          </td>
-          <td class="px-3 py-4 text-center text-sm text-gray-900 dark:text-white font-medium">8</td>
-          <td class="px-3 py-4 text-center text-sm text-gray-900 dark:text-white font-medium">6</td>
-          <td class="px-3 py-4 text-center text-sm text-gray-900 dark:text-white font-medium">2</td>
-          <td class="px-3 py-4 text-center text-sm text-gray-600 dark:text-gray-400">19-12</td>
-          <td class="px-3 py-4 text-center">
-            <span class="text-lg font-bold text-gray-900 dark:text-white">18</span>
-          </td>
-          <td class="px-3 py-4 text-center">
-            <div class="flex justify-center space-x-1">
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span class="w-2 h-2 bg-red-500 rounded-full"></span>
-            </div>
-          </td>
-        </tr>
-        
-        <!-- Más filas... -->
-      </tbody>
-    </table>
-  </div>
-  
-  <!-- Leyenda -->
-  <div class="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
-    <div class="flex flex-wrap items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
-      <div class="flex items-center">
-        <div class="w-3 h-3 bg-green-500 rounded mr-2"></div>
-        <span>Clasificación directa</span>
-      </div>
-      <div class="flex items-center">
-        <div class="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
-        <span>Repechaje</span>
-      </div>
-      <div class="flex items-center">
-        <div class="w-3 h-3 bg-red-500 rounded mr-2"></div>
-        <span>Eliminado</span>
-      </div>
-      <div class="ml-auto text-right">
-        <span>PJ: Partidos Jugados | PG: Partidos Ganados | PP: Partidos Perdidos | Pts: Puntos</span>
-      </div>
-    </div>
-  </div>
-</div>
-```
-
----
-
-## 📱 REFERENCIAS DE ESTILO
-
-### 🎯 **Inspiración en Plataformas Deportivas Modernas**
-
-#### **ESPN.com**
-- **Layout**: Grid dinámico con cards prominentes
-- **Live scores**: Marcadores destacados con animaciones sutiles
-- **Navigation**: Sticky header con navegación contextual
-- **Typography**: Jerarquías claras, números grandes para marcadores
-
-#### **Liga MX App**
-- **Mobile First**: Diseño optimizado para móviles
-- **Color coding**: Estados visuales claros (verde=en vivo, azul=programado)
-- **Team branding**: Integración de logos y colores de equipos
-- **Quick actions**: Botones de acción rápida siempre visibles
-
-#### **UEFA.com**
-- **Professional feel**: Diseño limpio y profesional
-- **Match cards**: Cards de partidos con información densa pero organizada
-- **Progressive disclosure**: Información básica primero, detalles bajo demanda
-- **Responsive tables**: Tablas que se adaptan perfectamente a móviles
-
-### 🇨🇴 **Identidad Visual del Voleibol Colombiano**
-
-#### **Paleta de Colores Patrióticos**
-```css
-/* Colores Colombia adaptados para voleibol */
-:root {
-  --colombia-yellow: #fbbf24;    /* Amarillo vibrante */
-  --colombia-blue: #1d4ed8;      /* Azul océano */
-  --colombia-red: #dc2626;       /* Rojo pasión */
-  
-  /* Colores específicos del voleibol */
-  --volley-court: #d97706;       /* Naranja cancha */
-  --volley-net: #374151;         /* Gris red de voleibol */
-  --volley-ball: #fef3c7;        /* Amarillo pelota */
-  
-  /* Colores regionales Sucre */
-  --sucre-green: #059669;        /* Verde sabana */
-  --sucre-sand: #f59e0b;         /* Arena costeña */
-}
-```
-
-#### **Elementos Gráficos Característicos**
-- **Iconografía deportiva**: Pelotas, redes, canchas estilizadas
-- **Patrones geométricos**: Inspirados en las líneas de la cancha
-- **Gradientes dinámicos**: Que evocan movimiento y energía
-- **Fotografía auténtica**: Jugadoras reales, no stock photos
-
-### 🎨 **Sistema de Design Tokens**
-
-#### **Espaciado Consistente**
-```css
-:root {
-  /* Escala de espaciado basada en 4px */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
-  --space-20: 5rem;     /* 80px */
-  --space-24: 6rem;     /* 96px */
-  
-  /* Espaciado semántico */
-  --space-section: var(--space-16);     /* Entre secciones */
-  --space-component: var(--space-8);    /* Entre componentes */
-  --space-element: var(--space-4);      /* Entre elementos */
-  --space-inline: var(--space-2);       /* Elementos inline */
-}
-```
-
-#### **Radios de Borde Consistentes**
-```css
-:root {
-  --radius-sm: 0.375rem;    /* 6px - Elementos pequeños */
-  --radius-md: 0.5rem;      /* 8px - Botones, inputs */
-  --radius-lg: 0.75rem;     /* 12px - Cards, modales */
-  --radius-xl: 1rem;        /* 16px - Containers grandes */
-  --radius-2xl: 1.5rem;     /* 24px - Hero sections */
-  --radius-full: 9999px;    /* Círculos, pills */
-}
-```
-
-#### **Sombras Consistentes**
-```css
-:root {
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-  
-  /* Sombras de colores para estados */
-  --shadow-primary: 0 10px 15px -3px rgb(30 64 175 / 0.3);
-  --shadow-success: 0 10px 15px -3px rgb(22 163 74 / 0.3);
-  --shadow-warning: 0 10px 15px -3px rgb(202 138 4 / 0.3);
-  --shadow-error: 0 10px 15px -3px rgb(220 38 38 / 0.3);
-}
-```
-
-### 📱 **Componentes Base del Sistema**
-
-#### **6. Componente de Calendario/Fixtures**
-```html
-<div class="bg-white dark:bg-dark-surface rounded-2xl shadow-lg overflow-hidden">
-  <!-- Header del calendario -->
-  <div class="p-6 bg-gradient-to-r from-primary-blue to-blue-600 text-white">
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-2xl font-bold mb-1">Próximos Partidos</h2>
-        <p class="text-blue-100">Esta semana en la Copa Departamental</p>
-      </div>
-      <div class="flex items-center space-x-2">
-        <button class="p-2 hover:bg-white/20 rounded-lg transition-colors">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"/>
-          </svg>
-        </button>
-        <span class="text-lg font-semibold px-3">Dic 2024</span>
-        <button class="p-2 hover:bg-white/20 rounded-lg transition-colors">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Lista de partidos -->
-  <div class="p-6 space-y-4">
-    <!-- Partido destacado (hoy) -->
-    <div class="border-l-4 border-primary-orange bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
-      <div class="flex items-center justify-between mb-3">
-        <span class="bg-primary-orange text-white px-3 py-1 rounded-full text-sm font-semibold">
-          HOY
-        </span>
-        <span class="text-sm text-gray-600 dark:text-gray-400">19:00</span>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-        <!-- Equipo local -->
-        <div class="flex items-center justify-center md:justify-end space-x-3">
-          <div class="text-center md:text-right">
-            <div class="font-bold text-gray-900 dark:text-white">Águilas Doradas</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">1° Grupo A</div>
-          </div>
-          <img src="/images/team-logo-aguilas.png" alt="Águilas" class="w-12 h-12 rounded-full">
         </div>
-        
-        <!-- VS y detalles -->
-        <div class="text-center">
-          <div class="text-2xl font-bold text-gray-400 mb-1">VS</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Cancha Principal<br>
-            Copa Departamental
-          </div>
-        </div>
-        
-        <!-- Equipo visitante -->
-        <div class="flex items-center justify-center md:justify-start space-x-3">
-          <img src="/images/team-logo-panteras.png" alt="Panteras" class="w-12 h-12 rounded-full">
-          <div class="text-center md:text-left">
-            <div class="font-bold text-gray-900 dark:text-white">Panteras FC</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">2° Grupo A</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Botón de seguimiento -->
-      <div class="mt-4 text-center">
-        <button class="bg-primary-orange text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium">
-          🔔 Recibir Notificaciones
-        </button>
-      </div>
     </div>
-    
-    <!-- Partidos regulares -->
-    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">Mañana • 20:30</span>
-        <span class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded text-xs">
-          Semifinal
-        </span>
-      </div>
-      
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <img src="/images/team-logo-tiburones.png" alt="Tiburones" class="w-10 h-10 rounded-full">
-          <span class="font-medium text-gray-900 dark:text-white">Tiburones del Mar</span>
-        </div>
-        
-        <span class="text-gray-400 font-medium">vs</span>
-        
-        <div class="flex items-center space-x-3">
-          <span class="font-medium text-gray-900 dark:text-white">Cóndores</span>
-          <img src="/images/team-logo-condores.png" alt="Cóndores" class="w-10 h-10 rounded-full">
-        </div>
-      </div>
-    </div>
-    
-    <!-- Más partidos... -->
-  </div>
-  
-  <!-- Footer con enlace al calendario completo -->
-  <div class="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
-    <a href="/public/schedule" 
-       class="block text-center text-primary-blue hover:text-blue-700 dark:text-blue-400 font-medium">
-      Ver calendario completo →
-    </a>
-  </div>
-</div>
-```
-
-#### **7. Sistema de Notificaciones Toast**
-```html
-<!-- Contenedor de notificaciones -->
-<div id="toast-container" 
-     class="fixed top-4 right-4 z-50 space-y-3"
-     x-data="{ toasts: [] }">
-  
-  <!-- Toast de éxito -->
-  <div x-show="toasts.includes('success')"
-       x-transition:enter="transform transition ease-out duration-300"
-       x-transition:enter-start="translate-x-full opacity-0"
-       x-transition:enter-end="translate-x-0 opacity-100"
-       x-transition:leave="transform transition ease-in duration-200"
-       x-transition:leave-start="translate-x-0 opacity-100"
-       x-transition:leave-end="translate-x-full opacity-0"
-       class="bg-white dark:bg-dark-surface border border-green-200 dark:border-green-800 rounded-lg shadow-lg p-4 max-w-sm">
-    <div class="flex items-start">
-      <div class="flex-shrink-0">
-        <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-        </svg>
-      </div>
-      <div class="ml-3 flex-1">
-        <p class="text-sm font-medium text-gray-900 dark:text-white">¡Gol confirmado!</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">El marcador se ha actualizado correctamente.</p>
-      </div>
-      <button @click="toasts = toasts.filter(t => t !== 'success')" 
-              class="flex-shrink-0 ml-4 text-gray-400 hover:text-gray-600">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-  
-  <!-- Toast de información -->
-  <div class="bg-white dark:bg-dark-surface border border-blue-200 dark:border-blue-800 rounded-lg shadow-lg p-4 max-w-sm">
-    <div class="flex items-start">
-      <div class="flex-shrink-0">
-        <svg class="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
-        </svg>
-      </div>
-      <div class="ml-3 flex-1">
-        <p class="text-sm font-medium text-gray-900 dark:text-white">Partido iniciado</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Águilas vs Panteras ha comenzado en la Cancha Principal.</p>
-      </div>
-    </div>
-  </div>
-</div>
-```
-
-#### **8. Footer Completo**
-```html
-<footer class="bg-gray-900 text-white">
-  <!-- Sección principal -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-      <!-- Branding y descripción -->
-      <div class="lg:col-span-2">
-        <div class="flex items-center space-x-3 mb-4">
-          <img src="/images/volleypass-logo-white.svg" alt="VolleyPass" class="h-10 w-auto">
-          <span class="text-xl font-bold">VolleyPass</span>
-        </div>
-        <p class="text-gray-300 mb-6 max-w-md">
-          Sistema oficial de gestión y seguimiento del voleibol en el departamento de Sucre. 
-          Conectando jugadoras, equipos y aficionados en tiempo real.
-        </p>
-        <div class="flex space-x-4">
-          <a href="#" class="text-gray-400 hover:text-white transition-colors">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <!-- Facebook icon -->
-            </svg>
-          </a>
-          <a href="#" class="text-gray-400 hover:text-white transition-colors">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <!-- Instagram icon -->
-            </svg>
-          </a>
-          <a href="#" class="text-gray-400 hover:text-white transition-colors">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <!-- YouTube icon -->
-            </svg>
-          </a>
-        </div>
-      </div>
-      
-      <!-- Enlaces rápidos -->
-      <div>
-        <h3 class="text-lg font-semibold mb-4">Navegación</h3>
-        <ul class="space-y-3">
-          <li><a href="/" class="text-gray-300 hover:text-white transition-colors">Torneos</a></li>
-          <li><a href="/public/standings" class="text-gray-300 hover:text-white transition-colors">Posiciones</a></li>
-          <li><a href="/public/schedule" class="text-gray-300 hover:text-white transition-colors">Calendario</a></li>
-          <li><a href="/public/results" class="text-gray-300 hover:text-white transition-colors">Resultados</a></li>
-          <li><a href="/login" class="text-gray-300 hover:text-white transition-colors">Iniciar Sesión</a></li>
-        </ul>
-      </div>
-      
-      <!-- Soporte -->
-      <div>
-        <h3 class="text-lg font-semibold mb-4">Soporte</h3>
-        <ul class="space-y-3">
-          <li><a href="/ayuda" class="text-gray-300 hover:text-white transition-colors">Centro de Ayuda</a></li>
-          <li><a href="/contacto" class="text-gray-300 hover:text-white transition-colors">Contacto</a></li>
-          <li><a href="/privacidad" class="text-gray-300 hover:text-white transition-colors">Privacidad</a></li>
-          <li><a href="/terminos" class="text-gray-300 hover:text-white transition-colors">Términos</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Sección inferior -->
-  <div class="border-t border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div class="flex flex-col md:flex-row items-center justify-between">
-        <p class="text-gray-400 text-sm">
-          © 2024 VolleyPass. Desarrollado para la Liga Departamental de Sucre.
-        </p>
-        <div class="flex items-center space-x-4 mt-4 md:mt-0">
-          <span class="text-gray-400 text-sm">Con ❤️ desde Sincelejo</span>
-          <div class="w-6 h-4 bg-gradient-to-r from-colombia-yellow via-colombia-blue to-colombia-red rounded-sm"></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </footer>
 ```
 
-### 🎯 **Principios de Accesibilidad**
+## 3. Menú de Usuario Autenticado (auth-menu.blade.php)
 
-#### **WCAG 2.1 AA Compliance**
-```css
-/* Contraste mínimo asegurado */
-:root {
-  --text-high-contrast: #000000;      /* 21:1 ratio en blanco */
-  --text-medium-contrast: #374151;    /* 7:1 ratio en blanco */
-  --text-low-contrast: #6b7280;       /* 4.5:1 ratio en blanco */
-  
-  /* Estados de foco visibles */
-  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.5);
-  --focus-ring-offset: 0 0 0 2px #ffffff;
-}
+### Ubicación: `resources/views/components/navigation/auth-menu.blade.php`
 
-/* Estados de foco consistentes */
-.focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-offset), var(--focus-ring);
-}
+```php
+<nav class="flex space-x-8">
+    <!-- Enlaces según el rol del usuario -->
+    @if(auth()->user()->hasRole('player'))
+        <a href="{{ route('player.dashboard') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('player.*') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Mi Dashboard
+        </a>
+        <a href="{{ route('player.matches') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('player.matches') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Mis Partidos
+        </a>
+        <a href="{{ route('player.team') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('player.team') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Mi Equipo
+        </a>
+        <a href="{{ route('player.stats') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('player.stats') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Estadísticas
+        </a>
+    @endif
 
-/* Texto alternativo para imágenes */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-```
+    @if(auth()->user()->hasRole('coach'))
+        <a href="{{ route('coach.dashboard') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('coach.*') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Panel de Control
+        </a>
+        <a href="{{ route('coach.team') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('coach.team') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Mi Equipo
+        </a>
+        <a href="{{ route('coach.matches') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('coach.matches') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Calendario
+        </a>
+        <a href="{{ route('coach.training') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('coach.training') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Entrenamientos
+        </a>
+    @endif
 
-#### **Navegación por Teclado**
-```html
-<!-- Skip links para navegación por teclado -->
-<a href="#main-content" 
-   class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-blue text-white px-4 py-2 rounded-lg z-50">
-  Saltar al contenido principal
-</a>
+    @if(auth()->user()->hasRole('referee'))
+        <a href="{{ route('referee.dashboard') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('referee.*') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Panel de Árbitro
+        </a>
+        <a href="{{ route('referee.assignments') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('referee.assignments') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Asignaciones
+        </a>
+        <a href="{{ route('referee.reports') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('referee.reports') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Reportes
+        </a>
+    @endif
 
-<!-- Roles ARIA apropiados -->
-<nav role="navigation" aria-label="Navegación principal">
-  <!-- Navegación -->
+    @if(auth()->user()->hasRole('medical'))
+        <a href="{{ route('medical.dashboard') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('medical.*') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Panel Médico
+        </a>
+        <a href="{{ route('medical.players') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('medical.players') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Jugadoras
+        </a>
+        <a href="{{ route('medical.reports') }}" 
+           class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('medical.reports') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+            Reportes Médicos
+        </a>
+    @endif
+
+    <!-- Enlaces comunes para todos los usuarios autenticados -->
+    <a href="{{ route('public.matches') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors">
+        Partidos
+    </a>
+    <a href="{{ route('public.teams') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors">
+        Equipos
+    </a>
 </nav>
-
-<main id="main-content" role="main">
-  <!-- Contenido principal -->
-</main>
-
-<!-- Landmarks semánticos -->
-<section aria-labelledby="tournaments-heading">
-  <h2 id="tournaments-heading">Torneos Activos</h2>
-  <!-- Contenido -->
-</section>
 ```
 
-### 📊 **Progressive Enhancement**
+## 4. Menú para Invitados (guest-menu.blade.php)
 
-#### **Funcionalidad Base (Sin JavaScript)**
-- **Navegación completa** funcional
-- **Formularios** que envían datos correctamente
-- **Contenido** completamente accesible
-- **Enlaces** que funcionan sin JavaScript
+### Ubicación: `resources/views/components/navigation/guest-menu.blade.php`
 
-#### **Mejoras con JavaScript**
-- **Actualizaciones en tiempo real** de marcadores
-- **Transiciones suaves** entre estados
-- **Modales** y overlays interactivos
-- **Filtrado dinámico** de tablas
-- **Notificaciones** toast
-- **Modo oscuro** toggle
-
-### 🚀 **Optimización de Performance**
-
-#### **Estrategias de Carga**
-```html
-<!-- Critical CSS inline -->
-<style>
-  /* CSS crítico para above-the-fold */
-</style>
-
-<!-- CSS no crítico diferido -->
-<link rel="preload" href="/css/non-critical.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-
-<!-- Imágenes optimizadas -->
-<picture>
-  <source srcset="/images/hero-volleyball.webp" type="image/webp">
-  <source srcset="/images/hero-volleyball.avif" type="image/avif">
-  <img src="/images/hero-volleyball.jpg" 
-       alt="Equipo de voleibol" 
-       loading="lazy"
-       width="800" 
-       height="600">
-</picture>
-
-<!-- Preload de recursos críticos -->
-<link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+```php
+<nav class="flex space-x-8">
+    <a href="{{ route('home') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('home') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+        Inicio
+    </a>
+    <a href="{{ route('public.matches') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('public.matches') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+        Partidos en Vivo
+    </a>
+    <a href="{{ route('public.results') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('public.results') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+        Resultados
+    </a>
+    <a href="{{ route('public.teams') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('public.teams') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+        Equipos
+    </a>
+    <a href="{{ route('public.standings') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('public.standings') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+        Tabla de Posiciones
+    </a>
+    <a href="{{ route('public.stats') }}" 
+       class="text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('public.stats') ? 'text-vp-primary-600 dark:text-vp-primary-400' : '' }}">
+        Estadísticas
+    </a>
+</nav>
 ```
 
-#### **Métricas de Performance Objetivo**
-- **First Contentful Paint**: < 1.5s
-- **Largest Contentful Paint**: < 2.5s
-- **Cumulative Layout Shift**: < 0.1
-- **First Input Delay**: < 100ms
-- **Time to Interactive**: < 3.5s
+## 5. Menú Móvil (mobile-menu.blade.php)
 
-### 📱 **Responsive Breakpoints**
+### Ubicación: `resources/views/components/navigation/mobile-menu.blade.php`
 
-```css
-/* Sistema de breakpoints móvil-first */
-/* xs: 0px - 639px (móviles) */
-/* sm: 640px - 767px (móviles grandes) */
-/* md: 768px - 1023px (tablets) */
-/* lg: 1024px - 1279px (laptops) */
-/* xl: 1280px - 1535px (desktop) */
-/* 2xl: 1536px+ (desktop grande) */
+```php
+<div class="px-4 py-6 space-y-1">
+    @auth
+        <!-- Información del usuario -->
+        <div class="pb-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center space-x-3">
+                <img class="h-10 w-10 rounded-full object-cover" 
+                     src="{{ auth()->user()->avatar_url ?? '/placeholder.svg?height=40&width=40' }}" 
+                     alt="{{ auth()->user()->name }}">
+                <div>
+                    <div class="text-base font-medium text-gray-900 dark:text-white">
+                        {{ auth()->user()->name }}
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ ucfirst(auth()->user()->role) }}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-@media (min-width: 640px) {
-  /* Estilos para móviles grandes */
+        <!-- Enlaces según el rol -->
+        <div class="mt-6 space-y-1">
+            @if(auth()->user()->hasRole('player'))
+                <a href="{{ route('player.dashboard') }}" 
+                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                    Mi Dashboard
+                </a>
+                <a href="{{ route('player.matches') }}" 
+                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                    Mis Partidos
+                </a>
+                <a href="{{ route('player.team') }}" 
+                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                    Mi Equipo
+                </a>
+            @endif
+
+            @if(auth()->user()->hasRole('coach'))
+                <a href="{{ route('coach.dashboard') }}" 
+                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                    Panel de Control
+                </a>
+                <a href="{{ route('coach.team') }}" 
+                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                    Mi Equipo
+                </a>
+                <a href="{{ route('coach.matches') }}" 
+                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                    Calendario
+                </a>
+            @endif
+
+            <!-- Enlaces comunes -->
+            <a href="{{ route('public.matches') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Partidos
+            </a>
+            <a href="{{ route('public.teams') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Equipos
+            </a>
+        </div>
+
+        <!-- Acciones del usuario -->
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-1">
+            <a href="{{ route('profile.edit') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Mi Perfil
+            </a>
+            <a href="{{ route('settings') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Configuración
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" 
+                        class="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors">
+                    Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    @else
+        <!-- Menú para invitados -->
+        <div class="space-y-1">
+            <a href="{{ route('home') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Inicio
+            </a>
+            <a href="{{ route('public.matches') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Partidos en Vivo
+            </a>
+            <a href="{{ route('public.results') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Resultados
+            </a>
+            <a href="{{ route('public.teams') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Equipos
+            </a>
+            <a href="{{ route('public.standings') }}" 
+               class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors">
+                Tabla de Posiciones
+            </a>
+        </div>
+
+        <!-- Acciones para invitados -->
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-3">
+            <a href="{{ route('login') }}" 
+               class="block bg-vp-primary-500 text-white text-center px-4 py-3 rounded-lg font-medium hover:bg-vp-primary-600 transition-colors">
+                Iniciar Sesión
+            </a>
+            <a href="{{ route('register') }}" 
+               class="block border-2 border-vp-primary-500 text-vp-primary-500 text-center px-4 py-3 rounded-lg font-medium hover:bg-vp-primary-50 transition-colors">
+                Registrarse
+            </a>
+        </div>
+    @endauth
+</div>
+```
+
+## 6. Dropdown de Usuario (user-dropdown.blade.php)
+
+### Ubicación: `resources/views/components/navigation/user-dropdown.blade.php`
+
+```php
+<div class="py-1">
+    <!-- Información del usuario -->
+    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ auth()->user()->name }}</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ ucfirst(auth()->user()->role) }}</p>
+    </div>
+
+    <!-- Enlaces de perfil -->
+    <div class="py-1">
+        <a href="{{ route('profile.edit') }}" 
+           class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Mi Perfil
+        </a>
+        
+        <a href="{{ route('settings') }}" 
+           class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Configuración
+        </a>
+
+        <!-- Enlaces específicos por rol -->
+        @if(auth()->user()->hasRole('player'))
+            <a href="{{ route('player.medical') }}" 
+               class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Estado Médico
+            </a>
+        @endif
+
+        @if(auth()->user()->hasRole('coach'))
+            <a href="{{ route('coach.reports') }}" 
+               class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Reportes
+            </a>
+        @endif
+
+        <a href="{{ route('help') }}" 
+           class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Ayuda
+        </a>
+    </div>
+
+    <!-- Cerrar sesión -->
+    <div class="py-1 border-t border-gray-200 dark:border-gray-700">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" 
+                    class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 transition-colors">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Cerrar Sesión
+            </button>
+        </form>
+    </div>
+</div>
+```
+
+## Características de los Componentes de Navegación
+
+### 1. Responsividad Completa
+- **Desktop**: Navegación horizontal completa
+- **Mobile**: Menú hamburguesa con overlay
+- **Tablet**: Adaptación automática
+
+### 2. Estados Activos
+- **Indicadores visuales**: Enlaces activos resaltados
+- **Breadcrumbs implícitos**: Usuario sabe dónde está
+- **Transiciones suaves**: Entre estados
+
+### 3. Modo Oscuro
+- **Toggle integrado**: En el header principal
+- **Persistencia**: Guarda preferencia en localStorage
+- **Transiciones**: Cambios suaves entre modos
+
+### 4. Notificaciones en Tiempo Real
+- **Dropdown**: Notificaciones recientes
+- **Contador**: Badge con número de notificaciones
+- **Auto-refresh**: Actualizaciones automáticas
+
+### 5. Seguridad y Roles
+- **Menús dinámicos**: Según rol del usuario
+- **Permisos**: Solo enlaces permitidos
+- **Logout seguro**: CSRF protection
+
+## JavaScript Alpine.js
+
+### Store Global para Navegación
+
+```javascript
+// En app.blade.php
+Alpine.store('navigation', {
+    mobileMenuOpen: false,
+    userMenuOpen: false,
+    notificationsOpen: false,
+    
+    closeMobileMenu() {
+        this.mobileMenuOpen = false;
+    },
+    
+    closeAllDropdowns() {
+        this.userMenuOpen = false;
+        this.notificationsOpen = false;
+    },
+    
+    toggleMobileMenu() {
+        this.mobileMenuOpen = !this.mobileMenuOpen;
+        if (this.mobileMenuOpen) {
+            this.closeAllDropdowns();
+        }
+    }
+});
+```
+
+## Estados de Desarrollo
+
+### ✅ Completado
+- Estructura de todos los componentes de navegación
+- Responsive design mobile-first
+- Sistema de roles y permisos
+- Modo oscuro integrado
+
+### 🔄 En Desarrollo
+- Componente de notificaciones
+- Dropdown de usuario
+- Navegación breadcrumb
+
+### 📋 Por Desarrollar
+- Todas las rutas referenciadas
+- Componente `@livewire('shared.notifications-dropdown')`
+- Sistema de búsqueda global
+- Navegación contextual por sección
+
+# 🏐 VolleyPass - Componentes Livewire por Desarrollar
+
+## 1. Componentes Públicos
+
+### 1.1 public.live-matches
+**Ubicación**: `app/Livewire/Public/LiveMatches.php`  
+**Vista**: `resources/views/livewire/public/live-matches.blade.php`
+
+**Funcionalidad**:
+- Muestra partidos actualmente en curso
+- Actualización en tiempo real de marcadores
+- Estados: En vivo, Próximos, Finalizados
+- Filtros por categoría y fecha
+
+**Propiedades**:
+```php
+public $matches = [];
+public $filter = 'live'; // live, upcoming, finished
+public $refreshInterval = 30; // segundos
+```
+
+**Métodos en Tiempo Real**:
+- `#[On('match-score-updated')]` - Actualiza marcador
+- `#[On('match-status-changed')]` - Cambia estado del partido
+- `refreshMatches()` - Refresco manual
+
+### 1.2 public.recent-results
+**Ubicación**: `app/Livewire/Public/RecentResults.php`
+
+**Funcionalidad**:
+- Últimos 10 resultados de partidos finalizados
+- Información de equipos y marcadores finales
+- Links a estadísticas detalladas
+
+### 1.3 public.league-stats
+**Ubicación**: `app/Livewire/Public/LeagueStats.php`
+
+**Funcionalidad**:
+- Estadísticas generales de la liga
+- Goleadoras, mejores equipos, records
+- Gráficos y métricas visuales
+
+## 2. Componentes de Jugadora
+
+### 2.1 player.profile-header
+**Ubicación**: `app/Livewire/Player/ProfileHeader.php`
+
+**Funcionalidad**:
+- Header con foto, nombre, posición, número
+- Estado médico actual
+- Estadísticas destacadas de la temporada
+- QR del carnet digital
+
+**Propiedades**:
+```php
+public $player;
+public $medicalStatus;
+public $seasonStats;
+public $qrCode;
+```
+
+### 2.2 player.upcoming-matches
+**Ubicación**: `app/Livewire/Player/UpcomingMatches.php`
+
+**Funcionalidad**:
+- Próximos partidos de la jugadora
+- Información del rival, fecha, lugar
+- Estado de confirmación de asistencia
+
+**Métodos**:
+- `confirmAttendance($matchId)` - Confirmar asistencia
+- `reportUnavailability($matchId, $reason)` - Reportar no disponibilidad
+
+### 2.3 player.performance-stats
+**Ubicación**: `app/Livewire/Player/PerformanceStats.php`
+
+**Funcionalidad**:
+- Estadísticas personales: puntos, aces, bloqueos, recepciones
+- Gráficos de evolución temporal
+- Comparación con promedios de la liga
+
+### 2.4 player.recent-activity
+**Ubicación**: `app/Livewire/Player/RecentActivity.php`
+
+**Funcionalidad**:
+- Timeline de actividades recientes
+- Partidos jugados, entrenamientos, evaluaciones médicas
+- Notificaciones importantes
+
+### 2.5 player.medical-status
+**Ubicación**: `app/Livewire/Player/MedicalStatus.php`
+
+**Funcionalidad**:
+- Estado médico actual: Apta/No apta/Observación
+- Fecha de último chequeo médico
+- Recordatorios de citas médicas
+- Botón para reportar lesión
+
+**Métodos**:
+- `reportInjury()` - Modal para reportar lesión
+- `requestMedicalCheckup()` - Solicitar cita médica
+
+### 2.6 player.team-info
+**Ubicación**: `app/Livewire/Player/TeamInfo.php`
+
+**Funcionalidad**:
+- Información del equipo actual
+- Entrenador, compañeras de equipo
+- Próximos entrenamientos
+- Chat del equipo (básico)
+
+## 3. Componentes de Entrenador
+
+### 3.1 coach.team-overview
+**Ubicación**: `app/Livewire/Coach/TeamOverview.php`
+
+**Funcionalidad**:
+- Header con información del equipo
+- Estadísticas del equipo en la temporada
+- Estado general del plantel (lesiones, disponibilidad)
+- Record de victorias/derrotas
+
+**Propiedades**:
+```php
+public $team;
+public $seasonRecord;
+public $playerAvailability;
+public $injuredPlayers;
+```
+
+### 3.2 coach.team-schedule
+**Ubicación**: `app/Livewire/Coach/TeamSchedule.php`
+
+**Funcionalidad**:
+- Calendario completo del equipo
+- Partidos, entrenamientos, eventos
+- Crear nuevos eventos
+- Confirmar asistencia de jugadoras
+
+**Métodos**:
+- `createEvent()` - Modal para crear evento
+- `editEvent($eventId)` - Editar evento existente
+- `viewAttendance($eventId)` - Ver asistencia
+
+### 3.3 coach.player-management
+**Ubicación**: `app/Livewire/Coach/PlayerManagement.php`
+
+**Funcionalidad**:
+- Lista completa de jugadoras del equipo
+- Estado médico, disponibilidad, estadísticas
+- Agregar/remover jugadoras
+- Gestión de rotaciones y posiciones
+
+**Métodos**:
+- `addPlayer()` - Modal para agregar jugadora
+- `removePlayer($playerId)` - Remover del equipo
+- `updatePosition($playerId, $position)` - Cambiar posición
+
+### 3.4 coach.team-statistics
+**Ubicación**: `app/Livewire/Coach/TeamStatistics.php`
+
+**Funcionalidad**:
+- Estadísticas completas del equipo
+- Análisis de rendimiento individual y colectivo
+- Gráficos comparativos
+- Exportar reportes
+
+### 3.5 coach.team-health-status
+**Ubicación**: `app/Livewire/Coach/TeamHealthStatus.php`
+
+**Funcionalidad**:
+- Estado médico del plantel
+- Jugadoras lesionadas, en recuperación
+- Alertas médicas importantes
+- Coordinación con staff médico
+
+### 3.6 coach.notifications
+**Ubicación**: `app/Livewire/Coach/Notifications.php`
+
+**Funcionalidad**:
+- Notificaciones específicas del entrenador
+- Confirmaciones de asistencia
+- Reportes de lesiones
+- Mensajes de la liga
+
+## 4. Componentes de Árbitro
+
+### 4.1 referee.stats-overview
+**Ubicación**: `app/Livewire/Referee/StatsOverview.php`
+
+**Funcionalidad**:
+- 4 tarjetas con métricas clave del árbitro
+- Partidos dirigidos, calificación promedio
+- Próximas asignaciones, certificaciones
+
+### 4.2 referee.assigned-matches
+**Ubicación**: `app/Livewire/Referee/AssignedMatches.php`
+
+**Funcionalidad**:
+- Lista de partidos asignados
+- Información de equipos, fecha, lugar
+- Confirmar disponibilidad
+- Acceso a control del partido en vivo
+
+**Métodos**:
+- `confirmAssignment($matchId)` - Confirmar asignación
+- `startMatchControl($matchId)` - Iniciar control en vivo
+- `submitMatchReport($matchId)` - Enviar reporte post-partido
+
+### 4.3 referee.match-reports
+**Ubicación**: `app/Livewire/Referee/MatchReports.php`
+
+**Funcionalidad**:
+- Historial de reportes de partidos
+- Crear nuevos reportes
+- Incidentes, amonestaciones, observaciones
+- Firmas digitales
+
+### 4.4 referee.performance-history
+**Ubicación**: `app/Livewire/Referee/PerformanceHistory.php`
+
+**Funcionalidad**:
+- Historial de evaluaciones
+- Feedback de equipos y supervisores
+- Evolución de calificaciones
+- Áreas de mejora
+
+### 4.5 referee.certification-status
+**Ubicación**: `app/Livewire/Referee/CertificationStatus.php`
+
+**Funcionalidad**:
+- Estado de certificaciones actuales
+- Fechas de vencimiento
+- Cursos pendientes
+- Renovaciones automáticas
+
+### 4.6 referee.recent-assignments
+**Ubicación**: `app/Livewire/Referee/RecentAssignments.php`
+
+**Funcionalidad**:
+- Últimas asignaciones completadas
+- Resultados y reportes asociados
+- Feedback recibido
+
+## 5. Componentes Médicos
+
+### 5.1 medical.stats-overview
+**Ubicación**: `app/Livewire/Medical/StatsOverview.php`
+
+**Funcionalidad**:
+- Métricas médicas: jugadoras atendidas, lesiones activas
+- Alertas críticas, citas programadas
+- Estado general de salud de la liga
+
+### 5.2 medical.active-injuries
+**Ubicación**: `app/Livewire/Medical/ActiveInjuries.php`
+
+**Funcionalidad**:
+- Lista de lesiones actualmente en tratamiento
+- Severidad, tiempo estimado de recuperación
+- Seguimiento de tratamientos
+- Actualizaciones de estado
+
+**Métodos**:
+- `updateInjuryStatus($injuryId, $status)` - Actualizar estado
+- `addTreatmentNote($injuryId, $note)` - Agregar nota de tratamiento
+- `clearForPlay($playerId)` - Dar alta médica
+
+### 5.3 medical.medical-reports
+**Ubicación**: `app/Livewire/Medical/MedicalReports.php`
+
+**Funcionalidad**:
+- Crear y gestionar reportes médicos
+- Evaluaciones periódicas
+- Certificados de aptitud física
+- Historiales médicos digitales
+
+### 5.4 medical.player-health-monitoring
+**Ubicación**: `app/Livewire/Medical/PlayerHealthMonitoring.php`
+
+**Funcionalidad**:
+- Monitoreo continuo de jugadoras
+- Programación de chequeos médicos
+- Alertas preventivas
+- Dashboard de salud general
+
+### 5.5 medical.emergency-contacts
+**Ubicación**: `app/Livewire/Medical/EmergencyContacts.php`
+
+**Funcionalidad**:
+- Lista de contactos de emergencia
+- Hospitales, ambulancias, especialistas
+- Acceso rápido durante emergencias
+- Protocolos de activación
+
+### 5.6 medical.medical-alerts
+**Ubicación**: `app/Livewire/Medical/MedicalAlerts.php`
+
+**Funcionalidad**:
+- Alertas médicas activas
+- Condiciones especiales de jugadoras
+- Medicamentos, alergias, restricciones
+- Notificaciones críticas
+
+## 6. Componentes Compartidos
+
+### 6.1 shared.notifications-dropdown
+**Ubicación**: `app/Livewire/Shared/NotificationsDropdown.php`
+
+**Funcionalidad**:
+- Dropdown de notificaciones del usuario
+- Notificaciones en tiempo real
+- Marcar como leídas
+- Filtros por tipo y fecha
+
+**Propiedades**:
+```php
+public $notifications = [];
+public $unreadCount = 0;
+public $filter = 'all'; // all, unread, today
+```
+
+**Métodos en Tiempo Real**:
+- `#[On('notification-received')]` - Nueva notificación
+- `markAsRead($notificationId)` - Marcar como leída
+- `markAllAsRead()` - Marcar todas como leídas
+
+### 6.2 shared.search-component
+**Ubicación**: `app/Livewire/Shared/SearchComponent.php`
+
+**Funcionalidad**:
+- Búsqueda global en la plataforma
+- Jugadoras, equipos, partidos
+- Autocompletado con resultados en tiempo real
+- Filtros avanzados
+
+### 6.3 shared.match-card
+**Ubicación**: `app/Livewire/Shared/MatchCard.php`
+
+**Funcionalidad**:
+- Componente reutilizable para mostrar partidos
+- Diferentes modos: live, upcoming, finished
+- Información de equipos, marcador, estado
+- Acciones contextuales según usuario
+
+### 6.4 shared.player-card
+**Ubicación**: `app/Livewire/Shared/PlayerCard.php`
+
+**Funcionalidad**:
+- Tarjeta reutilizable de jugadora
+- Foto, nombre, posición, equipo
+- Estado médico, estadísticas básicas
+- Links a perfil completo
+
+## Características Técnicas de los Componentes
+
+### 1. Tiempo Real con Livewire
+```php
+// Ejemplo de implementación en LiveMatches
+#[On('match-score-updated')]
+public function updateMatchScore($matchId, $homeScore, $awayScore)
+{
+    $match = $this->matches->find($matchId);
+    if ($match) {
+        $match->update([
+            'home_score' => $homeScore,
+            'away_score' => $awayScore
+        ]);
+        $this->refreshMatches();
+    }
 }
 
-@media (min-width: 768px) {
-  /* Estilos para tablets */
-}
-
-@media (min-width: 1024px) {
-  /* Estilos para laptops */
+// Polling automático cada 30 segundos
+public function refresh()
+{
+    $this->refreshMatches();
 }
 ```
 
-### 🎨 **Estados de Interacción**
+### 2. Alpine.js para Interactividad
+```php
+// En las vistas blade
+<div x-data="{ 
+    showDetails: false,
+    confirmAction(action) {
+        if (confirm('¿Estás seguro?')) {
+            $wire[action]();
+        }
+    }
+}">
+```
 
-```css
-/* Estados hover, focus, active consistentes */
-.button {
-  transition: all 0.2s ease-in-out;
+### 3. Eventos Personalizados
+```php
+// Dispatch events para comunicación entre componentes
+$this->dispatch('player-status-changed', playerId: $player->id);
+$this->dispatch('notification-created', [
+    'title' => 'Estado Actualizado',
+    'message' => 'El estado médico ha sido actualizado'
+]);
+```
+
+### 4. Validación en Tiempo Real
+```php
+#[Rule('required|min:3')]
+public $search = '';
+
+#[Rule('required|in:available,injured,suspended')]
+public $playerStatus = '';
+```
+
+### 5. Autorización por Roles
+```php
+public function mount()
+{
+    $this->authorize('view-medical-data');
 }
 
-.button:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-}
-
-.button:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-md);
-}
-
-.button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-/* Estados de datos */
-.loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.error {
-  border-color: var(--error-red);
-  background-color: rgb(254 242 242);
-}
-
-.success {
-  border-color: var(--success-green);
-  background-color: rgb(240 253 244);
+public function updatePlayerStatus($playerId, $status)
+{
+    $this->authorize('update-player-status');
+    // Lógica de actualización
 }
 ```
 
----
+## Estados de Desarrollo
 
-## 🎯 **RESUMEN EJECUTIVO**
+### 📋 Por Desarrollar (Prioridad Alta)
+1. **public.live-matches** - Crítico para página principal
+2. **player.profile-header** - Esencial para experiencia de jugadora
+3. **shared.notifications-dropdown** - Necesario para navegación
+4. **coach.team-overview** - Core del dashboard de entrenador
 
-### **Objetivos del Sistema UI/UX**
+### 📋 Por Desarrollar (Prioridad Media)
+- Todos los componentes de estadísticas
+- Sistema de reportes médicos
+- Gestión de asignaciones de árbitros
 
-1. **Profesionalismo Accesible**: Diseño que se siente oficial pero no intimidante
-2. **Performance Primero**: Carga rápida incluso con conectividad limitada
-3. **Mobile First**: Optimizado para el uso principal en dispositivos móviles
-4. **Identidad Regional**: Refleja la cultura deportiva de Sucre y Colombia
-5. **Escalabilidad**: Sistema que puede crecer con nuevas funcionalidades
+### 📋 Por Desarrollar (Prioridad Baja)
+- Componentes de chat y mensajería
+- Exportación de reportes avanzados
+- Integraciones con sistemas externos
 
-### **Diferenciadores Clave**
+## Consideraciones de Rendimiento
 
-- **Tiempo Real**: Actualizaciones instantáneas de marcadores y eventos
-- **Verificación QR**: Sistema único de autenticación de jugadoras
-- **Multi-Plataforma**: Web responsive + APIs para futuras apps móviles
-- **Personalización**: Experiencias adaptadas por rol de usuario
-- **Accesibilidad**: Cumple estándares internacionales WCAG 2.1 AA
+### 1. Lazy Loading
+```php
+// Solo cargar datos cuando el componente sea visible
+public function loadData()
+{
+    $this->data = $this->getData();
+    $this->loaded = true;
+}
+```
 
-### **Próximos Pasos de Implementación**
+### 2. Caché Inteligente
+```php
+// Cache de consultas pesadas
+public function getStatsProperty()
+{
+    return Cache::remember(
+        "player-stats-{$this->player->id}", 
+        now()->addMinutes(10), 
+        fn() => $this->calculateStats()
+    );
+}
+```
 
-1. **Crear sistema de design tokens** con variables CSS
-2. **Implementar componentes base** usando Livewire + Tailwind
-3. **Desarrollar sistema de grid** responsivo
-4. **Configurar sistema de imágenes** optimizadas
-5. **Implementar progressive enhancement** paso a paso
+### 3. Polling Inteligente
+```php
+// Solo hacer polling cuando la página esté activa
+public function startPolling()
+{
+    if (document.visibilityState === 'visible') {
+        $this->refreshData();
+    }
+}
+```
 
-Este sistema UI/UX garantiza una experiencia moderna, accesible y escalable que posiciona a VolleyPass como la plataforma líder de gestión deportiva en la región, siguiendo las mejores prácticas internacionales adaptadas al contexto local colombiano.
+Componentes en Tiempo Real:
+
+Marcadores en vivo durante partidos
+Notificaciones push de eventos importantes
+Estado médico actualizado instantáneamente
+Verificación QR con validación en tiempo real
+
+Dashboards por Rol:
+
+Jugadora: Perfil, partidos, estadísticas, estado médico
+Entrenador: Gestión de equipo, calendario, jugadoras
+Árbitro: Asignaciones, reportes, certificaciones
+Médico: Monitoreo de salud, lesiones, emergencias
+
+Diseño Inspirado en:
+
+ESPN, Liga MX App, UEFA.com
+Profesional pero accesible para voleibol amateur/regional
+Colores de la bandera colombiana (amarillo, azul, rojo)
+Mobile-first con funcionalidad sin JavaScript

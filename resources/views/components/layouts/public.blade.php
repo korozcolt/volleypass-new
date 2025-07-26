@@ -80,7 +80,7 @@
                             Torneos
                         </span>
                     </a>
-                    <a href="{{ route('teams') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
+                    <a href="{{ route('public.teams') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
                         <span class="flex items-center">
                             <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H17c-.8 0-1.5.7-1.5 1.5v6c0 .8.7 1.5 1.5 1.5h1v6h2zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10s.67 1.5 1.5 1.5zM5.5 6c1.11 0 2-.89 2-2s-.89-2-2-2-2 .89-2 2 .89 2 2 2zm2 16v-6H9V9.5C9 8.67 8.33 8 7.5 8S6 8.67 6 9.5V16H7.5v6h2zm7.5-6v6h2v-6h-2z"/>
@@ -88,7 +88,7 @@
                             Equipos
                         </span>
                     </a>
-                    <a href="{{ route('standings') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
+                    <a href="{{ route('public.standings') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
                         <span class="flex items-center">
                             <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
@@ -96,12 +96,12 @@
                             Posiciones
                         </span>
                     </a>
-                    <a href="{{ route('schedule') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
+                    <a href="{{ route('public.matches') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
                         <span class="flex items-center">
                             <svg class="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
                             </svg>
-                            Calendario
+                            Partidos
                         </span>
                     </a>
                     <a href="{{ route('about') }}" class="sports-nav-item group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-300">
@@ -234,13 +234,13 @@
                             </svg>
                             Acerca de Nosotros
                         </a></li>
-                        <li><a href="{{ route('teams') }}" class="text-gray-300 hover:text-blue-400 transition-colors duration-300 flex items-center group">
+                        <li><a href="{{ route('public.teams') }}" class="text-gray-300 hover:text-blue-400 transition-colors duration-300 flex items-center group">
                             <svg class="w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H17c-.8 0-1.5.7-1.5 1.5v6c0 .8.7 1.5 1.5 1.5h1v6h2z"/>
                             </svg>
                             Equipos Registrados
                         </a></li>
-                        <li><a href="#stats" class="text-gray-300 hover:text-blue-400 transition-colors duration-300 flex items-center group">
+                        <li><a href="{{ route('public.stats') }}" class="text-gray-300 hover:text-blue-400 transition-colors duration-300 flex items-center group">
                             <svg class="w-4 h-4 mr-3 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
                             </svg>
