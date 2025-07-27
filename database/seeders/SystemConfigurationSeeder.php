@@ -156,6 +156,41 @@ class SystemConfigurationSeeder extends Seeder
                 'is_editable' => true,
             ],
 
+            // Configuraciones de branding
+            [
+                'key' => 'branding.logo_dark',
+                'name' => 'Logo para Fondo Oscuro',
+                'description' => 'URL del logo para usar en fondos oscuros',
+                'value' => '/images/logo-volley_pass_white_back.png',
+                'type' => 'url',
+                'group' => 'branding',
+                'is_public' => true,
+                'is_editable' => true,
+                'validation_rules' => 'nullable|url',
+            ],
+            [
+                'key' => 'branding.logo_light',
+                'name' => 'Logo para Fondo Claro',
+                'description' => 'URL del logo para usar en fondos claros',
+                'value' => '/images/logo-volley_pass_black_back.png',
+                'type' => 'url',
+                'group' => 'branding',
+                'is_public' => true,
+                'is_editable' => true,
+                'validation_rules' => 'nullable|url',
+            ],
+            [
+                'key' => 'branding.favicon',
+                'name' => 'Favicon',
+                'description' => 'URL del favicon de la aplicación',
+                'value' => '/images/logo-volley_pass_black_back.png',
+                'type' => 'url',
+                'group' => 'branding',
+                'is_public' => true,
+                'is_editable' => true,
+                'validation_rules' => 'nullable|url',
+            ],
+
             // Configuraciones de mantenimiento
             [
                 'key' => 'maintenance.mode',

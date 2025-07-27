@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ColombiaLocationsSeeder::class,
             RolesAndPermissionsSeeder::class,
             KristianUsersSeeder::class,
+            SystemConfigurationSeeder::class,
         ]);
 
         $this->command->info('🎉 ¡Todos los seeders ejecutados exitosamente!');

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Validation\Validator;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -113,6 +114,11 @@ class SystemConfiguration extends Model
         return $config->typed_value;
     }
 
+    public static function getValue(string $key, $default = null)
+    {
+        return static::get($key, $default);
+    }
+
     public static function set(string $key, $value): bool
     {
         $config = static::where('key', $key)->first();
@@ -160,7 +166,7 @@ class SystemConfiguration extends Model
             return true;
         }
 
-        $validator = \Validator::make(
+        $validator = \Illuminate\Support\Facades\Validator::make(
             ['value' => $value],
             ['value' => $this->validation_rules]
         );
@@ -174,7 +180,7 @@ class SystemConfiguration extends Model
             return [];
         }
 
-        $validator = \Validator::make(
+        $validator = \Illuminate\Support\Facades\Validator::make(
             ['value' => $value],
             ['value' => $this->validation_rules]
         );

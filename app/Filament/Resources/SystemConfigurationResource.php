@@ -86,7 +86,16 @@ class SystemConfigurationResource extends Resource
                         Forms\Components\DatePicker::make('value')
                             ->label('Valor')
                             ->visible(fn($get) => $get('type') === 'date')
-                            ->formatStateUsing(fn($state) => $state ? \Carbon\Carbon::parse($state)->format('Y-m-d') : null)
+                            ->formatStateUsing(function ($state, $get) {
+                                if (!$state || $get('type') !== 'date') {
+                                    return null;
+                                }
+                                try {
+                                    return \Carbon\Carbon::parse($state)->format('Y-m-d');
+                                } catch (\Exception $e) {
+                                    return null;
+                                }
+                            })
                             ->dehydrateStateUsing(fn($state) => $state ? \Carbon\Carbon::parse($state)->toDateString() : null),
 
                         Forms\Components\Textarea::make('value')

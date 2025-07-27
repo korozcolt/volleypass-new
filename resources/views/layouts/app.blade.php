@@ -22,7 +22,7 @@
     <meta property="twitter:description" content="Plataforma digital oficial para la Liga de Voleibol de Sucre, Colombia.">
     <meta property="twitter:image" content="{{ asset('images/og-image.jpg') }}">
     
-    <title>{{ $title ?? 'VolleyPass' }} - Liga de Voleibol de Sucre</title>
+    <title>{{ $title ?? \App\Models\SystemConfiguration::getValue('app.name', 'VolleyPass') }} - Liga de Voleibol de Sucre</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,11 +30,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ \App\Models\SystemConfiguration::getValue('branding.favicon', asset('favicon.ico')) }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest.php') }}">
     
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
