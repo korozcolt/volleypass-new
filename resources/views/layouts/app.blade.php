@@ -37,7 +37,7 @@
     <link rel="manifest" href="{{ asset('site.webmanifest.php') }}">
     
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     
     <!-- Livewire Styles -->
     @livewireStyles

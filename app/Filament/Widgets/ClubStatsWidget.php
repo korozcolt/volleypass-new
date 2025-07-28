@@ -68,7 +68,7 @@ class ClubStatsWidget extends BaseWidget
             ->orderByRaw('COUNT(*) DESC')
             ->first();
             
-        return $departamento ? $departamento->nombre : 'N/A';
+        return $departamento ? $departamento->name : 'N/A';
     }
     
     private function getClubsChart(): array

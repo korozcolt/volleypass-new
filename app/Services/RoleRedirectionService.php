@@ -22,12 +22,13 @@ class RoleRedirectionService
 
         // Roles que van al panel administrativo
         $adminRoles = [
-            'admin',
-            'super_admin',
-            'league_director',
-            'club_director',
-            'coach',
-            'referee'
+            'SuperAdmin',
+            'LeagueAdmin',
+            'ClubDirector',
+            'Coach',
+            'Referee',
+            'SportsDoctor',
+            'Verifier'
         ];
 
         // Verificar si tiene rol administrativo
@@ -38,8 +39,8 @@ class RoleRedirectionService
         }
 
         // Solo jugadores van al dashboard de usuario final
-        if ($user->hasRole('player')) {
-            return route('player.dashboard');
+        if ($user->hasRole('Player')) {
+            return route('dashboard');
         }
 
         // Si no tiene rol específico, redirigir a home

@@ -18,14 +18,6 @@ Route::post('/contacto', [PublicController::class, 'submitContact'])->name('publ
 // DASHBOARD AUTENTICADO
 Route::middleware(['auth:web', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // Redirigir /admin para usuarios autenticados
-    Route::get('/admin', function () {
-        return redirect()->route('dashboard');
-    });
 });
 
-// REDIRIGIR /admin NO AUTENTICADO A LOGIN
-Route::get('/admin', function () {
-    return redirect()->route('login');
-})->middleware('guest');
+// Nota: Las rutas /admin son manejadas automáticamente por Filament
