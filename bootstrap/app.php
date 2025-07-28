@@ -28,10 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'system.config' => \App\Http\Middleware\ApplySystemConfigMiddleware::class,
             'system.maintenance' => \App\Http\Middleware\SystemMaintenanceMiddleware::class,
-            'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
             'admin.access' => \App\Http\Middleware\CheckAdminPanelAccess::class,
             'api.role' => \App\Http\Middleware\ApiRoleMiddleware::class,
+            'filter.navigation' => \App\Http\Middleware\FilterFilamentNavigation::class,
+            'role.redirection' => \App\Http\Middleware\RoleRedirectionMiddleware::class,
+            'post.login.redirect' => \App\Http\Middleware\PostLoginRoleRedirection::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -311,4 +311,44 @@ class PaymentResource extends Resource
             'edit' => Pages\EditPayment::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'ClubDirector'
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'ClubDirector']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return match($user->getRoleNames()->first()) {
+            'SuperAdmin' => true,
+            'LeagueAdmin' => true,
+            'ClubDirector' => $record->user?->club_id === $user->club_id,
+            default => false
+        };
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin']);
+    }
 }

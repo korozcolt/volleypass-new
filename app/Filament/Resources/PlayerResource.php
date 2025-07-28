@@ -639,6 +639,50 @@ class PlayerResource extends Resource
         return static::getModel()::count() > 100 ? 'warning' : 'primary';
     }
 
+    public static function canViewAny(): bool
+    {
+        $user = Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'ClubDirector', 'Coach', 'SportsDoctor'
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = Auth::user();
+        
+        // Solo ciertos roles pueden crear jugadores
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'ClubDirector'
+        ]);
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = Auth::user();
+        
+        return match($user->getRoleNames()->first()) {
+            'SuperAdmin' => true,
+            'LeagueAdmin' => $record->currentClub?->league_id === $user->league_id,
+            'ClubDirector' => $record->currentClub?->id === $user->club_id,
+            default => false
+        };
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = Auth::user();
+        
+        // Solo SuperAdmin y LeagueAdmin pueden eliminar
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin']);
+    }
+
     /**
      * Calcular la categoría del jugador basado en la edad
      */

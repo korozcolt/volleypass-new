@@ -27,6 +27,7 @@ class User extends Authenticatable implements HasMedia, FilamentUser
     use HasRoles, InteractsWithMedia, LogsActivity; // Spatie traits
     use HasSearch, HasValidation; // Nuestros traits personalizados
     use HasApiTokens;
+    use \App\Traits\HasRoleHelpers; // Trait para helpers de roles
 
     protected $fillable = [
         'name',

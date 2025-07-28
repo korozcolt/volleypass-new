@@ -290,4 +290,46 @@ class TeamResource extends Resource
             'edit' => Pages\EditTeam::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'ClubDirector', 'Coach'
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'ClubDirector'
+        ]);
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return match($user->getRoleNames()->first()) {
+            'SuperAdmin' => true,
+            'LeagueAdmin' => $record->club?->league_id === $user->league_id,
+            'ClubDirector' => $record->club_id === $user->club_id,
+            default => false
+        };
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'ClubDirector']);
+    }
 }

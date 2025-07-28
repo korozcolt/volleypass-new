@@ -968,4 +968,43 @@ class LeagueResource extends Resource
 
         return $impact;
     }
+
+    public static function canViewAny(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin'
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasRole('SuperAdmin');
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return match($user->getRoleNames()->first()) {
+            'SuperAdmin' => true,
+            'LeagueAdmin' => $record->id === $user->league_id,
+            default => false
+        };
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasRole('SuperAdmin');
+    }
 }

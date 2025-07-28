@@ -168,4 +168,33 @@ class RoleResource extends Resource
             'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Solo SuperAdmin puede gestionar roles
+        return $user->hasRole('SuperAdmin');
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasRole('SuperAdmin');
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasRole('SuperAdmin');
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasRole('SuperAdmin');
+    }
 }

@@ -33,10 +33,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandLogo(fn () => view('filament.admin.logo'))
             ->favicon(\App\Models\SystemConfiguration::getValue('branding.favicon', asset('favicon.ico')))
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->pages([
-                Pages\Dashboard::class,
+                \App\Filament\Pages\RoleDashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -57,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 \App\Http\Middleware\CheckAdminPanelAccess::class, // VERIFICACIÓN DE ROLES
+                \App\Http\Middleware\FilterFilamentNavigation::class, // FILTRADO DE NAVEGACIÓN POR ROL
             ]);
     }
 }

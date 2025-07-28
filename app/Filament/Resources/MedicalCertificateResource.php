@@ -283,4 +283,44 @@ class MedicalCertificateResource extends Resource
             'edit' => Pages\EditMedicalCertificate::route('/{record}/edit'),
         ];
     }
+
+    public static function canViewAny(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'SportsDoctor'
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'SportsDoctor']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return match($user->getRoleNames()->first()) {
+            'SuperAdmin' => true,
+            'LeagueAdmin' => true,
+            'SportsDoctor' => $record->doctor_id === $user->sportsDoctor?->id,
+            default => false
+        };
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin']);
+    }
 }

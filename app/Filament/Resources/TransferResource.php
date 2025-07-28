@@ -430,4 +430,44 @@ class TransferResource extends Resource
     {
         return 'warning';
     }
+
+    public static function canViewAny(): bool
+    {
+        $user = Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasAnyRole([
+            'SuperAdmin', 'LeagueAdmin', 'ClubDirector'
+        ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'ClubDirector']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = Auth::user();
+        
+        return match($user->getRoleNames()->first()) {
+            'SuperAdmin' => true,
+            'LeagueAdmin' => $record->league_id === $user->league_id,
+            'ClubDirector' => $record->from_club_id === $user->club_id || $record->to_club_id === $user->club_id,
+            default => false
+        };
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = Auth::user();
+        
+        return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin']);
+    }
 }

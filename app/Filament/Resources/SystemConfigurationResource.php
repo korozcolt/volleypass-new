@@ -310,7 +310,24 @@ class SystemConfigurationResource extends Resource
         ];
     }
 
+    public static function canViewAny(): bool
+    {
+        $user = Auth::user();
+        
+        // Referee no puede acceder al panel admin
+        if ($user->hasRole('Referee')) {
+            return false;
+        }
+        
+        return $user->hasRole('SuperAdmin');
+    }
+
     public static function canCreate(): bool
+    {
+        return Auth::user()->hasRole('SuperAdmin');
+    }
+
+    public static function canEdit($record): bool
     {
         return Auth::user()->hasRole('SuperAdmin');
     }
