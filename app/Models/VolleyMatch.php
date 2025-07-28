@@ -112,6 +112,27 @@ class VolleyMatch extends Model
         return $this->hasMany(TournamentCard::class, 'match_id');
     }
 
+    public function referee(): BelongsTo
+    {
+        return $this->belongsTo(Referee::class, 'first_referee');
+    }
+
+    public function sets(): HasMany
+    {
+        return $this->hasMany(MatchSet::class, 'match_id');
+    }
+
+    // Snake case aliases for compatibility
+    public function home_team(): BelongsTo
+    {
+        return $this->homeTeam();
+    }
+
+    public function away_team(): BelongsTo
+    {
+        return $this->awayTeam();
+    }
+
     // =======================
     // ACCESSORS & MUTATORS
     // =======================

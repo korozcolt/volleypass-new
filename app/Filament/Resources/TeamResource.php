@@ -24,7 +24,7 @@ class TeamResource extends Resource
     protected static ?string $navigationLabel = 'Equipos';
     protected static ?string $modelLabel = 'Equipo';
     protected static ?string $pluralModelLabel = 'Equipos';
-    protected static ?string $navigationGroup = 'Gestión de Clubes';
+    protected static ?string $navigationGroup = 'Gestión Deportiva';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

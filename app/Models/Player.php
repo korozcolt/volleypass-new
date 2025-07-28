@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
@@ -169,6 +170,25 @@ class Player extends Model
     public function club()
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_players')
+            ->withPivot(['jersey_number', 'position', 'is_captain', 'joined_at', 'left_at'])
+            ->withTimestamps();
+    }
+
+    public function team()
+    {
+        // Get the current/active team (most recent team without left_at date)
+        return $this->teams()->wherePivot('left_at', null)->latest('team_players.joined_at');
+    }
+
+    public function currentTeam()
+    {
+        // Alternative method to get current team as a single model
+        return $this->teams()->wherePivot('left_at', null)->latest('team_players.joined_at')->first();
     }
 
     // =======================

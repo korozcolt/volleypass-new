@@ -17,6 +17,6 @@ class Logout
         Session::invalidate();
         Session::regenerateToken();
 
-        return redirect()->route('tournaments.public');
+        return redirect()->route('public.tournaments');
     }
 }

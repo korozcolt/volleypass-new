@@ -119,7 +119,7 @@ class RoleRedirectionService
     {
         $publicRoutes = [
             'home',
-            'tournaments.public',
+            'public.tournaments',
             'tournaments.dashboard',
             'login',
             'register',

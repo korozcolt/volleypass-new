@@ -27,7 +27,7 @@ class TransferResource extends Resource
     protected static ?string $navigationLabel = 'Traspasos';
     protected static ?string $modelLabel = 'Traspaso';
     protected static ?string $pluralModelLabel = 'Traspasos';
-    protected static ?string $navigationGroup = 'Gestión de Jugadoras';
+    protected static ?string $navigationGroup = 'Gestión Deportiva';
     protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form

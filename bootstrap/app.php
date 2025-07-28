@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Middleware global para aplicar configuraciones del sistema
         $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
             \App\Http\Middleware\ApplySystemConfigMiddleware::class,
             \App\Http\Middleware\SystemMaintenanceMiddleware::class,
         ]);

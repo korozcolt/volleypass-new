@@ -36,7 +36,7 @@ class ClubResource extends Resource
     
     protected static ?string $navigationLabel = 'Clubes';
     
-    protected static ?string $navigationGroup = 'Gestión de Clubes';
+    protected static ?string $navigationGroup = 'Gestión Deportiva';
     
     protected static ?int $navigationSort = 1;
     

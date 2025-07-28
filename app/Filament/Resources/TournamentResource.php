@@ -21,7 +21,7 @@ class TournamentResource extends Resource
     protected static ?string $navigationLabel = 'Torneos';
     protected static ?string $modelLabel = 'Torneo';
     protected static ?string $pluralModelLabel = 'Torneos';
-    protected static ?string $navigationGroup = 'Administración de Ligas';
+    protected static ?string $navigationGroup = 'Gestión Deportiva';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

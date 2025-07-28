@@ -24,7 +24,7 @@ class MedicalCertificateResource extends Resource
     protected static ?string $navigationLabel = 'Certificados Médicos';
     protected static ?string $modelLabel = 'Certificado Médico';
     protected static ?string $pluralModelLabel = 'Certificados Médicos';
-    protected static ?string $navigationGroup = 'Gestión Médica';
+    protected static ?string $navigationGroup = 'Gestión Médica y Documentos';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

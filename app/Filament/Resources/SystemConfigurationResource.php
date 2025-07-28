@@ -23,7 +23,7 @@ class SystemConfigurationResource extends Resource
     protected static ?string $navigationLabel = 'Configuración del Sistema';
     protected static ?string $modelLabel = 'Configuración';
     protected static ?string $pluralModelLabel = 'Configuraciones';
-    protected static ?string $navigationGroup = 'Sistema';
+    protected static ?string $navigationGroup = 'Administración del Sistema';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

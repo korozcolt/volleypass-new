@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             KristianUsersSeeder::class,
             SystemConfigurationSeeder::class,
+            ExampleDataSeeder::class,
         ]);
 
         $this->command->info('🎉 ¡Todos los seeders ejecutados exitosamente!');

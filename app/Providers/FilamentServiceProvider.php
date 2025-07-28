@@ -19,17 +19,20 @@ class FilamentServiceProvider extends ServiceProvider
         Filament::serving(function () {
             // Configuraciones adicionales del panel admin
             Filament::registerNavigationGroups([
-                NavigationGroup::make('Gestión de Usuarios')
-                    ->label('Gestión de Usuarios')
-                    ->icon('heroicon-o-users'),
-                NavigationGroup::make('Torneos y Competencias')
-                    ->label('Torneos y Competencias')
+                NavigationGroup::make('Gestión Deportiva')
+                    ->label('Gestión Deportiva')
                     ->icon('heroicon-o-trophy'),
-                NavigationGroup::make('Equipos y Clubes')
-                    ->label('Equipos y Clubes')
-                    ->icon('heroicon-o-building-office'),
-                NavigationGroup::make('Configuración')
-                    ->label('Configuración')
+                NavigationGroup::make('Gestión Médica y Documentos')
+                    ->label('Gestión Médica y Documentos')
+                    ->icon('heroicon-o-document-check'),
+                NavigationGroup::make('Finanzas y Pagos')
+                    ->label('Finanzas y Pagos')
+                    ->icon('heroicon-o-credit-card'),
+                NavigationGroup::make('Comunicación')
+                    ->label('Comunicación')
+                    ->icon('heroicon-o-chat-bubble-left-right'),
+                NavigationGroup::make('Administración del Sistema')
+                    ->label('Administración del Sistema')
                     ->icon('heroicon-o-cog-6-tooth'),
             ]);
         });
