@@ -161,7 +161,7 @@ class ClubResource extends Resource
                                                     ->searchable()
                                                     ->required()
                                                     ->columnSpan(1),
-                                                Forms\Components\Select::make('role')
+                                                Forms\Components\Select::make('rol')
                                                     ->label('Rol')
                                                     ->options([
                                                         'presidente' => 'Presidente',
@@ -171,25 +171,25 @@ class ClubResource extends Resource
                                                     ])
                                                     ->required()
                                                     ->columnSpan(1),
-                                                Forms\Components\Toggle::make('is_active')
+                                                Forms\Components\Toggle::make('activo')
                                                     ->label('Activo')
                                                     ->default(true)
                                                     ->columnSpan(1),
                                             ]),
                                         Forms\Components\Grid::make(2)
                                             ->schema([
-                                                Forms\Components\DatePicker::make('start_date')
+                                                Forms\Components\DatePicker::make('fecha_inicio')
                                                     ->label('Fecha de Inicio')
                                                     ->required()
                                                     ->columnSpan(1),
-                                                Forms\Components\DatePicker::make('end_date')
+                                                Forms\Components\DatePicker::make('fecha_fin')
                                                     ->label('Fecha de Fin')
                                                     ->columnSpan(1),
                                             ]),
                                     ])
                                     ->collapsible()
                                     ->itemLabel(fn (array $state): ?string => 
-                                        $state['role'] ?? 'Nuevo Directivo'
+                                        $state['rol'] ?? 'Nuevo Directivo'
                                     )
                                     ->addActionLabel('Agregar Directivo')
                                     ->columnSpanFull(),

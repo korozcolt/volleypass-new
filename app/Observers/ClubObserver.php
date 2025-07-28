@@ -242,7 +242,7 @@ class ClubObserver
         if ($clubId) {
             Cache::forget("club_stats_{$clubId}");
             Cache::forget("club_players_count_{$clubId}");
-            Cache::forget("club_directors_{$clubId}");
+            Cache::forget("club_directivos_{$clubId}");
         }
         
         // Cache de navegación

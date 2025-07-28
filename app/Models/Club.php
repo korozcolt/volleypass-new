@@ -182,8 +182,8 @@ class Club extends Model implements HasMedia
 
     public function directors()
     {
-        return $this->belongsToMany(User::class, 'club_directors')
-            ->withPivot(['role', 'is_active', 'start_date', 'end_date', 'notes'])
+        return $this->belongsToMany(User::class, 'club_directivos')
+            ->withPivot(['rol', 'activo', 'fecha_inicio', 'fecha_fin', 'observaciones'])
             ->withTimestamps();
     }
 
