@@ -52,6 +52,7 @@ class VolleyMatch extends Model
         'finished_at' => 'datetime',
         'status' => MatchStatus::class,
         'phase' => MatchPhase::class,
+        'referees' => 'array',
         'events' => 'array',
         'statistics' => 'array',
     ];
