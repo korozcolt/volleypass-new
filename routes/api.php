@@ -240,6 +240,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     });
 });
 
+// Broadcasting Authentication
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::post('/broadcasting/auth', function (Request $request) {
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    });
+});
+
 // Webhooks
 Route::prefix('v1/webhooks')->group(function () {
     Route::post('/card-status-changed', function (Request $request) {

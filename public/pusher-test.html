@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<head>
+  <title>Pusher Test</title>
+  <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+  <script>
+
+    // Enable pusher logging - don't include this in production
+    Pusher.logToConsole = true;
+
+    var pusher = new Pusher('4a23367f593455b21847', {
+      cluster: 'us2'
+    });
+
+    var channel = pusher.subscribe('my-channel');
+    channel.bind('my-event', function(data) {
+      alert(JSON.stringify(data));
+    });
+  </script>
+</head>
+<body>
+  <h1>Pusher Test</h1>
+  <p>
+    Try publishing an event to channel <code>my-channel</code>
+    with event name <code>my-event</code>.
+  </p>
+  <div id="status">Connection status: <span id="connection-status">Connecting...</span></div>
+  
+  <script>
+    // Monitor connection status
+    pusher.connection.bind('connecting', function() {
+      document.getElementById('connection-status').textContent = 'Connecting...';
+      document.getElementById('connection-status').style.color = 'orange';
+    });
+    
+    pusher.connection.bind('connected', function() {
+      document.getElementById('connection-status').textContent = 'Connected';
+      document.getElementById('connection-status').style.color = 'green';
+    });
+    
+    pusher.connection.bind('disconnected', function() {
+      document.getElementById('connection-status').textContent = 'Disconnected';
+      document.getElementById('connection-status').style.color = 'red';
+    });
+    
+    pusher.connection.bind('failed', function() {
+      document.getElementById('connection-status').textContent = 'Failed';
+      document.getElementById('connection-status').style.color = 'red';
+    });
+  </script>
+</body>
+</html>
