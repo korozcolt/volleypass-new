@@ -40,9 +40,11 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
     const [homeRotation, setHomeRotation] = useState<TeamRotation>({});
     const [awayRotation, setAwayRotation] = useState<TeamRotation>({});
     const [showPlayersList, setShowPlayersList] = useState(false);
+    const [servingTeam, setServingTeam] = useState<'home' | 'away'>('home'); // Quien saca
+    const [servingPosition, setServingPosition] = useState<number>(1); // Posición que saca
 
     // Hook para control de árbitro
-    const { updateScore, startNewSet, updateMatchStatus } = useRefereeMatchControl(
+    const { updateScore, startNewSet, endSet, updateMatchStatus } = useRefereeMatchControl(
         match.id,
         (homeScore, awayScore) => {
             setCurrentSet(prev => ({ ...prev, home_score: homeScore, away_score: awayScore }));
@@ -125,29 +127,30 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
         loadTeamPlayers();
     }, [match.id]);
 
-    // Función para rotar jugadoras
+    // Función para rotar jugadoras según el patrón solicitado
     const rotateTeam = (team: 'home' | 'away') => {
         if (team === 'home') {
             setHomeRotation(prev => {
                 const newRotation: TeamRotation = {};
-                // Rotar en sentido horario: 1->6, 2->1, 3->2, 4->3, 5->4, 6->5
-                newRotation[6] = prev[1];
-                newRotation[1] = prev[2];
-                newRotation[2] = prev[3];
-                newRotation[3] = prev[4];
-                newRotation[4] = prev[5];
+                // Rotación solicitada: Pos 4 - Pos 3 - Pos 2, Pos 5 - Pos 6 - Pos 1
+                newRotation[1] = prev[5];
+                newRotation[2] = prev[4];
+                newRotation[3] = prev[2];
+                newRotation[4] = prev[3];
                 newRotation[5] = prev[6];
+                newRotation[6] = prev[1];
                 return newRotation;
             });
         } else {
             setAwayRotation(prev => {
                 const newRotation: TeamRotation = {};
-                newRotation[6] = prev[1];
-                newRotation[1] = prev[2];
-                newRotation[2] = prev[3];
-                newRotation[3] = prev[4];
-                newRotation[4] = prev[5];
+                // Rotación solicitada: Pos 4 - Pos 3 - Pos 2, Pos 5 - Pos 6 - Pos 1
+                newRotation[1] = prev[5];
+                newRotation[2] = prev[4];
+                newRotation[3] = prev[2];
+                newRotation[4] = prev[3];
                 newRotation[5] = prev[6];
+                newRotation[6] = prev[1];
                 return newRotation;
             });
         }
@@ -157,14 +160,8 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
     const handleScoreUpdate = async (team: 'home' | 'away', increment: number) => {
         setIsUpdating(true);
         try {
-            const newHomeScore = team === 'home' 
-                ? Math.max(0, currentSet.home_score + increment)
-                : currentSet.home_score;
-            const newAwayScore = team === 'away' 
-                ? Math.max(0, currentSet.away_score + increment)
-                : currentSet.away_score;
-
-            await updateScore(newHomeScore, newAwayScore, currentSet.set_number);
+            const action = increment > 0 ? 'increment' : 'decrement';
+            const result = await updateScore(team, action, currentSet.set_number);
             
             setLastAction(`${team === 'home' ? match.home_team?.name : match.away_team?.name} ${increment > 0 ? '+' : ''}${increment}`);
             
@@ -173,18 +170,18 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
                 rotateTeam(team);
             }
             
-            // Verificar si el set terminó (25 puntos con diferencia de 2)
-            if ((newHomeScore >= 25 && newHomeScore - newAwayScore >= 2) || 
-                (newAwayScore >= 25 && newAwayScore - newHomeScore >= 2)) {
-                // El set terminó, mostrar opción para iniciar nuevo set
-                setTimeout(() => {
-                    if (confirm('¿Iniciar nuevo set?')) {
-                        handleNewSet();
-                    }
-                }, 1000);
+            // Actualizar puntajes locales si están en el resultado
+            if (result?.data) {
+                setCurrentSet(prev => ({
+                    ...prev,
+                    home_score: result.data.home_score || prev.home_score,
+                    away_score: result.data.away_score || prev.away_score
+                }));
             }
+            
         } catch (error) {
             console.error('Error updating score:', error);
+            setLastAction('Error al actualizar el puntaje');
         } finally {
             setIsUpdating(false);
         }
@@ -203,6 +200,19 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
             setLastAction('Nuevo set iniciado');
         } catch (error) {
             console.error('Error starting new set:', error);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    // Finalizar set actual
+    const handleEndSet = async () => {
+        setIsUpdating(true);
+        try {
+            await endSet();
+            setLastAction('Set finalizado');
+        } catch (error) {
+            console.error('Error ending set:', error);
         } finally {
             setIsUpdating(false);
         }
@@ -369,6 +379,15 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
                             <CheckIcon className="w-5 h-5" />
                             <span>Nuevo Set</span>
                         </button>
+                        
+                        <button
+                            onClick={handleEndSet}
+                            disabled={isUpdating}
+                            className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all"
+                        >
+                            <StopIcon className="w-5 h-5" />
+                            <span>Finalizar Set</span>
+                        </button>
                     </>
                 )}
             </div>
@@ -392,34 +411,59 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
             <div className="mt-6 pt-6 border-t border-slate-600">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-bold text-white">Jugadoras en Cancha</h3>
-                    <button
-                        onClick={() => setShowPlayersList(!showPlayersList)}
-                        className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition-colors"
-                    >
-                        <ArrowPathIcon className="w-4 h-4" />
-                        {showPlayersList ? 'Ocultar Lista' : 'Ver Lista Completa'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className="text-gray-400">Saque:</span>
+                            <span className="text-yellow-400 font-bold">
+                                {servingTeam === 'home' ? (match.home_team?.name || 'Local') : (match.away_team?.name || 'Visitante')} - Pos. {servingPosition}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setServingTeam(servingTeam === 'home' ? 'away' : 'home')}
+                            className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors text-sm"
+                        >
+                            Cambiar Saque
+                        </button>
+                        <button
+                            onClick={() => setShowPlayersList(!showPlayersList)}
+                            className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition-colors"
+                        >
+                            <ArrowPathIcon className="w-4 h-4" />
+                            {showPlayersList ? 'Ocultar Lista' : 'Ver Lista Completa'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Jugadoras Equipo Local */}
                     <div>
-                        <h4 className="text-lg font-semibold text-blue-300 mb-4">
-                            {match.home_team?.name || 'Equipo Local'}
-                        </h4>
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-semibold text-blue-300">
+                                {match.home_team?.name || 'Equipo Local'}
+                            </h4>
+                            <button
+                                onClick={() => rotateTeam('home')}
+                                className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                            >
+                                <ArrowPathIcon className="w-4 h-4" />
+                                Rotar
+                            </button>
+                        </div>
                         <div className="space-y-2">
                             <div className="text-sm text-gray-400 mb-3">Rotación Actual (Posiciones 1-6):</div>
                             <div className="grid grid-cols-3 gap-2">
                                 {[1, 2, 3, 4, 5, 6].map(position => {
                                     const playerId = homeRotation[position];
                                     const player = homePlayers.find(p => p.id === playerId);
+                                    const isServing = servingTeam === 'home' && servingPosition === position;
                                     return (
-                                        <div key={position} className="bg-blue-600/30 rounded-lg p-3 text-center">
+                                        <div key={position} className={`${isServing ? 'bg-yellow-600/50 border-2 border-yellow-400' : 'bg-blue-600/30'} rounded-lg p-3 text-center relative`}>
                                             <div className="text-xs text-blue-300">Pos. {position}</div>
                                             <div className="text-lg font-bold text-white">#{player?.jersey_number || position}</div>
                                             <div className="text-xs text-blue-200 truncate">{player?.name || `Jugadora ${position}`}</div>
                                             <div className="text-xs text-blue-400">{player?.position || 'N/A'}</div>
                                             {player?.is_captain && <div className="text-xs text-yellow-300">★ Capitana</div>}
+                                            {isServing && <div className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs px-1 rounded-full font-bold">SAQUE</div>}
                                         </div>
                                     );
                                 })}
@@ -447,22 +491,33 @@ export default function MatchControlPanel({ match: initialMatch, onMatchUpdate }
 
                     {/* Jugadoras Equipo Visitante */}
                     <div>
-                        <h4 className="text-lg font-semibold text-red-300 mb-4">
-                            {match.away_team?.name || 'Equipo Visitante'}
-                        </h4>
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-lg font-semibold text-red-300">
+                                {match.away_team?.name || 'Equipo Visitante'}
+                            </h4>
+                            <button
+                                onClick={() => rotateTeam('away')}
+                                className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                            >
+                                <ArrowPathIcon className="w-4 h-4" />
+                                Rotar
+                            </button>
+                        </div>
                         <div className="space-y-2">
                             <div className="text-sm text-gray-400 mb-3">Rotación Actual (Posiciones 1-6):</div>
                             <div className="grid grid-cols-3 gap-2">
                                 {[1, 2, 3, 4, 5, 6].map(position => {
                                     const playerId = awayRotation[position];
                                     const player = awayPlayers.find(p => p.id === playerId);
+                                    const isServing = servingTeam === 'away' && servingPosition === position;
                                     return (
-                                        <div key={position} className="bg-red-600/30 rounded-lg p-3 text-center">
+                                        <div key={position} className={`${isServing ? 'bg-yellow-600/50 border-2 border-yellow-400' : 'bg-red-600/30'} rounded-lg p-3 text-center relative`}>
                                             <div className="text-xs text-red-300">Pos. {position}</div>
                                             <div className="text-lg font-bold text-white">#{player?.jersey_number || position}</div>
                                             <div className="text-xs text-red-200 truncate">{player?.name || `Jugadora ${position}`}</div>
                                             <div className="text-xs text-red-400">{player?.position || 'N/A'}</div>
                                             {player?.is_captain && <div className="text-xs text-yellow-300">★ Capitana</div>}
+                                            {isServing && <div className="absolute -top-1 -right-1 bg-yellow-500 text-black text-xs px-1 rounded-full font-bold">SAQUE</div>}
                                         </div>
                                     );
                                 })}

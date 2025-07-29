@@ -49,6 +49,12 @@ Route::middleware(['auth:web', 'verified'])->group(function () {
         Route::get('/stats', [RefereeController::class, 'getStats'])->name('stats');
         Route::get('/match/{match}/details', [RefereeController::class, 'matchDetails'])->name('match.details');
         Route::get('/api/match/{match}/details', [RefereeController::class, 'getMatchDetails'])->name('api.match.details');
+        
+        // Rutas para control de partidos
+        Route::post('/match/{match}/score', [RefereeController::class, 'updateScore'])->name('match.update-score');
+        Route::post('/match/{match}/status', [RefereeController::class, 'updateStatus'])->name('match.update-status');
+        Route::post('/match/{match}/new-set', [RefereeController::class, 'startNewSet'])->name('match.new-set');
+        Route::post('/match/{match}/end-set', [RefereeController::class, 'endSet'])->name('match.end-set');
     });
 });
 

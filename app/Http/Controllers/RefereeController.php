@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\VolleyMatch;
+use App\Services\MatchRealTimeService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -316,5 +317,121 @@ class RefereeController extends Controller
                 'upcoming_matches' => $upcomingMatches,
             ]
         ]);
+    }
+
+    /**
+     * Actualizar el puntaje del partido
+     */
+    public function updateScore(Request $request, VolleyMatch $match)
+    {
+        try {
+            $validated = $request->validate([
+                'team' => 'required|in:home,away',
+                'action' => 'required|in:increment,decrement',
+                'set_number' => 'required|integer|min:1'
+            ]);
+
+            $matchRealTimeService = app(MatchRealTimeService::class);
+            $result = $matchRealTimeService->updateSetScore(
+                $match->id,
+                $validated['team'],
+                $validated['action'],
+                $validated['set_number']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Puntaje actualizado correctamente',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el puntaje: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar el estado del partido
+     */
+    public function updateStatus(Request $request, VolleyMatch $match)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|string'
+            ]);
+
+            $match->update(['status' => $validated['status']]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado correctamente',
+                'status' => $match->status->value
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el estado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Iniciar un nuevo set
+     */
+    public function startNewSet(Request $request, VolleyMatch $match)
+    {
+        try {
+            $matchRealTimeService = app(MatchRealTimeService::class);
+            $result = $matchRealTimeService->startNewSet($match->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nuevo set iniciado correctamente',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al iniciar nuevo set: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Finalizar el set actual
+     */
+    public function endSet(Request $request, VolleyMatch $match)
+    {
+        try {
+            // Obtener el set actual en progreso
+            $currentSet = $match->sets()->where('status', 'in_progress')->first();
+            
+            if (!$currentSet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay un set en progreso para finalizar'
+                ], 400);
+            }
+
+            // Finalizar el set actual
+            $currentSet->update([
+                'status' => 'completed',
+                'ended_at' => now(),
+                'duration_minutes' => $currentSet->started_at ? now()->diffInMinutes($currentSet->started_at) : null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Set finalizado correctamente',
+                'data' => $currentSet->fresh()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al finalizar el set: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -124,17 +124,17 @@ export function useRefereeMatchControl(
     onScoreUpdate?: (homeScore: number, awayScore: number) => void,
     onSetComplete?: (setData: MatchSet) => void
 ) {
-    const updateScore = async (homeScore: number, awayScore: number, setNumber: number) => {
+    const updateScore = async (team: 'home' | 'away', action: 'increment' | 'decrement', setNumber: number) => {
         try {
-            const response = await fetch(`/api/v1/matches/${matchId}/score`, {
+            const response = await fetch(`/referee/match/${matchId}/score`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    home_score: homeScore,
-                    away_score: awayScore,
+                    team,
+                    action,
                     set_number: setNumber,
                 }),
             });
@@ -145,16 +145,19 @@ export function useRefereeMatchControl(
 
             const result = await response.json();
             if (result.success && onScoreUpdate) {
-                onScoreUpdate(homeScore, awayScore);
+                // Aquí necesitaremos obtener los puntajes actualizados del resultado
+                onScoreUpdate(result.data?.home_score || 0, result.data?.away_score || 0);
             }
+            return result;
         } catch (error) {
             console.error('Error updating score:', error);
+            throw error;
         }
     };
 
     const startNewSet = async () => {
         try {
-            const response = await fetch(`/api/v1/matches/${matchId}/new-set`, {
+            const response = await fetch(`/referee/match/${matchId}/new-set`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -168,16 +171,40 @@ export function useRefereeMatchControl(
 
             const result = await response.json();
             if (result.success && onSetComplete) {
-                onSetComplete(result.data.set);
+                onSetComplete(result.data);
             }
+            return result;
         } catch (error) {
             console.error('Error starting new set:', error);
+            throw error;
+        }
+    };
+
+    const endSet = async () => {
+        try {
+            const response = await fetch(`/referee/match/${matchId}/end-set`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to end set');
+            }
+
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Error ending set:', error);
+            throw error;
         }
     };
 
     const updateMatchStatus = async (status: string) => {
         try {
-            const response = await fetch(`/api/v1/matches/${matchId}/status`, {
+            const response = await fetch(`/referee/match/${matchId}/status`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -189,14 +216,19 @@ export function useRefereeMatchControl(
             if (!response.ok) {
                 throw new Error('Failed to update match status');
             }
+
+            const result = await response.json();
+            return result;
         } catch (error) {
             console.error('Error updating match status:', error);
+            throw error;
         }
     };
 
     return {
         updateScore,
         startNewSet,
+        endSet,
         updateMatchStatus,
     };
 }
