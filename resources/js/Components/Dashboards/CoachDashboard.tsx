@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { User, Coach, Match, Team } from '@/types/global';
-import { CalendarIcon, TrophyIcon, UserGroupIcon, DocumentTextIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, TrophyIcon, UserGroupIcon, DocumentIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 
 interface CoachDashboardProps {
     user: User;
@@ -50,7 +50,7 @@ export default function CoachDashboard({ data }: CoachDashboardProps) {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <DocumentTextIcon className="h-6 w-6 text-green-400" />
+                                <DocumentIcon className="h-6 w-6 text-green-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -249,7 +249,7 @@ export default function CoachDashboard({ data }: CoachDashboardProps) {
                             <UserGroupIcon className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-indigo-900">Gestionar Equipos</p>
                         </Link>
-                        
+
                         <Link
                             href="/coach/matches"
                             className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-center transition-colors"
@@ -257,7 +257,7 @@ export default function CoachDashboard({ data }: CoachDashboardProps) {
                             <CalendarIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-green-900">Ver Partidos</p>
                         </Link>
-                        
+
                         <Link
                             href="/coach/training"
                             className="bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg text-center transition-colors"
@@ -265,7 +265,7 @@ export default function CoachDashboard({ data }: CoachDashboardProps) {
                             <ClipboardDocumentListIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-yellow-900">Entrenamientos</p>
                         </Link>
-                        
+
                         <Link
                             href="/coach/statistics"
                             className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-center transition-colors"

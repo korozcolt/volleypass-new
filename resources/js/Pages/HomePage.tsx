@@ -1,20 +1,20 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types/global';
-import AppLayout from '@/Layouts/AppLayout';
-import { 
-    PlayIcon, 
-    UsersIcon, 
-    TrophyIcon, 
-    ShieldCheckIcon, 
-    BoltIcon, 
-    CheckCircleIcon, 
-    ArrowRightIcon, 
-    StarIcon, 
-    GlobeAltIcon, 
-    CircleStackIcon, 
-    LockClosedIcon, 
-    ChartBarIcon 
+import MainLayout from '@/Layouts/MainLayout';
+import {
+    PlayIcon,
+    UsersIcon,
+    TrophyIcon,
+    ShieldCheckIcon,
+    BoltIcon,
+    CheckCircleIcon,
+    ArrowRightIcon,
+    StarIcon,
+    GlobeAltIcon,
+    CircleStackIcon,
+    LockClosedIcon,
+    ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 interface HomePageProps extends PageProps {
@@ -33,33 +33,23 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
     const features = [
         {
             icon: <ShieldCheckIcon className="w-8 h-8 text-yellow-400" />,
-            title: "Sistema Dual de Gestión",
-            description: "Equipos federados (liga oficial) y descentralizados (ligas alternas) en una sola plataforma"
+            title: "Sistema Dual",
+            description: "Gestión federada y descentralizada"
         },
         {
             icon: <BoltIcon className="w-8 h-8 text-blue-400" />,
-            title: "Verificación QR Instantánea",
-            description: "API de verificación en tiempo real con códigos QR seguros SHA-256"
+            title: "Verificación QR",
+            description: "Validación instantánea en tiempo real"
         },
         {
             icon: <TrophyIcon className="w-8 h-8 text-red-400" />,
-            title: "Gestión Completa de Torneos",
-            description: "Desde inscripción hasta premiación con algoritmos de distribución balanceados"
+            title: "Torneos Completos",
+            description: "Desde inscripción hasta premiación"
         },
         {
             icon: <UsersIcon className="w-8 h-8 text-green-400" />,
             title: "Carnetización Digital",
-            description: "Carnets digitales con estados avanzados y renovación automática por temporadas"
-        },
-        {
-            icon: <ChartBarIcon className="w-8 h-8 text-purple-400" />,
-            title: "Panel Administrativo",
-            description: "13+ recursos Filament operativos con métricas en tiempo real"
-        },
-        {
-            icon: <GlobeAltIcon className="w-8 h-8 text-indigo-400" />,
-            title: "Configuraciones Flexibles",
-            description: "30+ configuraciones organizadas en 6 grupos para cada liga"
+            description: "Carnets con QR y renovación automática"
         }
     ];
 
@@ -78,14 +68,11 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
     ];
 
     return (
-        <AppLayout user={auth.user}>
-            <Head title="Inicio" />
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-            
+        <MainLayout title="Inicio" user={auth?.user} currentRoute="/">
             {/* Hero Section */}
             <section className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70"></div>
-                <div 
+                <div
                     className="relative bg-cover bg-center min-h-[600px] flex items-center"
                     style={{
                         backgroundImage: `url('https://images.pexels.com/photos/1103844/pexels-photo-1103844.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')`
@@ -104,25 +91,25 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                                     <p className="text-xl text-yellow-200 font-bold">Liga de Voleibol de Sucre</p>
                                 </div>
                             </div>
-                            
+
                             <h2 className="text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
                                 Plataforma Integral de
                                 <span className="block text-yellow-400">Gestión Deportiva</span>
                             </h2>
-                            
+
                             <p className="text-xl text-gray-200 mb-8 leading-relaxed max-w-3xl">
                                 {systemConfig.app_description || 'Sistema de digitalización y carnetización deportiva que centraliza el registro, verificación y gestión de jugadoras, entrenadores y clubes federados y descentralizados.'}
                             </p>
-                            
+
                             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                                <Link 
+                                <Link
                                     href="/live-matches"
                                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
                                 >
                                     <PlayIcon className="w-6 h-6" />
                                     <span>Ver Partidos en Vivo</span>
                                 </Link>
-                                <Link 
+                                <Link
                                     href="/torneos"
                                     className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
                                 >
@@ -130,7 +117,7 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                                     <span>Explorar Torneos</span>
                                 </Link>
                             </div>
-                            
+
                             <div className="inline-flex items-center space-x-2 bg-green-600/20 backdrop-blur-sm text-green-400 px-4 py-2 rounded-full border border-green-600/30">
                                 <CheckCircleIcon className="w-5 h-5" />
                                 <span className="font-bold">95% Completado - Listo para Producción</span>
@@ -163,11 +150,11 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                         <h3 className="text-4xl font-black text-white mb-4">
                             Características Principales
                         </h3>
-                        <p className="text-xl text-gray-100 max-w-3xl mx-auto">
+                        <p className="text-xl text-white max-w-3xl mx-auto">
                             Una plataforma completa que revoluciona la gestión deportiva en Colombia
                         </p>
                     </div>
-                    
+
                     <div className="grid lg:grid-cols-3 gap-8">
                         {features.map((feature, index) => (
                             <div key={index} className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 border border-slate-600">
@@ -175,7 +162,7 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                                     {feature.icon}
                                     <h4 className="text-2xl font-black text-white">{feature.title}</h4>
                                 </div>
-                                <p className="text-gray-100 leading-relaxed">{feature.description}</p>
+                                <p className="text-white leading-relaxed">{feature.description}</p>
                             </div>
                         ))}
                     </div>
@@ -189,11 +176,11 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                         <h3 className="text-3xl font-black text-white mb-4">
                             Tecnologías de Vanguardia
                         </h3>
-                        <p className="text-lg text-gray-100">
+                        <p className="text-lg text-white">
                             Construido con las mejores herramientas del ecosistema PHP
                         </p>
                     </div>
-                    
+
                     <div className="flex flex-wrap justify-center gap-6">
                         {technologies.map((tech, index) => (
                             <div key={index} className={`${tech.color} text-white px-6 py-3 rounded-lg font-bold text-lg shadow-lg`}>
@@ -211,13 +198,13 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                         <h3 className="text-4xl font-black text-white mb-6">
                             ¿Listo para Digitalizar tu Liga?
                         </h3>
-                        <p className="text-xl text-gray-100 mb-8">
+                        <p className="text-xl text-white mb-8">
                             Únete a la revolución deportiva digital con {systemConfig.app_name || 'VolleyPass'}
                         </p>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             {auth?.user ? (
-                                <Link 
+                                <Link
                                     href="/dashboard"
                                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
                                 >
@@ -225,7 +212,7 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                                     <span>Acceder al Dashboard</span>
                                 </Link>
                             ) : (
-                                <Link 
+                                <Link
                                     href="/login"
                                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200 shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
                                 >
@@ -233,7 +220,7 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                                     <span>Iniciar Sesión</span>
                                 </Link>
                             )}
-                            <Link 
+                            <Link
                                 href="/contacto"
                                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
                             >
@@ -259,36 +246,36 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                                     <p className="text-sm text-gray-100">Liga de Voleibol Sucre</p>
                                 </div>
                             </div>
-                            <p className="text-gray-100">
+                            <p className="text-white">
                                 Digitalizando el deporte, fortaleciendo la comunidad
                             </p>
                         </div>
-                        
+
                         <div>
                             <h5 className="text-lg font-bold text-white mb-4">Contacto</h5>
-                            <div className="space-y-2 text-gray-100">
+                            <div className="space-y-2 text-white">
                                 <p>📧 {systemConfig.contact_email || 'liga@volleypass.sucre.gov.co'}</p>
                                 <p>📱 {systemConfig.contact_phone || '+57 (5) 282-5555'}</p>
                                 <p>🏢 {systemConfig.contact_address || 'Cra. 25 #16-50, Sincelejo, Sucre'}</p>
                             </div>
                         </div>
-                        
+
                         <div>
                             <h5 className="text-lg font-bold text-white mb-4">Enlaces</h5>
                             <div className="space-y-2">
-                                <Link 
+                                <Link
                                     href="/live-matches"
                                     className="block text-gray-100 hover:text-yellow-400 transition-colors duration-200"
                                 >
                                     Partidos en Vivo
                                 </Link>
-                                <Link 
+                                <Link
                                     href="/torneos"
                                     className="block text-gray-400 hover:text-yellow-400 transition-colors duration-200"
                                 >
                                     Torneos
                                 </Link>
-                                <Link 
+                                <Link
                                     href="/dashboard"
                                     className="block text-gray-400 hover:text-yellow-400 transition-colors duration-200"
                                 >
@@ -297,15 +284,14 @@ export default function HomePage({ auth, systemConfig, featuredMatches, upcoming
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="border-t border-slate-700 mt-8 pt-8 text-center">
-                        <p className="text-gray-100">
+                        <p className="text-white">
                             © 2024 {systemConfig.app_name || 'VolleyPass'} Sucre. Desarrollado con ❤️ para el voleibol sucreño.
                         </p>
                     </div>
                 </div>
             </footer>
-            </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

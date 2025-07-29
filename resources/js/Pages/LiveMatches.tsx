@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { PageProps, Match } from '@/types/global';
-import AppLayout from '@/Layouts/AppLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import LiveMatchCard from '@/Components/LiveMatchCard';
-import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
+// import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { PlayIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { MatchSkeleton } from '@/Components/Skeleton';
 
@@ -15,19 +15,19 @@ export default function LiveMatches({ auth, matches: initialMatches }: LiveMatch
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [filter, setFilter] = useState<'all' | 'live' | 'upcoming' | 'finished'>('all');
 
-    // Hook para actualizaciones en tiempo real
-    useRealTimeUpdates({
-        onMatchUpdate: (updatedMatch: Match) => {
-            setMatches(prev => prev.map(match => 
-                match.id === updatedMatch.id ? updatedMatch : match
-            ));
-        },
-        onMatchScoreUpdate: (matchId: number, homeScore: number, awayScore: number) => {
-            setMatches(prev => prev.map(match => 
-                match.id === matchId ? { ...match, home_score: homeScore, away_score: awayScore } : match
-            ));
-        }
-    });
+    // Hook para actualizaciones en tiempo real - DESHABILITADO
+    // useRealTimeUpdates({
+    //     onMatchUpdate: (updatedMatch: Match) => {
+    //         setMatches(prev => prev.map(match =>
+    //             match.id === updatedMatch.id ? updatedMatch : match
+    //         ));
+    //     },
+    //     onMatchScoreUpdate: (matchId: number, homeScore: number, awayScore: number) => {
+    //         setMatches(prev => prev.map(match =>
+    //             match.id === matchId ? { ...match, home_score: homeScore, away_score: awayScore } : match
+    //         ));
+    //     }
+    // });
 
     const filteredMatches = matches.filter(match => {
         if (filter === 'all') return true;
@@ -37,13 +37,10 @@ export default function LiveMatches({ auth, matches: initialMatches }: LiveMatch
     const liveMatchesCount = matches.filter(match => match.status === 'live').length;
 
     return (
-        <AppLayout user={auth.user}>
-            <Head title="Partidos en Vivo" />
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-            
-            {/* Header */}
+        <MainLayout title="Partidos en Vivo" user={auth?.user} currentRoute="/live-matches">
+            {/* Match Header */}
             <div className="relative mb-8">
-                <div 
+                <div
                     className="h-48 bg-gradient-to-r from-yellow-400 via-blue-600 to-red-600 relative overflow-hidden"
                     style={{
                         backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.pexels.com/photos/1103844/pexels-photo-1103844.jpeg?auto=compress&cs=tinysrgb&w=1260&h=300&dpr=2')`,
@@ -71,7 +68,7 @@ export default function LiveMatches({ auth, matches: initialMatches }: LiveMatch
                                     'No hay partidos en vivo en este momento'
                                 )}
                             </p>
-                            <p className="text-lg text-gray-100 flex items-center space-x-2">
+                            <p className="text-lg text-white flex items-center space-x-2">
                                 <span className="text-2xl">🏐</span>
                                 <span>Liga de Voleibol Sucre</span>
                             </p>
@@ -127,8 +124,8 @@ export default function LiveMatches({ auth, matches: initialMatches }: LiveMatch
                             <h3 className="text-lg font-medium text-white mb-2">
                                 No hay partidos {filter === 'all' ? '' : filter === 'live' ? 'en vivo' : filter === 'upcoming' ? 'próximos' : 'finalizados'}
                             </h3>
-                            <p className="text-gray-100">
-                                {filter === 'live' 
+                            <p className="text-white">
+                                {filter === 'live'
                                     ? 'No hay partidos en vivo en este momento. ¡Vuelve pronto!'
                                     : filter === 'upcoming'
                                     ? 'No hay partidos programados próximamente.'
@@ -151,7 +148,6 @@ export default function LiveMatches({ auth, matches: initialMatches }: LiveMatch
                     </div>
                 )}
             </div>
-            </div>
-        </AppLayout>
+        </MainLayout>
     );
 }

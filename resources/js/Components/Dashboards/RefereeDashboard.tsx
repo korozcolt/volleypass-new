@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { User, Referee, Match } from '@/types/global';
-import { CalendarIcon, TrophyIcon, DocumentTextIcon, ClipboardDocumentCheckIcon, StarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, TrophyIcon, DocumentIcon, ClipboardDocumentCheckIcon, StarIcon } from '@heroicons/react/24/outline';
 
 interface RefereeDashboardProps {
     user: User;
@@ -69,7 +69,7 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <DocumentTextIcon className="h-6 w-6 text-yellow-400" />
+                                <DocumentIcon className="h-6 w-6 text-yellow-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -115,12 +115,12 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="text-center">
                             <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <DocumentTextIcon className="w-10 h-10 text-indigo-600" />
+                                <DocumentIcon className="w-10 h-10 text-indigo-600" />
                             </div>
                             <h4 className="text-lg font-medium text-gray-900">{user.name}</h4>
                             <p className="text-sm text-gray-300">Árbitro de Voleibol</p>
                         </div>
-                        
+
                         <div className="space-y-3">
                             <div>
                                 <label className="text-sm font-medium text-gray-300">Licencia</label>
@@ -131,7 +131,7 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                                 <p className="text-sm text-gray-900">{referee.category}</p>
                             </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                             <div>
                                 <label className="text-sm font-medium text-gray-500">Experiencia</label>
@@ -281,7 +281,7 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                             <CalendarIcon className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-indigo-900">Mis Partidos</p>
                         </Link>
-                        
+
                         <Link
                             href="/referee/schedule"
                             className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-center transition-colors"
@@ -289,15 +289,15 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                             <ClipboardDocumentCheckIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-green-900">Disponibilidad</p>
                         </Link>
-                        
+
                         <Link
                             href="/referee/reports"
                             className="bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg text-center transition-colors"
                         >
-                            <DocumentTextIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                            <DocumentIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-yellow-900">Reportes</p>
                         </Link>
-                        
+
                         <Link
                             href="/referee/profile"
                             className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-center transition-colors"

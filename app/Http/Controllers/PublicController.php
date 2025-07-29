@@ -37,11 +37,11 @@ class PublicController extends Controller
         return Inertia::render('LiveMatches', [
             'matches' => VolleyMatch::with(['home_team', 'away_team', 'tournament', 'referee'])
                 ->whereIn('status', ['live', 'upcoming', 'finished'])
-                ->orderByRaw("CASE 
-                    WHEN status = 'live' THEN 1 
-                    WHEN status = 'upcoming' THEN 2 
-                    WHEN status = 'finished' THEN 3 
-                    ELSE 4 
+                ->orderByRaw("CASE
+                    WHEN status = 'live' THEN 1
+                    WHEN status = 'upcoming' THEN 2
+                    WHEN status = 'finished' THEN 3
+                    ELSE 4
                 END")
                 ->orderBy('scheduled_at')
                 ->get(),
@@ -50,8 +50,9 @@ class PublicController extends Controller
 
     public function matches()
     {
-        return Inertia::render('Matches', [
-            'matches' => VolleyMatch::with(['home_team', 'away_team', 'tournament', 'referee'])
+        return Inertia::render('MatchesSimple', [
+            'user' => Auth::user(),
+            'matches' => VolleyMatch::with(['home_team', 'away_team', 'tournament', 'referee', 'sets'])
                 ->orderBy('scheduled_at', 'desc')
                 ->get(),
         ]);
@@ -87,7 +88,7 @@ class PublicController extends Controller
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:1000',
         ]);
-        
+
         return back()->with('success', 'Mensaje enviado correctamente. Te contactaremos pronto.');
     }
 }

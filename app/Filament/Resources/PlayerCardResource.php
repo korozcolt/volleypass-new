@@ -112,13 +112,7 @@ class PlayerCardResource extends Resource
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'expired' => 'warning',
-                        'suspended' => 'danger',
-                        'cancelled' => 'gray',
-                    }),
+                    ->badge(),
 
                 Tables\Columns\TextColumn::make('issued_date')
                     ->label('Emitido')
@@ -265,12 +259,12 @@ class PlayerCardResource extends Resource
     public static function canViewAny(): bool
     {
         $user = \Illuminate\Support\Facades\Auth::user();
-        
+
         // Referee no puede acceder al panel admin
         if ($user->hasRole('Referee')) {
             return false;
         }
-        
+
         return $user->hasAnyRole([
             'SuperAdmin', 'LeagueAdmin', 'ClubDirector'
         ]);
@@ -279,14 +273,14 @@ class PlayerCardResource extends Resource
     public static function canCreate(): bool
     {
         $user = \Illuminate\Support\Facades\Auth::user();
-        
+
         return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin', 'ClubDirector']);
     }
 
     public static function canEdit($record): bool
     {
         $user = \Illuminate\Support\Facades\Auth::user();
-        
+
         return match($user->getRoleNames()->first()) {
             'SuperAdmin' => true,
             'LeagueAdmin' => $record->player?->currentClub?->league_id === $user->league_id,
@@ -298,7 +292,7 @@ class PlayerCardResource extends Resource
     public static function canDelete($record): bool
     {
         $user = \Illuminate\Support\Facades\Auth::user();
-        
+
         return $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin']);
     }
 }

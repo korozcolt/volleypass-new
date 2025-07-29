@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { User } from '@/types/global';
-import { 
-    CalendarIcon, 
-    TrophyIcon, 
-    UserGroupIcon, 
-    DocumentTextIcon, 
+import {
+    CalendarIcon,
+    TrophyIcon,
+    UserGroupIcon,
+    DocumentIcon,
     ChartBarIcon,
     CogIcon,
     ShieldCheckIcon,
@@ -67,7 +67,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                         <div className="flex items-center">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(systemHealth.status)}`}>
                                 <ShieldCheckIcon className="w-4 h-4 mr-1" />
-                                {systemHealth.status === 'healthy' ? 'Saludable' : 
+                                {systemHealth.status === 'healthy' ? 'Saludable' :
                                  systemHealth.status === 'warning' ? 'Advertencia' : 'Crítico'}
                             </span>
                         </div>
@@ -111,7 +111,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <DocumentTextIcon className="h-6 w-6 text-green-400" />
+                                <DocumentIcon className="h-6 w-6 text-green-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -214,7 +214,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <DocumentTextIcon className="h-6 w-6 text-orange-400" />
+                                <DocumentIcon className="h-6 w-6 text-orange-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -263,7 +263,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                                 <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                                     <div className="flex-shrink-0">
                                         <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                                            <DocumentTextIcon className="w-4 h-4 text-indigo-600" />
+                                            <DocumentIcon className="w-4 h-4 text-indigo-600" />
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -299,7 +299,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                             <UserGroupIcon className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-indigo-900">Gestionar Usuarios</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/tournaments"
                             className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-center transition-colors"
@@ -307,7 +307,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                             <TrophyIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-green-900">Torneos</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/reports"
                             className="bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg text-center transition-colors"
@@ -315,7 +315,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                             <ChartBarIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-yellow-900">Reportes</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/settings"
                             className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-center transition-colors"
@@ -323,15 +323,15 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                             <CogIcon className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-purple-900">Configuración</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/clubs"
                             className="bg-red-50 hover:bg-red-100 p-4 rounded-lg text-center transition-colors"
                         >
-                            <DocumentTextIcon className="h-8 w-8 text-red-600 mx-auto mb-2" />
+                            <DocumentIcon className="h-8 w-8 text-red-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-red-900">Clubes</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/matches"
                             className="bg-orange-50 hover:bg-orange-100 p-4 rounded-lg text-center transition-colors"
@@ -339,7 +339,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                             <CalendarIcon className="h-8 w-8 text-orange-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-orange-900">Partidos</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/backup"
                             className="bg-pink-50 hover:bg-pink-100 p-4 rounded-lg text-center transition-colors"
@@ -347,7 +347,7 @@ export default function AdminDashboard({ data }: AdminDashboardProps) {
                             <ClipboardDocumentListIcon className="h-8 w-8 text-pink-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-pink-900">Respaldos</p>
                         </Link>
-                        
+
                         <Link
                             href="/admin/system"
                             className="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg text-center transition-colors"
