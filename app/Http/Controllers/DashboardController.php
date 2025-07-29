@@ -34,19 +34,19 @@ class DashboardController extends Controller
      */
     private function getUserRole($user): string
     {
-        if ($user->hasRole('admin')) {
+        if ($user->hasRole('SuperAdmin') || $user->hasRole('LeagueAdmin')) {
             return 'admin';
         }
         
-        if ($user->hasRole('referee')) {
+        if ($user->hasRole('Referee')) {
             return 'referee';
         }
         
-        if ($user->hasRole('coach')) {
+        if ($user->hasRole('Coach')) {
             return 'coach';
         }
         
-        if ($user->hasRole('player')) {
+        if ($user->hasRole('Player')) {
             return 'player';
         }
         
@@ -70,16 +70,31 @@ class DashboardController extends Controller
                 ];
 
             case 'referee':
-                // TODO: Implementar modelo Referee
+                $upcomingMatches = VolleyMatch::whereJsonContains('referees', $user->name)
+                ->where('status', 'scheduled')
+                ->with(['home_team', 'away_team', 'tournament'])
+                ->orderBy('scheduled_at')
+                ->limit(5)
+                ->get();
+                
+                $recentMatches = VolleyMatch::whereJsonContains('referees', $user->name)
+                ->whereIn('status', ['finished', 'in_progress'])
+                ->with(['home_team', 'away_team', 'tournament'])
+                ->orderBy('scheduled_at', 'desc')
+                ->limit(5)
+                ->get();
+                
                 return [
                     'referee' => [
-                        'referee' => null,
-                        'upcomingMatches' => [],
-                        'recentMatches' => [],
+                        'referee' => $user,
+                        'upcomingMatches' => $upcomingMatches,
+                        'recentMatches' => $recentMatches,
                         'stats' => [
-                            'totalMatches' => 0,
-                            'thisMonth' => 0,
-                            'thisYear' => 0,
+                            'totalMatches' => VolleyMatch::whereJsonContains('referees', $user->name)->count(),
+                            'thisMonth' => VolleyMatch::whereJsonContains('referees', $user->name)
+                                ->whereMonth('scheduled_at', now()->month)->count(),
+                            'thisYear' => VolleyMatch::whereJsonContains('referees', $user->name)
+                                ->whereYear('scheduled_at', now()->year)->count(),
                             'rating' => 4.5,
                         ],
                         'notifications' => [],

@@ -17,14 +17,11 @@ return [
         'echo' => [
             'broadcaster' => 'pusher',
             'key' => env('VITE_PUSHER_APP_KEY'),
-            'cluster' => env('VITE_PUSHER_APP_CLUSTER'),
-            'wsHost' => env('VITE_PUSHER_HOST'),
-            'wsPort' => env('VITE_PUSHER_PORT'),
-            'wssPort' => env('VITE_PUSHER_PORT'),
+            'cluster' => env('VITE_PUSHER_APP_CLUSTER', 'us2'),
+            'forceTLS' => true,
+            'encrypted' => true,
             'authEndpoint' => '/api/v1/broadcasting/auth',
             'disableStats' => true,
-            'encrypted' => true,
-            'forceTLS' => true,
         ],
 
     ],

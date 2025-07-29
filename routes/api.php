@@ -247,6 +247,22 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     });
 });
 
+// Real-time match updates
+Route::prefix('v1/matches')->group(function () {
+    // Rutas públicas para obtener datos en tiempo real
+    Route::get('/live', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'getLiveMatches']);
+    Route::get('/{matchId}/realtime', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'getMatchData']);
+    
+    // Rutas protegidas para actualizar datos (solo árbitros/administradores)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/{matchId}/score', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'updateSetScore']);
+        Route::post('/{matchId}/status', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'changeStatus']);
+        Route::post('/{matchId}/rotation', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'updateRotation']);
+        Route::post('/{matchId}/new-set', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'startNewSet']);
+        Route::post('/{matchId}/events', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'addMatchEvent']);
+    });
+});
+
 // Webhooks
 Route::prefix('v1/webhooks')->group(function () {
     Route::post('/card-status-changed', function (Request $request) {

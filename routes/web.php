@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LiveMatchController;
+use App\Http\Controllers\RefereeController;
 
 // AUTENTICACIÓN WEB
 require __DIR__.'/auth.php';
@@ -26,6 +28,7 @@ Route::middleware('auth')->group(function () {
 // RUTAS PÚBLICAS
 Route::get('/', [PublicController::class, 'welcome'])->name('home');
 Route::get('/live-matches', [PublicController::class, 'liveMatches'])->name('live-matches');
+Route::get('/live-matches-realtime', [LiveMatchController::class, 'index'])->name('live-matches-realtime');
 Route::get('/partidos', [PublicController::class, 'matches'])->name('public.matches');
 Route::get('/torneos', [PublicController::class, 'tournaments'])->name('public.tournaments');
 Route::get('/contacto', [PublicController::class, 'contact'])->name('public.contact');
@@ -34,6 +37,19 @@ Route::post('/contacto', [PublicController::class, 'submitContact'])->name('publ
 // DASHBOARD AUTENTICADO
 Route::middleware(['auth:web', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Rutas para árbitros
+    Route::prefix('referee')->name('referee.')->group(function () {
+        Route::get('/dashboard', [RefereeController::class, 'dashboard'])->name('dashboard');
+        Route::get('/schedule', [RefereeController::class, 'schedule'])->name('schedule');
+        Route::get('/profile', [RefereeController::class, 'profile'])->name('profile');
+        Route::get('/match/{match}/control', [RefereeController::class, 'matchControl'])->name('match.control');
+        Route::get('/matches', [RefereeController::class, 'matches'])->name('matches');
+        Route::get('/api/matches', [RefereeController::class, 'getAssignedMatches'])->name('api.matches');
+        Route::get('/stats', [RefereeController::class, 'getStats'])->name('stats');
+        Route::get('/match/{match}/details', [RefereeController::class, 'matchDetails'])->name('match.details');
+        Route::get('/api/match/{match}/details', [RefereeController::class, 'getMatchDetails'])->name('api.match.details');
+    });
 });
 
 // Nota: Las rutas /admin son manejadas automáticamente por Filament

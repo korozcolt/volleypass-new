@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { User, Referee, Match } from '@/types/global';
-import { CalendarIcon, TrophyIcon, DocumentIcon, ClipboardDocumentCheckIcon, StarIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, TrophyIcon, DocumentIcon, ClipboardDocumentCheckIcon, StarIcon, CogIcon } from '@heroicons/react/24/outline';
 
 interface RefereeDashboardProps {
     user: User;
@@ -198,13 +198,21 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                                                 Asignado
                                             </span>
                                         </div>
-                                        <div className="mt-3">
+                                        <div className="mt-3 flex space-x-3">
                                             <Link
                                                 href={`/referee/matches/${match.id}`}
                                                 className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
                                             >
                                                 Ver detalles →
                                             </Link>
+                                            {match.status === 'scheduled' && (
+                                                <Link
+                                                    href={`/referee/match/${match.id}/control`}
+                                                    className="text-green-600 hover:text-green-500 text-sm font-medium"
+                                                >
+                                                    Panel de Control →
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -273,7 +281,7 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                     <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                         Acciones Rápidas
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <Link
                             href="/referee/matches"
                             className="bg-indigo-50 hover:bg-indigo-100 p-4 rounded-lg text-center transition-colors"
@@ -281,6 +289,16 @@ export default function RefereeDashboard({ user, data }: RefereeDashboardProps) 
                             <CalendarIcon className="h-8 w-8 text-indigo-600 mx-auto mb-2" />
                             <p className="text-sm font-medium text-indigo-900">Mis Partidos</p>
                         </Link>
+
+                        {upcomingMatches.length > 0 && (
+                            <Link
+                                href={`/referee/match/${upcomingMatches[0].id}/control`}
+                                className="bg-red-50 hover:bg-red-100 p-4 rounded-lg text-center transition-colors"
+                            >
+                                <CogIcon className="h-8 w-8 text-red-600 mx-auto mb-2" />
+                                <p className="text-sm font-medium text-red-900">Panel Control</p>
+                            </Link>
+                        )}
 
                         <Link
                             href="/referee/schedule"

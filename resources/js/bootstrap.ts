@@ -1,6 +1,6 @@
-import axios from 'axios';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import axios from 'axios';
 
 window.axios = axios;
 
@@ -12,22 +12,18 @@ window.Pusher = Pusher;
 // Obtener variables de entorno de Vite de forma segura
 const pusherKey = (import.meta as any).env?.VITE_PUSHER_APP_KEY;
 const pusherCluster = (import.meta as any).env?.VITE_PUSHER_APP_CLUSTER ?? 'mt1';
-const pusherHost = (import.meta as any).env?.VITE_PUSHER_HOST;
-const pusherPort = (import.meta as any).env?.VITE_PUSHER_PORT ?? 443;
-const pusherScheme = (import.meta as any).env?.VITE_PUSHER_SCHEME ?? 'https';
 
 if (pusherKey) {
     window.Echo = new Echo({
         broadcaster: 'pusher',
         key: pusherKey,
         cluster: pusherCluster,
-        wsHost: pusherHost ? pusherHost : `ws-${pusherCluster}.pusher-channels.com`,
-        wsPort: pusherPort,
-        wssPort: pusherPort,
-        forceTLS: pusherScheme === 'https',
+        forceTLS: true,
+        encrypted: true,
         enabledTransports: ['ws', 'wss'],
     });
+
+    console.log('✅ Echo configurado correctamente con Pusher Cloud');
 } else {
-    // Echo no está configurado - funcionalidad en tiempo real deshabilitada
-    console.info('Pusher no configurado - funcionalidad en tiempo real deshabilitada');
+    console.warn('⚠️ VITE_PUSHER_APP_KEY no encontrada');
 }
