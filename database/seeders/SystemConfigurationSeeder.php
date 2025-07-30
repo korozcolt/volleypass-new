@@ -15,7 +15,7 @@ class SystemConfigurationSeeder extends Seeder
                 'key' => 'app.name',
                 'name' => 'Nombre de la Aplicación',
                 'description' => 'Nombre principal de la aplicación',
-                'value' => 'Sistema de Federación Deportiva',
+                'value' => 'Volleypass Soft',
                 'type' => 'string',
                 'group' => 'general',
                 'is_public' => true,

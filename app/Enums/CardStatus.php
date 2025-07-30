@@ -48,7 +48,7 @@ enum CardStatus: string implements HasLabel, HasColor, HasIcon {
             self::Expired => 'heroicon-o-clock',
             self::Suspended => 'heroicon-o-pause-circle',
             self::Medical_Restriction => 'heroicon-o-exclamation-triangle',
-            self::Pending_Approval => 'heroicon-o-hourglass',
+            self::Pending_Approval => 'heroicon-o-clock',
             self::Cancelled => 'heroicon-o-x-circle',
             self::Replaced => 'heroicon-o-arrow-right-circle',
         };
