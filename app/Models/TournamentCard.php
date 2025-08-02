@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Auth;
 
 class TournamentCard extends Model
 {
@@ -159,7 +160,7 @@ class TournamentCard extends Model
         $sanctions = $this->sanctions ?? [];
         $sanctions[] = array_merge($sanction, [
             'added_at' => now()->toISOString(),
-            'added_by' => auth()->id(),
+            'added_by' => Auth::id(),
         ]);
         
         return $this->update(['sanctions' => $sanctions]);
