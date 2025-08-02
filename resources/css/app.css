@@ -1,56 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* ===== DESIGN TOKENS ===== */
-:root {
-  /* Colores Primarios - Inspirados en la bandera de Colombia */
-  --vp-primary-50: #fef7e6;
-  --vp-primary-100: #fdecc4;
-  --vp-primary-200: #fbd687;
-  --vp-primary-300: #f9c74f;
-  --vp-primary-400: #f8b500;
-  --vp-primary-500: #f9a825; /* Amarillo principal */
-  --vp-primary-600: #f57f17;
-  --vp-primary-700: #e65100;
-  --vp-primary-800: #bf360c;
-  --vp-primary-900: #8d2f00;
 
-  /* Colores Secundarios - Azul Colombia */
-  --vp-secondary-50: #e3f2fd;
-  --vp-secondary-100: #bbdefb;
-  --vp-secondary-200: #90caf9;
-  --vp-secondary-300: #64b5f6;
-  --vp-secondary-400: #42a5f5;
-  --vp-secondary-500: #2196f3; /* Azul principal */
-  --vp-secondary-600: #1e88e5;
-  --vp-secondary-700: #1976d2;
-  --vp-secondary-800: #1565c0;
-  --vp-secondary-900: #0d47a1;
-
-  /* Colores de Acento - Rojo Colombia */
-  --vp-accent-50: #ffebee;
-  --vp-accent-100: #ffcdd2;
-  --vp-accent-200: #ef9a9a;
-  --vp-accent-300: #e57373;
-  --vp-accent-400: #ef5350;
-  --vp-accent-500: #f44336; /* Rojo principal */
-  --vp-accent-600: #e53935;
-  --vp-accent-700: #d32f2f;
-  --vp-accent-800: #c62828;
-  --vp-accent-900: #b71c1c;
-
-  /* Estados */
-  --vp-success-500: #4caf50;
-  --vp-warning-500: #ff9800;
-  --vp-error-500: #f44336;
-  --vp-info-500: #2196f3;
-
-  /* Tipografía del Sistema */
-  --font-display: 'Poppins', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-}
 
 /* ===== BASE STYLES ===== */
 @layer base {
@@ -60,7 +11,9 @@
   }
 
   body {
-    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200;
+    background-color: #f9fafb;
+  color: #111827;
+  transition: color 0.2s, background-color 0.2s;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -83,7 +36,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-500;
+    background-color: #9ca3af;
   }
 }
 
@@ -95,19 +48,42 @@
   }
 
   .btn-primary {
-    @apply bg-vp-primary-500 text-white hover:bg-vp-primary-600 focus:ring-vp-primary-500 shadow-sm;
+    background-color: #3b82f6;
+    color: white;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+  }
+
+  .btn-primary:hover {
+    background-color: #2563eb;
   }
 
   .btn-secondary {
-    @apply bg-vp-secondary-500 text-white hover:bg-vp-secondary-600 focus:ring-vp-secondary-500 shadow-sm;
+    background-color: #6b7280;
+    color: white;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+  }
+
+  .btn-secondary:hover {
+    background-color: #4b5563;
   }
 
   .btn-accent {
-    @apply bg-vp-accent-500 text-white hover:bg-vp-accent-600 focus:ring-vp-accent-500 shadow-sm;
+    background-color: #f59e0b;
+    color: white;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s;
+  }
+
+  .btn-accent:hover {
+    background-color: #d97706;
   }
 
   .btn-outline {
-    @apply border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:ring-gray-500;
+    border: 1px solid #d1d5db;
+  color: #374151;
+  transition: background-color 0.2s;
   }
 
   .btn-ghost {
@@ -128,7 +104,9 @@
   }
 
   .card-footer {
-    @apply p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50;
+    padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
   }
 
   /* Indicador de estado en vivo */
@@ -152,11 +130,13 @@
   }
 
   .badge-primary {
-    @apply bg-vp-primary-100 text-vp-primary-800 dark:bg-vp-primary-900 dark:text-vp-primary-200;
+    background-color: #dbeafe;
+    color: #1e40af;
   }
 
   .badge-secondary {
-    @apply bg-vp-secondary-100 text-vp-secondary-800 dark:bg-vp-secondary-900 dark:text-vp-secondary-200;
+    background-color: #f3f4f6;
+    color: #374151;
   }
 
   .badge-success {
@@ -173,7 +153,25 @@
 
   /* Forms */
   .form-input {
-    @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-vp-primary-500 focus:border-transparent transition-colors duration-200;
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    background-color: white;
+    color: #111827;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .form-input::placeholder {
+    color: #9ca3af;
   }
 
   .form-label {
@@ -186,11 +184,19 @@
 
   /* Navigation */
   .nav-link {
-    @apply text-gray-700 dark:text-gray-300 hover:text-vp-primary-600 dark:hover:text-vp-primary-400 px-3 py-2 text-sm font-medium transition-colors duration-200;
+    color: #374151;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover {
+    color: #3b82f6;
   }
 
   .nav-link.active {
-    @apply text-vp-primary-600 dark:text-vp-primary-400;
+    color: #3b82f6;
   }
 
   /* Volleyball background pattern */
@@ -217,11 +223,11 @@
 
   /* Gradientes personalizados */
   .gradient-primary {
-    background: linear-gradient(135deg, var(--vp-primary-500), var(--vp-secondary-500));
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, var(--vp-accent-500), var(--vp-primary-500));
+    background: linear-gradient(135deg, #f59e0b, #d97706);
   }
 
   /* Animaciones */

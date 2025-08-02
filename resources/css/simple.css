@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Simple CSS file for testing Tailwind CSS v4 */
+body {
+    font-family: Inter, sans-serif;
+}
