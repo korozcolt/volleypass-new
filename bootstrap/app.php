@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \App\Http\Middleware\ApplySystemConfigMiddleware::class,
             \App\Http\Middleware\SystemMaintenanceMiddleware::class,
+            \App\Http\Middleware\EnsureSetupCompleted::class,
         ]);
 
         // Middleware para API
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'filter.navigation' => \App\Http\Middleware\FilterFilamentNavigation::class,
             'role.redirection' => \App\Http\Middleware\RoleRedirectionMiddleware::class,
             'post.login.redirect' => \App\Http\Middleware\PostLoginRoleRedirection::class,
+            'setup.completed' => \App\Http\Middleware\EnsureSetupCompleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

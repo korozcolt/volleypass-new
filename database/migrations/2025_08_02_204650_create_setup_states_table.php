@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('setup_states', function (Blueprint $table) {
             $table->id();
+            $table->string('step')->unique();
+            $table->string('status')->default('not_started');
+            $table->json('data')->nullable();
+            $table->timestamp('completed_at')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
+
+            $table->index(['step', 'status']);
         });
     }
 

@@ -1,0 +1,36 @@
+{
+  "name": "VolleyPass Sucre - Gestión Integral de Voleibol",
+  "short_name": "VolleyPass",
+  "description": "Sistema de Digitalización y Carnetización Deportiva para la Liga de Voleibol de Sucre, Colombia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#334155",
+  "theme_color": "#475569",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo-volley_pass_white_back.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "productivity", "business"],
+  "lang": "es",
+  "scope": "/"
+}

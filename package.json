@@ -12,12 +12,14 @@
         "@vitejs/plugin-react": "^4.7.0",
         "axios": "^1.7.4",
         "laravel-vite-plugin": "^1.0",
+        "lucide-react": "^0.536.0",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
         "tailwindcss": "^4.1.11",
         "vite": "^6.0"
     },
     "devDependencies": {
+        "@vitejs/plugin-react-swc": "^3.11.0",
         "autoprefixer": "^10.4.7",
         "postcss": "^8.4.14"
     }

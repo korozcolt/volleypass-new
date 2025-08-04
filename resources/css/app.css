@@ -1,5 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Sigmar+One&display=swap');
 @import "tailwindcss";
+
+/* Configuración de fuentes personalizadas */
+@layer base {
+  /* Encabezados Principales */
+  h1, h2, h3, .hero-title, .heading {
+    font-family: "Poppins", "Arial Black", sans-serif;
+    font-weight: 700; /* Muy bold para impacto */
+  }
+  
+  /* Fuente especial para VolleyPass */
+  .volleypass-logo {
+    font-family: "Sigmar One", cursive;
+    font-weight: 400;
+  }
+  
+  /* Textos de Cuerpo */
+  body, p, span, div, .body-text {
+    font-family: "Inter", "Helvetica Neue", sans-serif;
+    font-weight: 400; /* Legible en todos los tamaños */
+  }
+  
+  /* Variantes de peso para encabezados */
+  .font-heading-bold {
+    font-family: "Poppins", "Arial Black", sans-serif;
+    font-weight: 900;
+  }
+  
+  .font-heading-semibold {
+    font-family: "Poppins", "Arial Black", sans-serif;
+    font-weight: 700;
+  }
+  
+  /* Variantes de peso para cuerpo */
+  .font-body-medium {
+    font-family: "Inter", "Helvetica Neue", sans-serif;
+    font-weight: 500;
+  }
+  
+  .font-body-semibold {
+    font-family: "Inter", "Helvetica Neue", sans-serif;
+    font-weight: 600;
+  }
+}
 
 
 
