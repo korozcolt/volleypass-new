@@ -49,6 +49,7 @@ class Club extends Model implements HasMedia
         'configurations',
         'settings',
         'notes',
+        'monthly_fee',
     ];
 
     protected $casts = [
@@ -59,6 +60,7 @@ class Club extends Model implements HasMedia
         'status' => UserStatus::class,
         'configurations' => 'array',
         'settings' => 'array',
+        'monthly_fee' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -201,6 +203,21 @@ class Club extends Model implements HasMedia
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function receivedPayments()
+    {
+        return $this->morphMany(Payment::class, 'receiver');
+    }
+
+    public function sentPayments()
+    {
+        return $this->morphMany(Payment::class, 'payer');
     }
 
     // =======================

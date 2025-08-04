@@ -10,10 +10,14 @@ class EditPayment extends EditRecord
 {
     protected static string $resource = PaymentResource::class;
 
+    public function getTitle(): string
+    {
+        return __('Edit') . ' ' . __('Pago');
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-            Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
         ];
     }

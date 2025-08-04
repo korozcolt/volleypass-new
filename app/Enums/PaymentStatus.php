@@ -8,7 +8,9 @@ use Filament\Support\Contracts\HasIcon;
 
 enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     case Pending = 'pending';
+    case UnderVerification = 'under_verification';
     case Verified = 'verified';
+    case Completed = 'completed';
     case Rejected = 'rejected';
     case Paid = 'paid';
     case Overdue = 'overdue';
@@ -19,7 +21,9 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'Pendiente',
+            self::UnderVerification => 'Por Verificación',
             self::Verified => 'Verificado',
+            self::Completed => 'Completado',
             self::Rejected => 'Rechazado',
             self::Paid => 'Pagado',
             self::Overdue => 'Vencido',
@@ -32,7 +36,9 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'warning',
+            self::UnderVerification => 'info',
             self::Verified => 'success',
+            self::Completed => 'success',
             self::Rejected => 'danger',
             self::Paid => 'success',
             self::Overdue => 'danger',
@@ -45,7 +51,9 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'heroicon-o-clock',
+            self::UnderVerification => 'heroicon-o-eye',
             self::Verified => 'heroicon-o-check-badge',
+            self::Completed => 'heroicon-o-check-circle',
             self::Rejected => 'heroicon-o-x-circle',
             self::Paid => 'heroicon-o-check-circle',
             self::Overdue => 'heroicon-o-exclamation-triangle',
@@ -58,7 +66,9 @@ enum PaymentStatus: string implements HasLabel, HasColor, HasIcon {
     {
         return match ($this) {
             self::Pending => 'bg-yellow-100 text-yellow-800',
+            self::UnderVerification => 'bg-blue-100 text-blue-800',
             self::Verified => 'bg-green-100 text-green-800',
+            self::Completed => 'bg-green-100 text-green-800',
             self::Rejected => 'bg-red-100 text-red-800',
             self::Paid => 'bg-green-100 text-green-800',
             self::Overdue => 'bg-red-100 text-red-800',

@@ -74,6 +74,7 @@ class ClubResource extends Resource
                                 Forms\Components\Grid::make(2)
                                     ->schema([
                                         Forms\Components\TextInput::make('email')
+                                            ->label(__('Email'))
                                             ->email()
                                             ->unique(ignoreRecord: true)
                                             ->columnSpan(1),
@@ -114,6 +115,7 @@ class ClubResource extends Resource
                                             ->label('Fecha de Fundación')
                                             ->columnSpan(1),
                                         Forms\Components\FileUpload::make('logo')
+                                            ->label(__('Logo'))
                                             ->image()
                                             ->maxSize(2048)
                                             ->directory('clubs/logos')
@@ -211,6 +213,7 @@ class ClubResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('logo')
+                    ->label(__('Logo'))
                     ->circular()
                     ->size(40)
                     ->defaultImageUrl(url('/images/default-club.png')),

@@ -162,6 +162,16 @@ class Player extends Model
         return $this->belongsTo(Payment::class, 'federation_payment_id');
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function sentPayments()
+    {
+        return $this->morphMany(Payment::class, 'payer');
+    }
+
     public function league()
     {
         return $this->belongsTo(League::class);

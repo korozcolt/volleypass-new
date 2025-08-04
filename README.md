@@ -68,13 +68,13 @@ Crear un ecosistema digital completo que permita:
 
 ## 📊 Estado del Proyecto
 
-### 🎯 **PROGRESO GENERAL: 95% COMPLETADO**
+### 🎯 **PROGRESO GENERAL: 97% COMPLETADO**
 
 | Fase | Estado | Progreso | Detalles |
 |------|--------|----------|----------|
 | **🏗️ Infraestructura Base** | ✅ Completada | 100% | Laravel 11.x + Filament 3.x + 8 paquetes Spatie |
 | **🆔 Carnetización Digital** | ✅ Completada | 100% | Sistema QR + API verificación + notificaciones |
-| **⚖️ Gestión Avanzada** | ✅ Completada | 85% | Configuraciones + federación + traspasos |
+| **⚖️ Gestión Avanzada** | ✅ Completada | 95% | Configuraciones + federación + traspasos + pagos |
 | **🏆 Sistema de Torneos** | ✅ Completada | 90% | TournamentResource + algoritmos + cache |
 | **💻 Interfaces Admin** | ✅ Completada | 95% | 13+ Resources Filament operativos |
 | **🌐 Componentes Frontend** | 🚧 En Desarrollo | 5% | Welcome + dashboards públicos |
@@ -184,7 +184,7 @@ php artisan league:config list 1 --group=transfers
 - ✅ **LeagueResource** - Gestión de ligas
 - ✅ **TournamentResource** - Administración de torneos
 - ✅ **TeamResource** - Gestión de equipos y nóminas
-- ✅ **PaymentResource** - Sistema de pagos
+- ✅ **PaymentResource** - Sistema completo de pagos y facturación
 - ✅ **MedicalCertificateResource** - Certificados médicos
 - ✅ **PlayerCardResource** - Carnets digitales
 - ✅ **UserResource** - Gestión de usuarios
@@ -376,6 +376,47 @@ GET /api/verification/stats         // Estadísticas de verificación
 - **Batching automático** para evitar spam
 - **Rate limiting** personalizable por usuario
 - **Templates responsive** para todos los dispositivos
+
+</details>
+
+### 💰 **Sistema Integral de Pagos**
+
+<details>
+<summary><strong>💳 Gestión Completa de Facturación</strong></summary>
+
+**Tipos de Pago Soportados:**
+- 🏛️ **Federación**: Pagos a entidades federativas
+- 📝 **Inscripción**: Registro de equipos y jugadoras
+- 🏆 **Torneo**: Participación en competencias
+- 🔄 **Traspaso**: Transferencias entre clubes
+- ⚖️ **Multa**: Sanciones disciplinarias
+- 📅 **Mensualidad**: Cuotas periódicas
+- ⬆️ **Club a Liga**: Pagos ascendentes
+- ⬇️ **Jugador a Club**: Pagos descendentes
+- 📋 **Otro**: Conceptos adicionales
+
+**Estados de Pago Avanzados:**
+- ⏳ **Pendiente**: Pago creado, esperando procesamiento
+- 👁️ **Por Verificación**: En proceso de validación
+- ✅ **Verificado**: Validado por administradores
+- 🎯 **Completado**: Proceso finalizado exitosamente
+- ❌ **Rechazado**: Pago no aprobado
+- 💚 **Pagado**: Confirmación de pago recibida
+- ⚠️ **Vencido**: Pago fuera de plazo
+- 🚫 **Cancelado**: Proceso cancelado
+- 🔄 **Reembolsado**: Dinero devuelto
+
+**Características del Sistema:**
+- **Números de referencia únicos** generados automáticamente
+- **Múltiples métodos de pago** soportados
+- **Integración con pasarelas** de pago (preparado)
+- **Comprobantes digitales** con códigos QR
+- **Historial completo** de transacciones
+- **Reportes financieros** detallados
+- **Notificaciones automáticas** de estado
+- **Gestión de monedas** múltiples
+- **Pagos recurrentes** programables
+- **Auditoría completa** de movimientos
 
 </details>
 
@@ -772,7 +813,7 @@ php artisan test --filter=TournamentServiceTest
 
 ## 📈 Roadmap
 
-### 🎯 **Próximas Funcionalidades (5% Restante)**
+### 🎯 **Próximas Funcionalidades (3% Restante)**
 
 | Prioridad | Componente | Estimación | Estado |
 |-----------|------------|------------|--------|
@@ -885,7 +926,7 @@ Este proyecto está licenciado bajo la **Licencia MIT**. Ver [LICENSE](LICENSE) 
 
 ## 🎯 **Resumen Ejecutivo**
 
-### ✅ **Sistema Completamente Funcional (95%)**
+### ✅ **Sistema Completamente Funcional (97%)**
 
 **VolleyPass** es una plataforma integral que revoluciona la gestión deportiva en Colombia:
 
@@ -898,7 +939,7 @@ Este proyecto está licenciado bajo la **Licencia MIT**. Ver [LICENSE](LICENSE) 
 
 ### 🚀 **Listo para Producción**
 
-Con solo **5% restante** de desarrollo frontend, VolleyPass está preparado para:
+Con solo **3% restante** de desarrollo frontend, VolleyPass está preparado para:
 
 - **Comercialización inmediata** a ligas departamentales
 - **Escalabilidad nacional** con arquitectura robusta
@@ -929,7 +970,7 @@ Con solo **5% restante** de desarrollo frontend, VolleyPass está preparado para
 
 ### 🏆 **Estado del Proyecto**
 
-![Progress](https://img.shields.io/badge/Progreso-95%25%20Completado-brightgreen)
+![Progress](https://img.shields.io/badge/Progreso-97%25%20Completado-brightgreen)
 ![Status](https://img.shields.io/badge/Estado-Listo%20para%20Producción-success)
 ![MVP](https://img.shields.io/badge/MVP-Comercializable-blue)
 

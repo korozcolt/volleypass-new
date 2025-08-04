@@ -41,6 +41,17 @@ class Kernel extends ConsoleKernel
                  ->at('05:00')
                  ->withoutOverlapping()
                  ->runInBackground();
+
+        // Generar pagos mensuales automáticamente el primer día de cada mes
+        $schedule->command('payments:generate-monthly')
+                 ->monthlyOn(1, '08:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Marcar pagos vencidos diariamente
+        $schedule->call(function () {
+            app(\App\Services\PaymentService::class)->markOverduePayments();
+        })->daily()->at('07:00');
     }
 
     /**
