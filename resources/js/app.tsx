@@ -1,6 +1,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import * as ReactDOM from 'react-dom/client';
 import '../css/app.css';
+
+// Make React and ReactDOM available globally for Blade integration
+(window as any).React = React;
+(window as any).ReactDOM = ReactDOM;
 
 // Basic React app for admin functionality
 function App() {

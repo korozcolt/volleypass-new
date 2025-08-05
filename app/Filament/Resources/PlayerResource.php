@@ -20,6 +20,7 @@ use App\Enums\FederationStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
 use App\Enums\Gender;
+use App\Enums\SelectionStatus;
 use App\Services\FederationService;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -50,11 +51,11 @@ class PlayerResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Jugadoras';
+    protected static ?string $navigationLabel = 'Jugadores';
 
-    protected static ?string $modelLabel = 'Jugadora';
+    protected static ?string $modelLabel = 'Jugador';
 
-    protected static ?string $pluralModelLabel = 'Jugadoras';
+    protected static ?string $pluralModelLabel = 'Jugadores';
 
     protected static ?int $navigationSort = 2;
 
@@ -104,7 +105,7 @@ class PlayerResource extends Resource
                                                 Forms\Components\TextInput::make('user.document_number')
                                                     ->label('Número de Documento')
                                                     ->required()
-                                                    ->unique(ignoreRecord: true)
+                                                    ->unique(User::class, 'document_number', ignoreRecord: true)
                                                     ->maxLength(20)
                                                     ->rules(['regex:/^[0-9]+$/']),
                                                 
@@ -146,7 +147,7 @@ class PlayerResource extends Resource
                                                     ->label('Correo Electrónico')
                                                     ->email()
                                                     ->required()
-                                                    ->unique(ignoreRecord: true),
+                                                    ->unique(User::class, 'email', ignoreRecord: true),
                                                 
                                                 Forms\Components\TextInput::make('user.phone')
                                                     ->label('Teléfono Principal')
@@ -277,7 +278,7 @@ class PlayerResource extends Resource
                                             ->schema([
                                                 Forms\Components\TextInput::make('federation_number')
                                                     ->label('Número de Federación')
-                                                    ->unique(ignoreRecord: true)
+                                                    ->unique(Player::class, 'federation_number', ignoreRecord: true)
                                                     ->maxLength(20)
                                                     ->disabled()
                                                     ->dehydrated()
@@ -409,6 +410,33 @@ class PlayerResource extends Resource
                                             }),
                                     ]),
                             ]),
+
+                        // TAB 5: SELECCIÓN
+                        Tabs\Tab::make('Selección')
+                            ->icon('heroicon-o-flag')
+                            ->schema([
+                                Section::make('Estado de Selección')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                Forms\Components\Select::make('selection_status')
+                                                    ->label('Estado de Selección')
+                                                    ->options(\App\Enums\SelectionStatus::options())
+                                                    ->default(\App\Enums\SelectionStatus::NONE->value)
+                                                    ->required()
+                                                    ->live(),
+                                                
+                                                Forms\Components\DateTimePicker::make('selection_date')
+                                                    ->label('Fecha de Selección')
+                                                    ->visible(fn (Forms\Get $get) => $get('selection_status') !== \App\Enums\SelectionStatus::NONE->value),
+                                            ]),
+                                        
+                                        Forms\Components\Textarea::make('selection_notes')
+                                            ->label('Notas de Selección')
+                                            ->rows(3)
+                                            ->visible(fn (Forms\Get $get) => $get('selection_status') !== \App\Enums\SelectionStatus::NONE->value),
+                                    ]),
+                            ]),
                     ])
                     ->columnSpanFull()
             ]);
@@ -473,6 +501,13 @@ class PlayerResource extends Resource
                     ->label('Estado Médico')
                     ->badge()
                     ->color(fn($record) => $record?->medical_status?->getColor() ?? 'gray')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('selection_status')
+                    ->label('Selección')
+                    ->badge()
+                    ->color(fn($record) => $record?->selection_status?->color() ?? 'gray')
+                    ->formatStateUsing(fn($state) => $state?->label() ?? 'Sin Estado')
                     ->toggleable(),
 
                 Tables\Columns\IconColumn::make('is_eligible')
@@ -547,7 +582,8 @@ class PlayerResource extends Resource
                     ->icon('heroicon-o-identification')
                     ->color('info')
                     ->visible(fn($record) => $record->current_card !== null)
-                    ->url(fn($record) => route('player.card', $record)),
+                    ->url(fn($record) => route('player.card.show', $record->current_card->card_number))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -594,7 +630,7 @@ class PlayerResource extends Resource
                             
                             Notification::make()
                                 ->title('Federación Masiva Completada')
-                                ->body("Se federaron {$federatedCount} jugadoras exitosamente.")
+                                ->body("Se federaron {$federatedCount} jugadores exitosamente.")
                                 ->success()
                                 ->send();
                         }),

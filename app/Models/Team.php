@@ -11,6 +11,7 @@ use Spatie\Activitylog\LogOptions;
 use App\Traits\HasSearch;
 use App\Enums\PlayerCategory;
 use App\Enums\Gender;
+use App\Enums\TeamType;
 
 class Team extends Model
 {
@@ -18,6 +19,9 @@ class Team extends Model
 
     protected $fillable = [
         'club_id',
+        'team_type',
+        'league_id',
+        'department_id',
         'name',
         'category',
         'league_category_id',
@@ -34,6 +38,7 @@ class Team extends Model
     ];
 
     protected $casts = [
+        'team_type' => TeamType::class,
         'category' => PlayerCategory::class,
         'gender' => Gender::class,
         'founded_date' => 'date',
@@ -54,6 +59,16 @@ class Team extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function league(): BelongsTo
+    {
+        return $this->belongsTo(League::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function coach(): BelongsTo
@@ -104,5 +119,70 @@ class Team extends Model
     public function matches()
     {
         return $this->homeMatches()->union($this->awayMatches());
+    }
+
+    // =======================
+    // SCOPES Y MÉTODOS AUXILIARES
+    // =======================
+
+    public function scopeClubTeams($query)
+    {
+        return $query->where('team_type', TeamType::CLUB);
+    }
+
+    public function scopeDepartmentalSelections($query)
+    {
+        return $query->where('team_type', TeamType::SELECTION);
+    }
+
+    public function scopeByLeague($query, $leagueId)
+    {
+        return $query->where('league_id', $leagueId);
+    }
+
+    public function scopeByDepartment($query, $departmentId)
+    {
+        return $query->where('department_id', $departmentId);
+    }
+
+    public function isClubTeam(): bool
+    {
+        return $this->team_type === TeamType::CLUB;
+    }
+
+    public function isDepartmentalSelection(): bool
+    {
+        return $this->team_type === TeamType::SELECTION;
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        if ($this->isDepartmentalSelection()) {
+            return "Selección {$this->department?->name} - {$this->name}";
+        }
+        
+        return $this->name;
+    }
+
+    /**
+     * Obtiene jugadores elegibles para una selección departamental
+     * (jugadores de clubes del mismo departamento y liga)
+     */
+    public function getEligiblePlayersForSelection()
+    {
+        if (!$this->isDepartmentalSelection()) {
+            return collect();
+        }
+
+        return Player::whereHas('currentClub', function ($query) {
+            $query->where('league_id', $this->league_id)
+                  ->where('department_id', $this->department_id);
+        })
+        ->where('gender', $this->gender)
+        ->whereHas('category', function ($query) {
+            $query->where('id', $this->league_category_id);
+        })
+        ->where('activa', true)
+        ->get();
     }
 }

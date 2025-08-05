@@ -279,7 +279,7 @@ class Club extends Model implements HasMedia
 
     public function getDirectivosActivosCountAttribute(): int
     {
-        return $this->directors()->wherePivot('is_active', true)->count();
+        return $this->directors()->wherePivot('activo', true)->count();
     }
 
     public function getCoachesCountAttribute(): int

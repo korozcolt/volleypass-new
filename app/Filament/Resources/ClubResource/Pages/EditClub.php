@@ -30,7 +30,7 @@ class EditClub extends EditRecord
 
     public function getTitle(): string
     {
-        return 'Editar Club: ' . $this->record->nombre;
+        return 'Editar Club: ' . $this->record->name;
     }
 
     public function getSubheading(): ?string
@@ -56,7 +56,7 @@ class EditClub extends EditRecord
         // Log de la actualización
         Log::info('Club actualizado', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
+            'nombre' => $club->name,
             'updated_by' => Auth::id(),
             'changes' => $this->record->getChanges(),
         ]);
@@ -64,7 +64,7 @@ class EditClub extends EditRecord
         // Notificación de éxito
         Notification::make()
             ->title('Club actualizado')
-            ->body("La información del club '{$club->nombre}' ha sido actualizada correctamente.")
+            ->body("La información del club '{$club->name}' ha sido actualizada correctamente.")
             ->success()
             ->send();
     }
@@ -77,8 +77,8 @@ class EditClub extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Validar código de federación único si es federado
-        if ($data['es_federado'] && !empty($data['codigo_federacion'])) {
-            $existingClub = \App\Models\Club::where('codigo_federacion', $data['codigo_federacion'])
+        if ($data['is_federated'] && !empty($data['federation_code'])) {
+            $existingClub = \App\Models\Club::where('federation_code', $data['federation_code'])
                 ->where('id', '!=', $this->record->id)
                 ->first();
                 
@@ -115,7 +115,7 @@ class EditClub extends EditRecord
     {
         return [
             '/admin/clubs' => 'Clubes',
-            '/admin/clubs/' . $this->record->id => $this->record->nombre,
+            '/admin/clubs/' . $this->record->id => $this->record->name,
             '' => 'Editar',
         ];
     }

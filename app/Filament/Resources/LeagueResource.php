@@ -45,11 +45,20 @@ class LeagueResource extends Resource
                                         Forms\Components\TextInput::make('name')
                                             ->label('Nombre')
                                             ->required()
-                                            ->maxLength(255),
+                                            ->maxLength(255)
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function (Forms\Get $get, Forms\Set $set, $state) {
+                                                if ($state && !$get('short_name')) {
+                                                    $shortName = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $state), 0, 3));
+                                                    $set('short_name', $shortName);
+                                                }
+                                            }),
 
                                         Forms\Components\TextInput::make('short_name')
                                             ->label('Nombre Corto')
-                                            ->maxLength(50),
+                                            ->maxLength(50)
+                                            ->readOnly()
+                                            ->dehydrated(),
 
                                         Forms\Components\Textarea::make('description')
                                             ->label('Descripción')
@@ -70,7 +79,7 @@ class LeagueResource extends Resource
                                             ->default(UserStatus::Active)
                                             ->required(),
 
-                                        Forms\Components\DatePicker::make('founded_date')
+                                        Forms\Components\DatePicker::make('foundation_date')
                                             ->label('Fecha de Fundación'),
 
                                         Forms\Components\TextInput::make('website')
@@ -631,7 +640,7 @@ class LeagueResource extends Resource
                     ->label('Estado')
                     ->badge(),
 
-                Tables\Columns\TextColumn::make('founded_date')
+                Tables\Columns\TextColumn::make('foundation_date')
                     ->label('Fundada')
                     ->date()
                     ->sortable(),
@@ -787,7 +796,7 @@ class LeagueResource extends Resource
                             ->badge()
                             ->color(fn($record) => $record->hasCustomCategories() ? 'success' : 'gray'),
 
-                        Infolists\Components\TextEntry::make('founded_date')
+                        Infolists\Components\TextEntry::make('foundation_date')
                             ->label('Fecha de Fundación')
                             ->date(),
                     ])->columns(4),

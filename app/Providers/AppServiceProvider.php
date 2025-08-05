@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Models\Club;
+use App\Models\Player;
 use App\Observers\ClubObserver;
+use App\Observers\PlayerObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
         
         // Registrar observers
         Club::observe(ClubObserver::class);
+        Player::observe(PlayerObserver::class);
     }
 }

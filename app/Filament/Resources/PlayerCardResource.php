@@ -35,13 +35,27 @@ class PlayerCardResource extends Resource
                             ->label('Jugadora')
                             ->options(\App\Models\Player::with('user')->get()->pluck('user.name', 'id'))
                             ->searchable()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    $player = \App\Models\Player::find($state);
+                                    if ($player && $player->currentClub) {
+                                        $set('league_id', $player->currentClub->league_id);
+                                    }
+                                }
+                            }),
+
+                        Forms\Components\Select::make('league_id')
+                            ->label('Liga')
+                            ->options(\App\Models\League::pluck('name', 'id'))
                             ->required(),
 
                         Forms\Components\TextInput::make('card_number')
                             ->label('Número de Carnet')
-                            ->required()
                             ->unique(ignoreRecord: true)
-                            ->maxLength(50),
+                            ->maxLength(50)
+                            ->helperText('Dejar vacío para generar automáticamente'),
 
                         Forms\Components\Select::make('status')
                             ->label('Estado')
@@ -54,15 +68,14 @@ class PlayerCardResource extends Resource
                             ->default('active')
                             ->required(),
 
-                        Forms\Components\DatePicker::make('issued_date')
+                        Forms\Components\DatePicker::make('issued_at')
                             ->label('Fecha de Emisión')
-                            ->default(now())
-                            ->required(),
+                            ->default(now()),
 
                         Forms\Components\DatePicker::make('expires_at')
                             ->label('Fecha de Expiración')
-                            ->required()
-                            ->after('issued_date'),
+                            ->default(now()->addYear())
+                            ->after('issued_at'),
                     ])->columns(2),
 
                 Forms\Components\Section::make('Información Adicional')
@@ -159,6 +172,12 @@ class PlayerCardResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('view_card')
+                    ->label('Ver Carnet')
+                    ->icon('heroicon-o-identification')
+                    ->color('info')
+                    ->url(fn ($record) => route('player.card.show', $record->card_number))
+                    ->openUrlInNewTab(),
                 Tables\Actions\Action::make('verify')
                     ->label('Verificar')
                     ->icon('heroicon-o-check-badge')

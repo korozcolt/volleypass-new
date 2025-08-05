@@ -22,6 +22,21 @@ class ViewPlayer extends ViewRecord
         return [
             Actions\EditAction::make(),
 
+            Actions\Action::make('view_card')
+                ->label('Ver Carnet')
+                ->icon('heroicon-o-identification')
+                ->color('info')
+                ->visible(fn () => $this->record->current_card !== null)
+                ->modalContent(fn () => view('filament.components.react-player-card', [
+                    'player' => $this->record->load(['user', 'currentClub', 'current_card.league'])
+                ]))
+                ->modalWidth('7xl')
+                ->extraModalWindowAttributes([
+                    'class' => 'min-h-[90vh] max-h-[95vh]'
+                ])
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Cerrar'),
+
             Actions\Action::make('federate')
                 ->label('Federar Jugadora')
                 ->icon('heroicon-o-check-badge')

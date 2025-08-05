@@ -2,7 +2,11 @@
 
 namespace App\Enums;
 
-enum TransferStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+use Filament\Support\Contracts\HasIcon;
+
+enum TransferStatus: string implements HasLabel, HasColor, HasIcon
 {
     case Pending = 'pending';
     case Approved = 'approved';
@@ -21,7 +25,7 @@ enum TransferStatus: string
         };
     }
 
-    public function getColor(): string
+    public function getColor(): string | array | null
     {
         return match($this) {
             self::Pending => 'warning',
@@ -32,7 +36,7 @@ enum TransferStatus: string
         };
     }
 
-    public function getIcon(): string
+    public function getIcon(): string | null
     {
         return match($this) {
             self::Pending => 'heroicon-o-clock',

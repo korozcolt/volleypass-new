@@ -15,8 +15,8 @@ class ClubObserver
     public function creating(Club $club): void
     {
         // Generar código de federación si es federado y no tiene código
-        if ($club->es_federado && empty($club->codigo_federacion)) {
-            $club->codigo_federacion = $this->generateFederationCode($club);
+        if ($club->is_federated && empty($club->federation_code)) {
+            $club->federation_code = $this->generateFederationCode($club);
         }
         
         // Establecer usuario que crea el registro
@@ -26,8 +26,8 @@ class ClubObserver
         
         // Log del evento
         Log::info('Creando nuevo club', [
-            'nombre' => $club->nombre,
-            'es_federado' => $club->es_federado,
+            'nombre' => $club->name,
+            'es_federado' => $club->is_federated,
             'created_by' => $club->created_by,
         ]);
     }
@@ -43,8 +43,8 @@ class ClubObserver
         // Log del evento
         Log::info('Club creado exitosamente', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
-            'codigo_federacion' => $club->codigo_federacion,
+            'nombre' => $club->name,
+            'codigo_federacion' => $club->federation_code,
         ]);
         
         // Crear entrada en el historial de actividades
@@ -52,9 +52,9 @@ class ClubObserver
             ->performedOn($club)
             ->causedBy(Auth::user())
             ->withProperties([
-                'nombre' => $club->nombre,
-                'es_federado' => $club->es_federado,
-                'tipo_federacion' => $club->tipo_federacion,
+                'nombre' => $club->name,
+                'es_federado' => $club->is_federated,
+                'tipo_federacion' => $club->federation_type,
             ])
             ->log('Club creado');
     }
@@ -65,14 +65,14 @@ class ClubObserver
     public function updating(Club $club): void
     {
         // Validar cambios en federación
-        if ($club->isDirty('es_federado')) {
-            if ($club->es_federado && empty($club->codigo_federacion)) {
-                $club->codigo_federacion = $this->generateFederationCode($club);
-            } elseif (!$club->es_federado) {
+        if ($club->isDirty('is_federated')) {
+            if ($club->is_federated && empty($club->federation_code)) {
+                $club->federation_code = $this->generateFederationCode($club);
+            } elseif (!$club->is_federated) {
                 // Si se desfederó, limpiar datos de federación
-                $club->codigo_federacion = null;
-                $club->vencimiento_federacion = null;
-                $club->tipo_federacion = null;
+                $club->federation_code = null;
+                $club->federation_expiry = null;
+                $club->federation_type = null;
             }
         }
         
@@ -86,7 +86,7 @@ class ClubObserver
         if (!empty($changes)) {
             Log::info('Actualizando club', [
                 'club_id' => $club->id,
-                'nombre' => $club->nombre,
+                'nombre' => $club->name,
                 'changes' => array_keys($changes),
                 'updated_by' => $club->updated_by,
             ]);
@@ -105,13 +105,13 @@ class ClubObserver
         $changes = $club->getChanges();
         Log::info('Club actualizado', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
+            'nombre' => $club->name,
             'changes' => $changes,
         ]);
         
         // Registrar actividad si hay cambios significativos
         $significantChanges = array_intersect(array_keys($changes), [
-            'nombre', 'es_federado', 'tipo_federacion', 'codigo_federacion'
+            'name', 'is_federated', 'federation_type', 'federation_code'
         ]);
         
         if (!empty($significantChanges)) {
@@ -135,7 +135,7 @@ class ClubObserver
         $activePlayersCount = $club->jugadoras()->where('activa', true)->count();
         if ($activePlayersCount > 0) {
             throw new \Exception(
-                "No se puede eliminar el club '{$club->nombre}' porque tiene {$activePlayersCount} jugadoras activas."
+                "No se puede eliminar el club '{$club->name}' porque tiene {$activePlayersCount} jugadoras activas."
             );
         }
         
@@ -143,14 +143,14 @@ class ClubObserver
         $pendingPaymentsCount = $club->pagos()->where('estado', 'pendiente')->count();
         if ($pendingPaymentsCount > 0) {
             throw new \Exception(
-                "No se puede eliminar el club '{$club->nombre}' porque tiene {$pendingPaymentsCount} pagos pendientes."
+                "No se puede eliminar el club '{$club->name}' porque tiene {$pendingPaymentsCount} pagos pendientes."
             );
         }
         
         // Log del evento
         Log::warning('Eliminando club', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
+            'nombre' => $club->name,
             'deleted_by' => Auth::id(),
         ]);
     }
@@ -166,7 +166,7 @@ class ClubObserver
         // Log del evento
         Log::warning('Club eliminado', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
+            'nombre' => $club->name,
         ]);
         
         // Registrar actividad
@@ -174,8 +174,8 @@ class ClubObserver
             ->performedOn($club)
             ->causedBy(Auth::user())
             ->withProperties([
-                'nombre' => $club->nombre,
-                'codigo_federacion' => $club->codigo_federacion,
+                'nombre' => $club->name,
+                'codigo_federacion' => $club->federation_code,
             ])
             ->log('Club eliminado');
     }
@@ -191,7 +191,7 @@ class ClubObserver
         // Log del evento
         Log::info('Club restaurado', [
             'club_id' => $club->id,
-            'nombre' => $club->nombre,
+            'nombre' => $club->name,
             'restored_by' => Auth::id(),
         ]);
         
@@ -199,7 +199,7 @@ class ClubObserver
         activity()
             ->performedOn($club)
             ->causedBy(Auth::user())
-            ->withProperties(['nombre' => $club->nombre])
+            ->withProperties(['nombre' => $club->name])
             ->log('Club restaurado');
     }
 
@@ -212,9 +212,9 @@ class ClubObserver
         $year = date('Y');
         
         // Buscar el siguiente número secuencial
-        $lastCode = Club::where('codigo_federacion', 'like', "{$departmentCode}{$year}%")
-            ->orderBy('codigo_federacion', 'desc')
-            ->value('codigo_federacion');
+        $lastCode = Club::where('federation_code', 'like', "{$departmentCode}{$year}%")
+            ->orderBy('federation_code', 'desc')
+            ->value('federation_code');
         
         if ($lastCode) {
             $lastNumber = (int) substr($lastCode, -3);

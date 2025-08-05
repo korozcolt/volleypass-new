@@ -3,8 +3,11 @@
 namespace App\Enums;
 
 use App\Traits\EnumHelpers;
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+use Filament\Support\Contracts\HasIcon;
 
-enum ConfigurationType: string
+enum ConfigurationType: string implements HasLabel, HasColor, HasIcon
 {
     use EnumHelpers;
 
@@ -16,7 +19,7 @@ enum ConfigurationType: string
     case EMAIL = 'email';
     case URL = 'url';
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::STRING => 'Texto',
@@ -29,7 +32,7 @@ enum ConfigurationType: string
         };
     }
 
-    public function color(): string
+    public function getColor(): string | array | null
     {
         return match ($this) {
             self::STRING => 'gray',
@@ -42,7 +45,7 @@ enum ConfigurationType: string
         };
     }
 
-    public function icon(): string
+    public function getIcon(): string | null
     {
         return match ($this) {
             self::STRING => 'heroicon-o-document-text',
@@ -55,10 +58,26 @@ enum ConfigurationType: string
         };
     }
 
+    // Backward compatibility methods
+    public function label(): string
+    {
+        return $this->getLabel();
+    }
+
+    public function color(): string
+    {
+        return $this->getColor();
+    }
+
+    public function icon(): string
+    {
+        return $this->getIcon();
+    }
+
     public static function options(): array
     {
         return collect(self::cases())
-            ->mapWithKeys(fn($case) => [$case->value => $case->label()])
+            ->mapWithKeys(fn($case) => [$case->value => $case->getLabel()])
             ->toArray();
     }
 }

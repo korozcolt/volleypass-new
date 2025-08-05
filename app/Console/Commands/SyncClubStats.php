@@ -84,7 +84,7 @@ class SyncClubStats extends Command
         }
         
         if ($verbose) {
-            $this->line("📊 Sincronizando club: {$club->nombre}");
+            $this->line("📊 Sincronizando club: {$club->name}");
         }
         
         $this->updateClubCounters($club, $force, $verbose);
@@ -135,7 +135,7 @@ class SyncClubStats extends Command
         
         // Contar directivos activos
         $activeDirectorsCount = $club->directivos()
-            ->wherePivot('is_active', true)
+            ->wherePivot('activo', true)
             ->count();
         
         // Contar torneos participados
@@ -165,17 +165,17 @@ class SyncClubStats extends Command
      */
     private function updateClubFederationStatus(Club $club, bool $verbose): void
     {
-        if ($club->es_federado && $club->vencimiento_federacion) {
-            $isExpired = Carbon::parse($club->vencimiento_federacion)->isPast();
+        if ($club->is_federated && $club->federation_expiry) {
+            $isExpired = Carbon::parse($club->federation_expiry)->isPast();
             
-            if ($isExpired && $club->es_federado) {
+            if ($isExpired && $club->is_federated) {
                 $club->update([
-                    'es_federado' => false,
-                    'tipo_federacion' => null,
+                    'is_federated' => false,
+                    'federation_type' => null,
                 ]);
                 
                 if ($verbose) {
-                    $this->line("  ⚠️  Federación expirada para: {$club->nombre}");
+                    $this->line("  ⚠️  Federación expirada para: {$club->name}");
                 }
             }
         }
@@ -196,7 +196,7 @@ class SyncClubStats extends Command
                     ->where('es_federada', true)
                     ->count(),
                 'directivos_activos' => $club->directivos()
-                    ->wherePivot('is_active', true)
+                    ->wherePivot('activo', true)
                     ->count(),
                 'torneos_participados' => $club->torneos()->count(),
                 'fecha_fundacion' => $club->fundacion,
@@ -227,16 +227,16 @@ class SyncClubStats extends Command
         if ($force || !Cache::has($cacheKey)) {
             $stats = [
                 'total_clubs' => Club::count(),
-                'federated_clubs' => Club::where('es_federado', true)->count(),
+                'federated_clubs' => Club::where('is_federated', true)->count(),
                 'clubs_by_department' => Club::select('departamento_id')
                     ->with('departamento:id,name')
                     ->get()
                     ->groupBy('departamento.name')
                     ->map->count(),
-                'clubs_by_federation_type' => Club::where('es_federado', true)
-                    ->select('tipo_federacion')
+                'clubs_by_federation_type' => Club::where('is_federated', true)
+                    ->select('federation_type')
                     ->get()
-                    ->groupBy('tipo_federacion')
+                    ->groupBy('federation_type')
                     ->map->count(),
                 'monthly_growth' => $this->calculateMonthlyGrowth(),
                 'updated_at' => now()->toISOString(),

@@ -20,6 +20,7 @@ class RoleDashboard extends Page
     protected static ?string $navigationLabel = 'Dashboard';
     protected static ?int $navigationSort = 1;
     protected static string $view = 'filament.pages.role-dashboard';
+    protected static ?string $slug = 'dashboard';
 
     public function getTitle(): string
     {

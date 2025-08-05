@@ -2,19 +2,31 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SetupWizardController;
+use App\Http\Controllers\ClubSetupController;
+use App\Http\Controllers\PlayerCardController;
 
-// Ruta principal - página de bienvenida
+// Ruta principal - página de bienvenida con React
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Rutas del wizard de configuración inicial
-Route::middleware(['auth', 'role:superadmin'])->prefix('setup')->name('setup.')->group(function () {
-    Route::get('/wizard', [SetupWizardController::class, 'index'])->name('wizard');
-    Route::get('/wizard/step/{step}', [SetupWizardController::class, 'showStep'])->name('wizard.step');
-    Route::post('/wizard/step/{step}', [SetupWizardController::class, 'processStep'])->name('wizard.process');
-    Route::post('/wizard/reset', [SetupWizardController::class, 'reset'])->name('wizard.reset');
+// Wizard de configuración inicial del sistema
+Route::prefix('setup')->group(function () {
+    Route::get('/wizard', [SetupWizardController::class, 'index'])->name('setup.wizard');
+    Route::post('/wizard/step', [SetupWizardController::class, 'processStep'])->name('setup.wizard.step');
 });
 
-// Todas las rutas /referee, /club, /player - ELIMINADAS
-// Solo mantener rutas de Filament (auto-registradas)
+// Wizard de configuración de clubes
+Route::prefix('club')->group(function () {
+    Route::get('/setup/{clubId?}', [ClubSetupController::class, 'index'])->name('club.setup');
+    Route::post('/setup/complete', [ClubSetupController::class, 'complete'])->name('club.setup.complete');
+    Route::post('/setup/validate-step', [ClubSetupController::class, 'validateStep'])->name('club.setup.validate');
+    Route::get('/setup/data/{step}', [ClubSetupController::class, 'getStepData'])->name('club.setup.data');
+});
+
+// Rutas para tarjetas de jugadores
+Route::get('/card/{cardNumber}', [PlayerCardController::class, 'show'])->name('player.card.show');
+Route::get('/card/{cardNumber}/download', [PlayerCardController::class, 'download'])->name('player.card.download');
+
+// Todas las rutas de administración se manejan a través de Filament
+// Las vistas de usuario son React/TypeScript

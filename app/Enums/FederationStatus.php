@@ -2,7 +2,11 @@
 
 namespace App\Enums;
 
-enum FederationStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+use Filament\Support\Contracts\HasIcon;
+
+enum FederationStatus: string implements HasLabel, HasColor, HasIcon
 {
     case NotFederated = 'not_federated';
     case PendingPayment = 'pending_payment';
@@ -23,7 +27,7 @@ enum FederationStatus: string
         };
     }
 
-    public function getColor(): string
+    public function getColor(): string | array | null
     {
         return match($this) {
             self::NotFederated => 'gray',
@@ -35,7 +39,7 @@ enum FederationStatus: string
         };
     }
 
-    public function getIcon(): string
+    public function getIcon(): string | null
     {
         return match($this) {
             self::NotFederated => 'heroicon-o-minus-circle',

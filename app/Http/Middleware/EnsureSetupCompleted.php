@@ -26,7 +26,7 @@ class EnsureSetupCompleted
         if (!SetupState::isSetupComplete()) {
             // Solo superadmin puede acceder al wizard
             if (!$request->user() || !$request->user()->hasRole('superadmin')) {
-                return redirect()->route('login')
+                return redirect()->route('filament.admin.auth.login')
                     ->with('error', 'El sistema requiere configuración inicial. Contacte al administrador.');
             }
 
@@ -47,6 +47,8 @@ class EnsureSetupCompleted
             'setup.*',
             'password.*',
             'verification.*',
+            'card.*',
+            'player.card*',
         ];
 
         $allowedPaths = [

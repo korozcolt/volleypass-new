@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Alias de middleware
         $middleware->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
             'system.config' => \App\Http\Middleware\ApplySystemConfigMiddleware::class,
             'system.maintenance' => \App\Http\Middleware\SystemMaintenanceMiddleware::class,
             'admin.access' => \App\Http\Middleware\CheckAdminPanelAccess::class,

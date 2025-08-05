@@ -9,6 +9,9 @@ use App\Models\User;
 use App\Enums\UserStatus;
 use App\Enums\PlayerCategory;
 use App\Enums\Gender;
+use App\Enums\TeamType;
+use App\Models\League;
+use App\Models\Department;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -33,6 +36,21 @@ class TeamResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Información Básica')
                     ->schema([
+                        Forms\Components\Select::make('team_type')
+                            ->label('Tipo de Equipo')
+                            ->options(TeamType::options())
+                            ->default(TeamType::CLUB)
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                                if ($state === TeamType::SELECTION->value) {
+                                    $set('club_id', null);
+                                } else {
+                                    $set('league_id', null);
+                                    $set('department_id', null);
+                                }
+                            }),
+
                         Forms\Components\TextInput::make('name')
                             ->label('Nombre')
                             ->required()
@@ -43,7 +61,34 @@ class TeamResource extends Resource
                             ->relationship('club', 'name')
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required(fn (Forms\Get $get) => $get('team_type') === TeamType::CLUB->value)
+                            ->visible(fn (Forms\Get $get) => $get('team_type') === TeamType::CLUB->value),
+
+                        Forms\Components\Select::make('league_id')
+                            ->label('Liga')
+                            ->relationship('league', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(fn (Forms\Get $get) => $get('team_type') === TeamType::SELECTION->value)
+                            ->visible(fn (Forms\Get $get) => $get('team_type') === TeamType::SELECTION->value)
+                            ->live()
+                            ->afterStateUpdated(fn (Forms\Set $set) => $set('department_id', null)),
+
+                        Forms\Components\Select::make('department_id')
+                            ->label('Departamento')
+                            ->options(function (Forms\Get $get) {
+                                $leagueId = $get('league_id');
+                                if (!$leagueId) return [];
+                                
+                                $league = League::find($leagueId);
+                                if (!$league) return [];
+                                
+                                return Department::where('country_id', $league->country_id)
+                                    ->pluck('name', 'id');
+                            })
+                            ->searchable()
+                            ->required(fn (Forms\Get $get) => $get('team_type') === TeamType::SELECTION->value)
+                            ->visible(fn (Forms\Get $get) => $get('team_type') === TeamType::SELECTION->value),
 
                         Forms\Components\Select::make('league_category_id')
                             ->label('Categoría')
@@ -114,6 +159,16 @@ class TeamResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('team_type')
+                    ->label('Tipo')
+                    ->badge()
+                    ->color(fn (TeamType $state): string => match ($state) {
+                        TeamType::CLUB => 'primary',
+                        TeamType::SELECTION => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (TeamType $state): string => $state->label()),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nombre')
                     ->searchable()
@@ -121,7 +176,19 @@ class TeamResource extends Resource
 
                 Tables\Columns\TextColumn::make('club.name')
                     ->label('Club')
-                    ->sortable(),
+                    ->sortable()
+                    ->placeholder('N/A')
+                    ->visible(fn ($record) => $record?->team_type === TeamType::CLUB),
+
+                Tables\Columns\TextColumn::make('league.name')
+                    ->label('Liga')
+                    ->sortable()
+                    ->visible(fn ($record) => $record?->team_type === TeamType::SELECTION),
+
+                Tables\Columns\TextColumn::make('department.name')
+                    ->label('Departamento')
+                    ->sortable()
+                    ->visible(fn ($record) => $record?->team_type === TeamType::SELECTION),
 
                 Tables\Columns\TextColumn::make('leagueCategory.name')
                     ->label('Categoría')
@@ -148,7 +215,7 @@ class TeamResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('players_count')
-                    ->label('Jugadoras')
+                    ->label('Jugadores')
                     ->counts('players')
                     ->badge(),
 
@@ -168,6 +235,10 @@ class TeamResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('team_type')
+                    ->label('Tipo de Equipo')
+                    ->options(TeamType::options()),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options(UserStatus::class),
@@ -177,17 +248,24 @@ class TeamResource extends Resource
                     ->relationship('leagueCategory', 'name')
                     ->preload(),
 
-                Tables\Filters\SelectFilter::make('category')
-                    ->label('Categoría (Legacy)')
-                    ->options(PlayerCategory::class),
-
                 Tables\Filters\SelectFilter::make('gender')
                     ->label('Género')
                     ->options(Gender::class),
 
                 Tables\Filters\SelectFilter::make('club')
                     ->label('Club')
-                    ->relationship('club', 'name'),
+                    ->relationship('club', 'name')
+                    ->visible(fn () => request()->get('tableFilters.team_type.value') !== TeamType::SELECTION->value),
+
+                Tables\Filters\SelectFilter::make('league')
+                    ->label('Liga')
+                    ->relationship('league', 'name')
+                    ->visible(fn () => request()->get('tableFilters.team_type.value') === TeamType::SELECTION->value),
+
+                Tables\Filters\SelectFilter::make('department')
+                    ->label('Departamento')
+                    ->relationship('department', 'name')
+                    ->visible(fn () => request()->get('tableFilters.team_type.value') === TeamType::SELECTION->value),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -251,7 +329,7 @@ class TeamResource extends Resource
                 Infolists\Components\Section::make('Estadísticas')
                     ->schema([
                         Infolists\Components\TextEntry::make('players_count')
-                            ->label('Total de Jugadoras')
+                            ->label('Total de Jugadores')
                             ->state(fn ($record) => $record->players()->count()),
 
                         Infolists\Components\TextEntry::make('matches_played')
@@ -286,8 +364,28 @@ class TeamResource extends Resource
         return [
             'index' => Pages\ListTeams::route('/'),
             'create' => Pages\CreateTeam::route('/create'),
+            'manage-departmental-selections' => Pages\ManageDepartmentalSelections::route('/departmental-selections'),
+            'player-selections' => Pages\PlayerSelections::route('/{record}/player-selections'),
             'view' => Pages\ViewTeam::route('/{record}'),
             'edit' => Pages\EditTeam::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getNavigationItems(): array
+    {
+        return [
+            \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
+                ->icon(static::getNavigationIcon())
+                ->activeIcon(static::getActiveNavigationIcon())
+                ->group(static::getNavigationGroup())
+                ->sort(static::getNavigationSort())
+                ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
+                ->url(static::getUrl()),
+            \Filament\Navigation\NavigationItem::make('Selecciones Departamentales')
+                ->icon('heroicon-o-flag')
+                ->group(static::getNavigationGroup())
+                ->sort(static::getNavigationSort() + 1)
+                ->url(static::getUrl('manage-departmental-selections')),
         ];
     }
 

@@ -42,7 +42,7 @@ class ClubDetailsWidget extends Widget
         
         // Obtener directivos activos
         $directivos = $club->directivos()
-            ->wherePivot('is_active', true)
+            ->wherePivot('activo', true)
             ->with(['user'])
             ->get();
         

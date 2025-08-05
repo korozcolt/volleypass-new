@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('tournament_registrations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tournament_id')->constrained()->onDelete('cascade');
+            $table->foreignId('club_id')->constrained()->onDelete('cascade');
+            $table->timestamp('registered_at')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->text('notes')->nullable();
             $table->timestamps();
+            
+            $table->unique(['tournament_id', 'club_id']);
         });
     }
 

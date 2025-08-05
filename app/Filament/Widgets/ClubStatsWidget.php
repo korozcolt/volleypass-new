@@ -12,7 +12,7 @@ class ClubStatsWidget extends BaseWidget
     protected function getStats(): array
     {
         $totalClubes = Club::count();
-        $clubesFederados = Club::where('es_federado', true)->count();
+        $clubesFederados = Club::where('is_federated', true)->count();
         $clubesNoFederados = $totalClubes - $clubesFederados;
         $crecimientoMensual = $this->getCrecimientoMensual();
         
@@ -84,7 +84,7 @@ class ClubStatsWidget extends BaseWidget
     private function getFederatedChart(): array
     {
         return Club::selectRaw('COUNT(*) as count')
-            ->where('es_federado', true)
+            ->where('is_federated', true)
             ->whereDate('created_at', '>=', now()->subDays(7))
             ->groupByRaw('DATE(created_at)')
             ->orderBy('created_at')

@@ -2,7 +2,11 @@
 
 namespace App\Enums;
 
-enum RegistrationStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+use Filament\Support\Contracts\HasIcon;
+
+enum RegistrationStatus: string implements HasLabel, HasColor, HasIcon
 {
     case Pending = 'pending';
     case Approved = 'approved';
@@ -21,7 +25,7 @@ enum RegistrationStatus: string
         };
     }
 
-    public function getColor(): string
+    public function getColor(): string | array | null
     {
         return match($this) {
             self::Pending => 'warning',
@@ -32,14 +36,14 @@ enum RegistrationStatus: string
         };
     }
 
-    public function getIcon(): string
+    public function getIcon(): string | null
     {
         return match($this) {
-            self::Pending => 'clock',
-            self::Approved => 'check-circle',
-            self::Rejected => 'x-circle',
-            self::Cancelled => 'ban',
-            self::Withdrawn => 'arrow-left-circle',
+            self::Pending => 'heroicon-o-clock',
+            self::Approved => 'heroicon-o-check-circle',
+            self::Rejected => 'heroicon-o-x-circle',
+            self::Cancelled => 'heroicon-o-no-symbol',
+            self::Withdrawn => 'heroicon-o-arrow-left-circle',
         };
     }
 

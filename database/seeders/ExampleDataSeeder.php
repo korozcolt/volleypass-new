@@ -436,6 +436,8 @@ class ExampleDataSeeder extends Seeder
                         'position' => ['libero', 'setter', 'outside_hitter', 'middle_blocker', 'opposite'][rand(0, 4)],
                         'height' => rand(160, 190),
                         'weight' => rand(55, 80),
+                        'blood_type' => ['O', 'A', 'B', 'AB'][rand(0, 3)],
+                        'blood_rh' => ['positive', 'negative'][rand(0, 1)],
                         'category' => $categories[array_rand($categories)],
                         'status' => UserStatus::Active,
                         'created_by' => 1

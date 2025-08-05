@@ -32,6 +32,8 @@ class Player extends Model
         'height',
         'weight',
         'dominant_hand',
+        'blood_type',
+        'blood_rh',
         'status',
         'medical_status',
         'debut_date',
@@ -42,6 +44,10 @@ class Player extends Model
         'is_eligible',
         'eligibility_checked_at',
         'eligibility_checked_by',
+        // Campos de selección
+        'selection_status',
+        'selection_date',
+        'selection_notes',
         // Campos de federación
         'federation_status',
         'federation_date',
@@ -55,9 +61,13 @@ class Player extends Model
         'weight' => 'decimal:2',
         'position' => PlayerPosition::class,
         'category' => PlayerCategory::class,
+        'blood_type' => \App\Enums\BloodType::class,
+        'blood_rh' => \App\Enums\BloodRh::class,
         'status' => UserStatus::class,
         'medical_status' => MedicalStatus::class,
         'federation_status' => FederationStatus::class,
+        'selection_status' => \App\Enums\SelectionStatus::class,
+        'selection_date' => 'datetime',
         'debut_date' => 'date',
         'retirement_date' => 'date',
         'federation_date' => 'date',
@@ -125,6 +135,11 @@ class Player extends Model
     public function playerCards(): HasMany
     {
         return $this->hasMany(PlayerCard::class);
+    }
+
+    public function current_card()
+    {
+        return $this->hasOne(PlayerCard::class)->where('status', \App\Enums\CardStatus::Active)->latest();
     }
 
     public function statistics(): HasMany

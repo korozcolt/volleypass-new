@@ -8,7 +8,7 @@
         ->where('is_federated', true)
         ->count();
     $activeDirectors = $club->directors()
-        ->wherePivot('is_active', true)
+        ->wherePivot('activo', true)
         ->count();
     $tournaments = $club->tournaments()->count();
     
@@ -22,7 +22,7 @@
     
     // Get active directors
     $directors = $club->directors()
-        ->wherePivot('is_active', true)
+        ->wherePivot('activo', true)
         ->with(['user'])
         ->get();
     

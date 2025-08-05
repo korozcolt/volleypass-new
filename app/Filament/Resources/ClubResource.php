@@ -252,7 +252,7 @@ class ClubResource extends Resource
                     })
                     ->visible(fn ($record) => $record && $record->is_federated),
                 Tables\Columns\TextColumn::make('players_count')
-                    ->label('Jugadoras')
+                    ->label('Jugadores')
                     ->counts('players')
                     ->sortable()
                     ->badge()
@@ -441,38 +441,38 @@ class ClubResource extends Resource
                     ]),
                 Section::make('Estado de Federación')
                     ->schema([
-                        TextEntry::make('es_federado')
+                        TextEntry::make('is_federated')
                              ->label('¿Es Federado?')
                              ->badge()
                              ->color(fn ($state) => $state ? 'success' : 'danger')
                              ->formatStateUsing(fn ($state) => $state ? 'Sí' : 'No'),
-                        TextEntry::make('tipo_federacion')
+                        TextEntry::make('federation_type')
                             ->label('Tipo de Federación')
                             ->badge()
-                            ->visible(fn ($record) => $record && $record->es_federado),
-                        TextEntry::make('codigo_federacion')
+                            ->visible(fn ($record) => $record && $record->is_federated),
+                        TextEntry::make('federation_code')
                             ->label('Código de Federación')
-                            ->visible(fn ($record) => $record && $record->es_federado),
-                        TextEntry::make('vencimiento_federacion')
+                            ->visible(fn ($record) => $record && $record->is_federated),
+                        TextEntry::make('federation_expiry')
                             ->label('Vencimiento de Federación')
                             ->date('d/m/Y')
-                            ->visible(fn ($record) => $record && $record->es_federado),
+                            ->visible(fn ($record) => $record && $record->is_federated),
                         TextEntry::make('federation_notes')
                             ->label('Observaciones')
                             ->visible(fn ($record) => $record && $record->federation_notes),
                     ])
-                    ->visible(fn ($record) => $record && $record->es_federado),
+                    ->visible(fn ($record) => $record && $record->is_federated),
                 Section::make('Estadísticas')
                     ->schema([
                         Grid::make(3)
                             ->schema([
                                 TextEntry::make('players_count')
-                                    ->label('Total Jugadoras')
+                                    ->label('Total Jugadores')
                                     ->state(fn ($record) => $record->players()->count())
                                     ->badge()
                                     ->color('primary'),
                                 TextEntry::make('federadas_count')
-                                    ->label('Jugadoras Federadas')
+                                    ->label('Jugadores Federados')
                                     ->state(fn ($record) => $record->players()->whereHas('medicalCertificates', function ($query) {
                                         $query->where('status', 'approved');
                                     })->count())
@@ -551,7 +551,7 @@ class ClubResource extends Resource
         return [
             'Departamento' => $record->departamento?->name,
             'Ciudad' => $record->ciudad?->name,
-            'Federado' => $record && $record->es_federado ? 'Sí' : 'No',
+            'Federado' => $record && $record->is_federated ? 'Sí' : 'No',
         ];
     }
 }
