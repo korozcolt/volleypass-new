@@ -6,6 +6,7 @@ use App\Enums\Gender;
 use App\Enums\TeamType;
 use App\Enums\UserStatus;
 use App\Filament\Resources\TeamResource;
+use App\Filament\Resources\TeamResource\Widgets\DepartmentalSelectionsStatsWidget;
 use App\Models\Club;
 use App\Models\Department;
 use App\Models\League;
@@ -23,11 +24,14 @@ use Filament\Resources\Pages\Page;
 use Filament\Tables\Actions\Action as TableAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
-class ManageDepartmentalSelections extends Page
+class ManageDepartmentalSelections extends Page implements HasTable
 {
+    use InteractsWithTable;
     protected static string $resource = TeamResource::class;
 
     protected static string $view = 'filament.resources.team-resource.pages.manage-departmental-selections';
@@ -41,7 +45,7 @@ class ManageDepartmentalSelections extends Page
     public static function canAccess(array $parameters = []): bool
     {
         $user = Auth::user();
-        
+
         // Solo SuperAdmin y LeagueAdmin pueden acceder
         return $user && $user->hasAnyRole(['SuperAdmin', 'LeagueAdmin']);
     }
@@ -118,7 +122,7 @@ class ManageDepartmentalSelections extends Page
                                             $departmentId = $get('../../department_id');
                                             $gender = $get('../../gender');
                                             $categoryId = $get('../../league_category_id');
-                                            
+
                                             if (!$departmentId || !$gender || !$categoryId) {
                                                 return [];
                                             }
@@ -333,7 +337,14 @@ class ManageDepartmentalSelections extends Page
                     ->label('Gestionar Selecciones')
                     ->icon('heroicon-o-flag')
                     ->color('primary')
-                    ->url(fn ($record) => static::getUrl('player-selections', ['record' => $record->id])),
+                    ->url(fn ($record) => TeamResource::getUrl('player-selections', ['record' => $record->id]))
             ]);
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            DepartmentalSelectionsStatsWidget::class,
+        ];
     }
 }

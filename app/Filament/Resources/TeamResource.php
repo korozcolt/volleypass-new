@@ -371,23 +371,7 @@ class TeamResource extends Resource
         ];
     }
 
-    public static function getNavigationItems(): array
-    {
-        return [
-            \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
-                ->icon(static::getNavigationIcon())
-                ->activeIcon(static::getActiveNavigationIcon())
-                ->group(static::getNavigationGroup())
-                ->sort(static::getNavigationSort())
-                ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
-                ->url(static::getUrl()),
-            \Filament\Navigation\NavigationItem::make('Selecciones Departamentales')
-                ->icon('heroicon-o-flag')
-                ->group(static::getNavigationGroup())
-                ->sort(static::getNavigationSort() + 1)
-                ->url(static::getUrl('manage-departmental-selections')),
-        ];
-    }
+    // Eliminado getNavigationItems() - ahora las selecciones departamentales se acceden desde el botón en la lista de equipos
 
     public static function canViewAny(): bool
     {

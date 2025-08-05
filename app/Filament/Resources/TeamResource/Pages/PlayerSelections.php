@@ -14,10 +14,12 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Notifications\Notification;
+use App\Filament\Resources\TeamResource\Widgets\SelectionStatsWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +30,7 @@ class PlayerSelections extends Page implements HasTable
 
     protected static string $resource = TeamResource::class;
 
-    protected static string $view = 'filament.resources.team-resource.pages.player-selections';
+    protected static string $view = 'filament.resources.pages.page';
 
     public Team $record;
 
@@ -186,5 +188,19 @@ class PlayerSelections extends Page implements HasTable
                     ->label('Estado de Selección')
                     ->options(SelectionStatus::options()),
             ]);
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            SelectionStatsWidget::make([
+                'record' => $this->record,
+            ]),
+        ];
+    }
+
+    public function getSubheading(): ?string
+    {
+        return 'Gestiona las selecciones departamentales para ' . $this->record->name . ' (' . $this->record->department->name . ' - ' . ($this->record->gender === 'M' ? 'Masculino' : 'Femenino') . ' - ' . $this->record->league->category->name . '). Selecciona jugadores usando las acciones individuales o masivas.';
     }
 }
