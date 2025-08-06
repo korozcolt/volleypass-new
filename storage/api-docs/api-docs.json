@@ -1169,6 +1169,334 @@
                 }
             }
         },
+        "/api/public/matches/{id}/players": {
+            "get": {
+                "tags": [
+                    "Public Match Players"
+                ],
+                "summary": "Obtener listado de jugadores de un partido",
+                "operationId": "de3ebede9925544b88c36df97cceaf29",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listado de jugadores del partido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "match_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "match_date": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2024-01-15T15:30:00Z"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "scheduled"
+                                                },
+                                                "tournament_name": {
+                                                    "type": "string",
+                                                    "example": "Copa Nacional 2024"
+                                                },
+                                                "venue_name": {
+                                                    "type": "string",
+                                                    "example": "Polideportivo Central"
+                                                },
+                                                "home_team": {
+                                                    "properties": {
+                                                        "team_id": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "team_name": {
+                                                            "type": "string",
+                                                            "example": "Equipo A"
+                                                        },
+                                                        "logo": {
+                                                            "type": "string",
+                                                            "example": "https://example.com/logo.png"
+                                                        },
+                                                        "players": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "player_id": {
+                                                                        "type": "integer",
+                                                                        "example": 10
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "María García"
+                                                                    },
+                                                                    "jersey_number": {
+                                                                        "type": "integer",
+                                                                        "example": 7
+                                                                    },
+                                                                    "position": {
+                                                                        "type": "string",
+                                                                        "example": "Libero"
+                                                                    },
+                                                                    "is_captain": {
+                                                                        "type": "boolean",
+                                                                        "example": false
+                                                                    },
+                                                                    "is_starter": {
+                                                                        "type": "boolean",
+                                                                        "example": true
+                                                                    },
+                                                                    "birth_date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "1995-03-15"
+                                                                    },
+                                                                    "height": {
+                                                                        "type": "integer",
+                                                                        "example": 175
+                                                                    },
+                                                                    "weight": {
+                                                                        "type": "integer",
+                                                                        "example": 65
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "away_team": {
+                                                    "properties": {
+                                                        "team_id": {
+                                                            "type": "integer",
+                                                            "example": 8
+                                                        },
+                                                        "team_name": {
+                                                            "type": "string",
+                                                            "example": "Equipo B"
+                                                        },
+                                                        "logo": {
+                                                            "type": "string",
+                                                            "example": "https://example.com/logo2.png"
+                                                        },
+                                                        "players": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "properties": {
+                                                                    "player_id": {
+                                                                        "type": "integer",
+                                                                        "example": 15
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Ana López"
+                                                                    },
+                                                                    "jersey_number": {
+                                                                        "type": "integer",
+                                                                        "example": 12
+                                                                    },
+                                                                    "position": {
+                                                                        "type": "string",
+                                                                        "example": "Atacante"
+                                                                    },
+                                                                    "is_captain": {
+                                                                        "type": "boolean",
+                                                                        "example": true
+                                                                    },
+                                                                    "is_starter": {
+                                                                        "type": "boolean",
+                                                                        "example": true
+                                                                    },
+                                                                    "birth_date": {
+                                                                        "type": "string",
+                                                                        "format": "date",
+                                                                        "example": "1993-07-22"
+                                                                    },
+                                                                    "height": {
+                                                                        "type": "integer",
+                                                                        "example": 180
+                                                                    },
+                                                                    "weight": {
+                                                                        "type": "integer",
+                                                                        "example": 70
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "match_officials": {
+                                                    "properties": {
+                                                        "referee": {
+                                                            "type": "string",
+                                                            "example": "Carlos Mendoza"
+                                                        },
+                                                        "assistant_referee": {
+                                                            "type": "string",
+                                                            "example": "Luis Rodríguez"
+                                                        },
+                                                        "scorer": {
+                                                            "type": "string",
+                                                            "example": "Elena Vargas"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partido no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/public/matches/{id}/teams/{teamId}/players": {
+            "get": {
+                "tags": [
+                    "Public Match Players"
+                ],
+                "summary": "Obtener listado de jugadores de un equipo específico en un partido",
+                "operationId": "f69a29feced7b72bf35d2ea08f00bb15",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "teamId",
+                        "in": "path",
+                        "description": "ID del equipo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Listado de jugadores del equipo en el partido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "match_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "team_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "team_name": {
+                                                    "type": "string",
+                                                    "example": "Equipo A"
+                                                },
+                                                "logo": {
+                                                    "type": "string",
+                                                    "example": "https://example.com/logo.png"
+                                                },
+                                                "is_home_team": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "players": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "player_id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "María García"
+                                                            },
+                                                            "jersey_number": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "position": {
+                                                                "type": "string",
+                                                                "example": "Libero"
+                                                            },
+                                                            "is_captain": {
+                                                                "type": "boolean",
+                                                                "example": false
+                                                            },
+                                                            "is_starter": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "birth_date": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "example": "1995-03-15"
+                                                            },
+                                                            "height": {
+                                                                "type": "integer",
+                                                                "example": 175
+                                                            },
+                                                            "weight": {
+                                                                "type": "integer",
+                                                                "example": 65
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partido o equipo no encontrado"
+                    }
+                }
+            }
+        },
         "/api/public/tournaments": {
             "get": {
                 "tags": [
@@ -1268,6 +1596,315 @@
                     },
                     "404": {
                         "description": "Torneo no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/public/tournaments/{id}/standings": {
+            "get": {
+                "tags": [
+                    "Public Tournament Standings"
+                ],
+                "summary": "Obtener tabla de posiciones de un torneo",
+                "operationId": "68fe36ee945432a6d1ad47e4310fb44c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del torneo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tabla de posiciones del torneo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "tournament_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "tournament_name": {
+                                                    "type": "string",
+                                                    "example": "Copa Nacional 2024"
+                                                },
+                                                "format": {
+                                                    "type": "string",
+                                                    "example": "round_robin"
+                                                },
+                                                "groups": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "group_id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "group_name": {
+                                                                "type": "string",
+                                                                "example": "Grupo A"
+                                                            },
+                                                            "standings": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "position": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "team_id": {
+                                                                            "type": "integer",
+                                                                            "example": 5
+                                                                        },
+                                                                        "team_name": {
+                                                                            "type": "string",
+                                                                            "example": "Equipo A"
+                                                                        },
+                                                                        "matches_played": {
+                                                                            "type": "integer",
+                                                                            "example": 3
+                                                                        },
+                                                                        "wins": {
+                                                                            "type": "integer",
+                                                                            "example": 2
+                                                                        },
+                                                                        "losses": {
+                                                                            "type": "integer",
+                                                                            "example": 1
+                                                                        },
+                                                                        "sets_won": {
+                                                                            "type": "integer",
+                                                                            "example": 6
+                                                                        },
+                                                                        "sets_lost": {
+                                                                            "type": "integer",
+                                                                            "example": 4
+                                                                        },
+                                                                        "points_for": {
+                                                                            "type": "integer",
+                                                                            "example": 150
+                                                                        },
+                                                                        "points_against": {
+                                                                            "type": "integer",
+                                                                            "example": 120
+                                                                        },
+                                                                        "table_points": {
+                                                                            "type": "integer",
+                                                                            "example": 7
+                                                                        },
+                                                                        "set_ratio": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 1.5
+                                                                        },
+                                                                        "point_ratio": {
+                                                                            "type": "number",
+                                                                            "format": "float",
+                                                                            "example": 1.25
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "overall_standings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "position": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "team_id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "team_name": {
+                                                                "type": "string",
+                                                                "example": "Equipo A"
+                                                            },
+                                                            "group_name": {
+                                                                "type": "string",
+                                                                "example": "Grupo A"
+                                                            },
+                                                            "matches_played": {
+                                                                "type": "integer",
+                                                                "example": 3
+                                                            },
+                                                            "wins": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "losses": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "table_points": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Torneo no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/public/tournaments/{id}/groups/{groupId}/standings": {
+            "get": {
+                "tags": [
+                    "Public Tournament Standings"
+                ],
+                "summary": "Obtener tabla de posiciones de un grupo específico",
+                "operationId": "b7eb4fb3d072a01f2f9968e26fcb2137",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del torneo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "groupId",
+                        "in": "path",
+                        "description": "ID del grupo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tabla de posiciones del grupo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "group_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "group_name": {
+                                                    "type": "string",
+                                                    "example": "Grupo A"
+                                                },
+                                                "tournament_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "tournament_name": {
+                                                    "type": "string",
+                                                    "example": "Copa Nacional 2024"
+                                                },
+                                                "standings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "position": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "team_id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "team_name": {
+                                                                "type": "string",
+                                                                "example": "Equipo A"
+                                                            },
+                                                            "matches_played": {
+                                                                "type": "integer",
+                                                                "example": 3
+                                                            },
+                                                            "wins": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "losses": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "sets_won": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "sets_lost": {
+                                                                "type": "integer",
+                                                                "example": 4
+                                                            },
+                                                            "points_for": {
+                                                                "type": "integer",
+                                                                "example": 150
+                                                            },
+                                                            "points_against": {
+                                                                "type": "integer",
+                                                                "example": 120
+                                                            },
+                                                            "table_points": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "set_ratio": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 1.5
+                                                            },
+                                                            "point_ratio": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 1.25
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Grupo o torneo no encontrado"
                     }
                 }
             }
@@ -2563,6 +3200,347 @@
                     }
                 ]
             }
+        },
+        "/api/v1/users/profile": {
+            "get": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Obtener perfil del usuario autenticado",
+                "operationId": "2eb42076613ac98059f809f789403dfb",
+                "responses": {
+                    "200": {
+                        "description": "Perfil del usuario",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Juan Pérez"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "juan@example.com"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "Juan"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "Pérez"
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+57 300 123 4567"
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1990-05-15"
+                                                },
+                                                "gender": {
+                                                    "type": "string",
+                                                    "example": "male"
+                                                },
+                                                "address": {
+                                                    "type": "string",
+                                                    "example": "Calle 123 #45-67"
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "Player"
+                                                    ]
+                                                },
+                                                "user_type": {
+                                                    "type": "string",
+                                                    "example": "player"
+                                                },
+                                                "profile": {
+                                                    "properties": {
+                                                        "nickname": {
+                                                            "type": "string",
+                                                            "example": "Juancho"
+                                                        },
+                                                        "bio": {
+                                                            "type": "string",
+                                                            "example": "Jugador de voleibol desde 2010"
+                                                        },
+                                                        "avatar_url": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "emergency_contact_name": {
+                                                            "type": "string",
+                                                            "example": "María Pérez"
+                                                        },
+                                                        "emergency_contact_phone": {
+                                                            "type": "string",
+                                                            "example": "+57 300 987 6543"
+                                                        },
+                                                        "blood_type": {
+                                                            "type": "string",
+                                                            "example": "O+"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "player_info": {
+                                                    "properties": {
+                                                        "position": {
+                                                            "type": "string",
+                                                            "example": "Libero"
+                                                        },
+                                                        "jersey_number": {
+                                                            "type": "integer",
+                                                            "example": 10
+                                                        },
+                                                        "height": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 1.75
+                                                        },
+                                                        "weight": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 70.5
+                                                        },
+                                                        "current_club": {
+                                                            "type": "string",
+                                                            "example": "Club Deportivo ABC"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "location": {
+                                                    "properties": {
+                                                        "city": {
+                                                            "type": "string",
+                                                            "example": "Bogotá"
+                                                        },
+                                                        "department": {
+                                                            "type": "string",
+                                                            "example": "Cundinamarca"
+                                                        },
+                                                        "country": {
+                                                            "type": "string",
+                                                            "example": "Colombia"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No autenticado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Actualizar perfil del usuario autenticado",
+                "operationId": "099c417decbee0b4a715bfcf8b8e2bb4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "Juan"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Pérez"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+57 300 123 4567"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Calle 123 #45-67"
+                                    },
+                                    "nickname": {
+                                        "type": "string",
+                                        "example": "Juancho"
+                                    },
+                                    "bio": {
+                                        "type": "string",
+                                        "example": "Jugador de voleibol desde 2010"
+                                    },
+                                    "emergency_contact_name": {
+                                        "type": "string",
+                                        "example": "María Pérez"
+                                    },
+                                    "emergency_contact_phone": {
+                                        "type": "string",
+                                        "example": "+57 300 987 6543"
+                                    },
+                                    "emergency_contact_relationship": {
+                                        "type": "string",
+                                        "example": "Madre"
+                                    },
+                                    "blood_type": {
+                                        "type": "string",
+                                        "example": "O+"
+                                    },
+                                    "allergies": {
+                                        "type": "string",
+                                        "example": "Ninguna conocida"
+                                    },
+                                    "medical_conditions": {
+                                        "type": "string",
+                                        "example": "Ninguna"
+                                    },
+                                    "t_shirt_size": {
+                                        "type": "string",
+                                        "example": "M"
+                                    },
+                                    "social_media": {
+                                        "properties": {
+                                            "instagram": {
+                                                "type": "string",
+                                                "example": "@juancho_volley"
+                                            },
+                                            "facebook": {
+                                                "type": "string",
+                                                "example": "Juan Pérez"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Perfil actualizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Perfil actualizado exitosamente"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/{userId}/profile": {
+            "get": {
+                "tags": [
+                    "User Profile"
+                ],
+                "summary": "Obtener perfil público de un usuario",
+                "operationId": "783b5a5b97cca713fc6d6befa5e26d03",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID del usuario",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Perfil público del usuario",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -3015,12 +3993,24 @@
             "description": "Endpoints públicos para consultar partidos"
         },
         {
+            "name": "Public Match Players",
+            "description": "Endpoints públicos para consultar listados de jugadores por partido"
+        },
+        {
             "name": "Public Tournaments",
             "description": "Endpoints públicos para consultar torneos"
         },
         {
+            "name": "Public Tournament Standings",
+            "description": "Endpoints públicos para consultar tablas de posiciones de torneos"
+        },
+        {
             "name": "Rotation Tracking",
             "description": "Gestión de rotaciones de jugadores en partidos"
+        },
+        {
+            "name": "User Profile",
+            "description": "Gestión de perfiles de usuario"
         }
     ]
 }

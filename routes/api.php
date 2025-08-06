@@ -80,6 +80,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/scheduled', [\App\Http\Controllers\Api\PublicMatchController::class, 'scheduled'])->name('api.public.matches.scheduled');
             Route::get('/live', [\App\Http\Controllers\Api\PublicMatchController::class, 'live'])->name('api.public.matches.live');
             Route::get('/{id}', [\App\Http\Controllers\Api\PublicMatchController::class, 'show'])->name('api.public.matches.show');
+            
+            // Listados de jugadores por partido
+            Route::get('/{id}/players', [\App\Http\Controllers\Api\PublicMatchPlayersController::class, 'show'])->name('api.public.matches.players');
+            Route::get('/{id}/teams/{teamId}/players', [\App\Http\Controllers\Api\PublicMatchPlayersController::class, 'showTeam'])->name('api.public.matches.team-players');
+        });
+        
+        // Tablas de posiciones de torneos
+        Route::prefix('tournaments/{id}')->group(function () {
+            Route::get('/standings', [\App\Http\Controllers\Api\PublicTournamentStandingsController::class, 'show'])->name('api.public.tournaments.standings');
+            Route::get('/groups/{groupId}/standings', [\App\Http\Controllers\Api\PublicTournamentStandingsController::class, 'showGroup'])->name('api.public.tournaments.group-standings');
         });
     });
 });
@@ -94,6 +104,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');
         Route::get('/tokens', [AuthController::class, 'listTokens'])->name('tokens.list');
         Route::delete('/tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('tokens.revoke');
+    });
+
+    // Gestión de perfiles de usuario
+    Route::prefix('users')->name('api.users.')->group(function () {
+        Route::get('/profile', [\App\Http\Controllers\Api\UserProfileController::class, 'show'])->name('profile.show');
+        Route::put('/profile', [\App\Http\Controllers\Api\UserProfileController::class, 'update'])->name('profile.update');
+        Route::get('/{userId}/profile', [\App\Http\Controllers\Api\UserProfileController::class, 'showPublic'])->name('profile.public');
     });
     
     // Verificadores avanzados
