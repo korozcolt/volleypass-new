@@ -11,6 +11,7 @@ export default defineConfig({
             'resources/css/app.css',
             'resources/js/app.tsx',
             'resources/js/welcome.tsx',
+            'resources/js/contact.tsx',
             'resources/js/setup-wizard.tsx',
             'resources/js/club-setup.tsx',
             'resources/js/player-card.tsx'

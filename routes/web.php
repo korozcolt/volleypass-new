@@ -4,10 +4,21 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SetupWizardController;
 use App\Http\Controllers\ClubSetupController;
 use App\Http\Controllers\PlayerCardController;
+use App\Http\Controllers\FrontendController;
 
 // Ruta principal - página de bienvenida con React
 Route::get('/', function () {
     return view('welcome');
+});
+
+// Página de contacto
+Route::get('/contacto', [FrontendController::class, 'contact'])->name('contact');
+
+// APIs para el frontend
+Route::prefix('api')->group(function () {
+    Route::get('/departments', [FrontendController::class, 'getDepartments']);
+    Route::get('/cities/{departmentId}', [FrontendController::class, 'getCities']);
+    Route::post('/contact', [FrontendController::class, 'submitContact']);
 });
 
 // Wizard de configuración inicial del sistema

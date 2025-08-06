@@ -3,8 +3,8 @@
     <div class="flex-shrink-0">
         <img
             src="{{ asset('images/logo-volley_pass_black_back.png') }}"
-            alt="{{ app_name() }} Logo"
-            class="h-8 w-auto"
+            alt="VolleyPass Logo"
+            class="h-10 w-auto"
         >
     </div>
 

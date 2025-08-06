@@ -49,10 +49,12 @@ class EnsureSetupCompleted
             'verification.*',
             'card.*',
             'player.card*',
+            'contact',
         ];
 
         $allowedPaths = [
             '/',
+            'contacto',
             'api/*',
             'livewire/*',
             '_debugbar/*',
