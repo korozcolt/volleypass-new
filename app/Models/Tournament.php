@@ -3,6 +3,39 @@
 namespace App\Models;
 
 use App\Enums\TournamentStatus;
+
+/**
+ * @OA\Schema(
+ *     schema="Tournament",
+ *     type="object",
+ *     title="Tournament",
+ *     description="Tournament model",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="Copa Nacional de Voleibol"),
+ *     @OA\Property(property="slug", type="string", example="copa-nacional-voleibol"),
+ *     @OA\Property(property="description", type="string", example="Torneo nacional de voleibol"),
+ *     @OA\Property(property="league_id", type="integer", example=1),
+ *     @OA\Property(property="type", type="string", example="championship"),
+ *     @OA\Property(property="format", type="string", example="round_robin"),
+ *     @OA\Property(property="category", type="string", example="senior"),
+ *     @OA\Property(property="gender", type="string", example="mixed"),
+ *     @OA\Property(property="registration_start", type="string", format="date-time"),
+ *     @OA\Property(property="registration_end", type="string", format="date-time"),
+ *     @OA\Property(property="start_date", type="string", format="date-time"),
+ *     @OA\Property(property="end_date", type="string", format="date-time"),
+ *     @OA\Property(property="season", type="string", example="2024"),
+ *     @OA\Property(property="max_teams", type="integer", example=16),
+ *     @OA\Property(property="min_teams", type="integer", example=8),
+ *     @OA\Property(property="registration_fee", type="number", format="float", example=100.00),
+ *     @OA\Property(property="status", type="string", example="active"),
+ *     @OA\Property(property="is_public", type="boolean", example=true),
+ *     @OA\Property(property="venue", type="string", example="Polideportivo Municipal"),
+ *     @OA\Property(property="total_teams", type="integer", example=12),
+ *     @OA\Property(property="total_matches", type="integer", example=66),
+ *     @OA\Property(property="created_at", type="string", format="date-time"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time")
+ * )
+ */
 use App\Enums\TournamentType;
 use App\Enums\PlayerCategory;
 use App\Enums\Gender;
@@ -126,6 +159,11 @@ class Tournament extends Model
     public function cards(): HasMany
     {
         return $this->hasMany(TournamentCard::class);
+    }
+
+    public function rounds(): HasMany
+    {
+        return $this->hasMany(TournamentRound::class);
     }
 
     // Scopes

@@ -1,0 +1,3026 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "VolleyPass API",
+        "description": "API para el sistema de gestión de voleibol VolleyPass",
+        "contact": {
+            "name": "VolleyPass Support",
+            "email": "admin@volleypass.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://my-default-host.com",
+            "description": "VolleyPass API Server"
+        }
+    ],
+    "paths": {
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login para verificadores móviles",
+                "description": "Autenticación de usuarios con permisos de verificador, administrador de liga o super administrador",
+                "operationId": "dd51a484b7fa0f97c7680fdbde14cf5f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "device_name"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "verifier@volleypass.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "example": "iPhone 15 Pro"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login exitoso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "1|abcdef123456..."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "Bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 2592000
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Juan Pérez"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "verifier@volleypass.com"
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "Verifier"
+                                                    ]
+                                                },
+                                                "abilities": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "profile": {
+                                                    "properties": {
+                                                        "avatar_url": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Credenciales inválidas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Credenciales inválidas"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiados intentos de login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Demasiados intentos de login. Intente en 300 segundos."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Cerrar sesión actual",
+                "description": "Revoca el token de acceso actual del usuario",
+                "operationId": "df9bdc6c7a6d9f20b983526b2ec0f698",
+                "responses": {
+                    "200": {
+                        "description": "Sesión cerrada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sesión cerrada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/logout-all": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Cerrar sesión en todos los dispositivos",
+                "description": "Revoca todos los tokens de acceso del usuario",
+                "operationId": "cb4dc83917db0d5fff6f1f5a2562c05b",
+                "responses": {
+                    "200": {
+                        "description": "Sesiones cerradas en todos los dispositivos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sesión cerrada en todos los dispositivos (3 tokens revocados)"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Obtener información del usuario autenticado",
+                "description": "Retorna la información del usuario actual y detalles del token",
+                "operationId": "015ae3b99f0678ec8fe0a02409751660",
+                "responses": {
+                    "200": {
+                        "description": "Información del usuario",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Juan Pérez"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "verifier@volleypass.com"
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "Verifier"
+                                                    ]
+                                                },
+                                                "abilities": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "profile": {
+                                                    "properties": {
+                                                        "avatar_url": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "token_info": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "iPhone 15 Pro"
+                                                },
+                                                "abilities": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/start": {
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Iniciar un partido",
+                "operationId": "9e574ca680092d0b70100f61f512e0b0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Partido iniciado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "match": {
+                                                    "$ref": "#/components/schemas/VolleyMatch"
+                                                },
+                                                "first_set": {
+                                                    "$ref": "#/components/schemas/MatchSet"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Partido iniciado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/finish": {
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Finalizar un partido",
+                "operationId": "b7411742485772a95328fabeac23584c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Partido finalizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/VolleyMatch"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Partido finalizado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/sets/start": {
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Iniciar un nuevo set",
+                "operationId": "6095ac6efbb3f2bd4c9ecc488119d887",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Set iniciado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MatchSet"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Set iniciado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/sets/finish": {
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Finalizar el set actual",
+                "operationId": "7dce2adc321353ff0f496bda487e9fff",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "home_score",
+                                    "away_score"
+                                ],
+                                "properties": {
+                                    "home_score": {
+                                        "description": "Puntos del equipo local",
+                                        "type": "integer"
+                                    },
+                                    "away_score": {
+                                        "description": "Puntos del equipo visitante",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Set finalizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MatchSet"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Set finalizado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/score": {
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Actualizar marcador del set actual",
+                "operationId": "47e5be0203b48836d5022d209b99e134",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "home_score",
+                                    "away_score"
+                                ],
+                                "properties": {
+                                    "home_score": {
+                                        "description": "Puntos del equipo local",
+                                        "type": "integer"
+                                    },
+                                    "away_score": {
+                                        "description": "Puntos del equipo visitante",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Marcador actualizado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "set": {
+                                                    "$ref": "#/components/schemas/MatchSet"
+                                                },
+                                                "match": {
+                                                    "$ref": "#/components/schemas/VolleyMatch"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Marcador actualizado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/rotation": {
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Actualizar rotación de jugadores",
+                "operationId": "0cdb5ff0fba4474484a8a69b3b26c400",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team",
+                                    "rotation"
+                                ],
+                                "properties": {
+                                    "team": {
+                                        "description": "Equipo (home o away)",
+                                        "type": "string",
+                                        "enum": [
+                                            "home",
+                                            "away"
+                                        ]
+                                    },
+                                    "rotation": {
+                                        "description": "Array de IDs de jugadores en orden de rotación",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rotación actualizada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "rotation": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rotación actualizada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/events": {
+            "get": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Obtener eventos del partido",
+                "operationId": "62d927278d5436ef66fec28370fd5a9e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "set_number",
+                        "in": "query",
+                        "description": "Número del set",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "event_type",
+                        "in": "query",
+                        "description": "Tipo de evento",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de eventos del partido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MatchEvent"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Registrar evento del partido",
+                "operationId": "a59daf0a52ca55e9b91730bdda5370f4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "event_type",
+                                    "team_id"
+                                ],
+                                "properties": {
+                                    "event_type": {
+                                        "description": "Tipo de evento",
+                                        "type": "string"
+                                    },
+                                    "event_subtype": {
+                                        "description": "Subtipo de evento",
+                                        "type": "string"
+                                    },
+                                    "team_id": {
+                                        "description": "ID del equipo",
+                                        "type": "integer"
+                                    },
+                                    "player_id": {
+                                        "description": "ID del jugador",
+                                        "type": "integer"
+                                    },
+                                    "description": {
+                                        "description": "Descripción del evento",
+                                        "type": "string"
+                                    },
+                                    "is_successful": {
+                                        "description": "Si el evento fue exitoso",
+                                        "type": "boolean"
+                                    },
+                                    "points_awarded": {
+                                        "description": "Puntos otorgados",
+                                        "type": "integer"
+                                    },
+                                    "coordinates_x": {
+                                        "description": "Coordenada X",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "coordinates_y": {
+                                        "description": "Coordenada Y",
+                                        "type": "number",
+                                        "format": "float"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Evento registrado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MatchEvent"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Evento registrado exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/status": {
+            "get": {
+                "tags": [
+                    "Match Live"
+                ],
+                "summary": "Obtener estado completo del partido",
+                "operationId": "3f19968ded3d21049b47b0b98bcc2540",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estado completo del partido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "match": {
+                                                    "$ref": "#/components/schemas/VolleyMatch"
+                                                },
+                                                "sets": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MatchSet"
+                                                    }
+                                                },
+                                                "current_rotations": {
+                                                    "type": "object"
+                                                },
+                                                "recent_events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MatchEvent"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/matches/scheduled": {
+            "get": {
+                "tags": [
+                    "Public Matches"
+                ],
+                "summary": "Listar partidos programados",
+                "operationId": "d815c837b9959d759d0399d9738e170f",
+                "parameters": [
+                    {
+                        "name": "tournament_id",
+                        "in": "query",
+                        "description": "Filtrar por torneo",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "team_id",
+                        "in": "query",
+                        "description": "Filtrar por equipo",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Filtrar por fecha (YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de partidos programados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VolleyMatch"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/matches/live": {
+            "get": {
+                "tags": [
+                    "Public Matches"
+                ],
+                "summary": "Listar partidos en vivo",
+                "operationId": "b6a08489cffebe1976570472a8eb7aee",
+                "responses": {
+                    "200": {
+                        "description": "Lista de partidos en vivo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VolleyMatch"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/matches/{id}": {
+            "get": {
+                "tags": [
+                    "Public Matches"
+                ],
+                "summary": "Obtener detalles de un partido",
+                "operationId": "51baca717c6461f58fd5532331b10f1e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del partido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/VolleyMatch"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Partido no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/public/tournaments": {
+            "get": {
+                "tags": [
+                    "Public Tournaments"
+                ],
+                "summary": "Listar torneos públicos",
+                "operationId": "d5b0daf3bb873ceae8c85a3d611325e9",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrar por estado del torneo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrar por tipo de torneo",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "description": "Filtrar por categoría",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de torneos públicos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Tournament"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/tournaments/{id}": {
+            "get": {
+                "tags": [
+                    "Public Tournaments"
+                ],
+                "summary": "Obtener detalles de un torneo",
+                "operationId": "05820e954c1c6838b1e5fee28a688968",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del torneo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del torneo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Tournament"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Torneo no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/verify-qr": {
+            "post": {
+                "tags": [
+                    "QR Verification"
+                ],
+                "summary": "Verificación principal de código QR",
+                "description": "Verifica un código QR de carnet de jugador para eventos deportivos",
+                "operationId": "33727eab12f8dcdca74b756d332d1443",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "qr_code",
+                                    "verification_token",
+                                    "scanner_id"
+                                ],
+                                "properties": {
+                                    "qr_code": {
+                                        "type": "string",
+                                        "example": "QR123456789"
+                                    },
+                                    "verification_token": {
+                                        "type": "string",
+                                        "example": "TOKEN_ABC123"
+                                    },
+                                    "scanner_id": {
+                                        "type": "string",
+                                        "example": "SCANNER_001"
+                                    },
+                                    "event_data": {
+                                        "properties": {
+                                            "match_id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "event_type": {
+                                                "type": "string",
+                                                "example": "match_entry"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Verificación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carnet válido"
+                                        },
+                                        "can_play": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "response_time_ms": {
+                                            "type": "integer",
+                                            "example": 150
+                                        },
+                                        "player_info": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Juan Pérez"
+                                                },
+                                                "card_number": {
+                                                    "type": "string",
+                                                    "example": "VP2024001"
+                                                },
+                                                "club": {
+                                                    "type": "string",
+                                                    "example": "Club Deportivo"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Carnet inválido o suspendido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "invalid"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carnet suspendido"
+                                        },
+                                        "can_play": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error_code": {
+                                            "type": "string",
+                                            "example": "CARD_SUSPENDED"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/qr-info/{qrCode}": {
+            "get": {
+                "tags": [
+                    "QR Verification"
+                ],
+                "summary": "Información básica del carnet",
+                "description": "Obtiene información básica de un carnet sin registrar verificación",
+                "operationId": "3bfabc1f20b7e939011b8bd742bb6160",
+                "parameters": [
+                    {
+                        "name": "qrCode",
+                        "in": "path",
+                        "description": "Código QR del carnet",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "QR123456789"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Información del carnet",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "card_number": {
+                                            "type": "string",
+                                            "example": "VP2024001"
+                                        },
+                                        "player_name": {
+                                            "type": "string",
+                                            "example": "Juan Pérez"
+                                        },
+                                        "club_name": {
+                                            "type": "string",
+                                            "example": "Club Deportivo"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Activo"
+                                        },
+                                        "photo_url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "valid_until": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2024-12-31"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Carnet no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Carnet no encontrado"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{id}/rotation/update": {
+            "post": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Actualizar rotación de un equipo",
+                "operationId": "cb86131de67a41511e63e7529763c3eb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team_id",
+                                    "rotation_data"
+                                ],
+                                "properties": {
+                                    "team_id": {
+                                        "description": "ID del equipo",
+                                        "type": "integer"
+                                    },
+                                    "rotation_data": {
+                                        "description": "Datos de rotación con posiciones y jugadores",
+                                        "type": "object"
+                                    },
+                                    "set_number": {
+                                        "description": "Número del set",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rotación actualizada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "rotation": {
+                                                    "properties": {
+                                                        "team_id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "rotation_order": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "broadcast_sent": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rotación actualizada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/rotation/rotate": {
+            "post": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Rotar posiciones de un equipo",
+                "operationId": "8634053d974afd6479635e6cf9184b4c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team_id",
+                                    "direction"
+                                ],
+                                "properties": {
+                                    "team_id": {
+                                        "description": "ID del equipo",
+                                        "type": "integer"
+                                    },
+                                    "direction": {
+                                        "description": "Dirección de rotación",
+                                        "type": "string",
+                                        "enum": [
+                                            "clockwise",
+                                            "counterclockwise"
+                                        ]
+                                    },
+                                    "set_number": {
+                                        "description": "Número del set",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rotación realizada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "rotation": {
+                                                    "properties": {
+                                                        "team_id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "rotation_order": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "previous_rotation": {
+                                                    "type": "object"
+                                                },
+                                                "broadcast_sent": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rotación realizada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/rotation/current": {
+            "get": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Obtener rotación actual de los equipos",
+                "operationId": "1429f98d0be6416949e7f9bdeb6325b7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "team_id",
+                        "in": "query",
+                        "description": "ID del equipo (opcional, si no se especifica devuelve ambos equipos)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "set_number",
+                        "in": "query",
+                        "description": "Número del set",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rotación actual de los equipos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "home_team": {
+                                                    "type": "object"
+                                                },
+                                                "away_team": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{id}/rotation/history": {
+            "get": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Obtener historial de rotaciones",
+                "operationId": "ee4794ebccdeb418c235f37fde551f58",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "team_id",
+                        "in": "query",
+                        "description": "ID del equipo",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "set_number",
+                        "in": "query",
+                        "description": "Número del set",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historial de rotaciones",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "team_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "rotation_order": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/matches/{id}/rotation/substitute": {
+            "post": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Realizar sustitución de jugador",
+                "operationId": "5095453bcbe966a4dc680348292bb609",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team_id",
+                                    "player_out_id",
+                                    "player_in_id",
+                                    "position"
+                                ],
+                                "properties": {
+                                    "team_id": {
+                                        "description": "ID del equipo",
+                                        "type": "integer"
+                                    },
+                                    "player_out_id": {
+                                        "description": "ID del jugador que sale",
+                                        "type": "integer"
+                                    },
+                                    "player_in_id": {
+                                        "description": "ID del jugador que entra",
+                                        "type": "integer"
+                                    },
+                                    "position": {
+                                        "description": "Posición en la que se realiza la sustitución",
+                                        "type": "string"
+                                    },
+                                    "set_number": {
+                                        "description": "Número del set",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sustitución realizada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "rotation": {
+                                                    "properties": {
+                                                        "team_id": {
+                                                            "type": "integer"
+                                                        },
+                                                        "rotation_order": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "integer"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "substitution_event": {
+                                                    "$ref": "#/components/schemas/MatchEvent"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sustitución realizada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/rotation/validate": {
+            "post": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Validar configuración de rotación",
+                "operationId": "49324d8279c1a0f6043e2248a5e8ea36",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team_id",
+                                    "rotation_data"
+                                ],
+                                "properties": {
+                                    "team_id": {
+                                        "description": "ID del equipo",
+                                        "type": "integer"
+                                    },
+                                    "rotation_data": {
+                                        "description": "Datos de rotación a validar",
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Resultado de la validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "is_valid": {
+                                                    "type": "boolean"
+                                                },
+                                                "errors": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "warnings": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{id}/rotation/positions": {
+            "get": {
+                "tags": [
+                    "Rotation Tracking"
+                ],
+                "summary": "Obtener posiciones disponibles",
+                "operationId": "15822d3959b10e84a5885e37efd44f69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de posiciones disponibles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "positions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "rotation_order": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sanctions": {
+            "get": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Listar sanciones",
+                "operationId": "5af4cb487550a1f83c7f58863ba51859",
+                "parameters": [
+                    {
+                        "name": "player_id",
+                        "in": "query",
+                        "description": "ID del jugador",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "team_id",
+                        "in": "query",
+                        "description": "ID del equipo",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "tournament_id",
+                        "in": "query",
+                        "description": "ID del torneo",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Estado de la sanción",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "completed",
+                                "appealed",
+                                "overturned"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de sanciones",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sanction"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Aplicar nueva sanción",
+                "operationId": "006d399f83ae14657e9eff371058ffd1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "player_id",
+                                    "type",
+                                    "severity",
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "player_id": {
+                                        "description": "ID del jugador",
+                                        "type": "integer"
+                                    },
+                                    "type": {
+                                        "description": "Tipo de sanción",
+                                        "type": "string",
+                                        "enum": [
+                                            "yellow_card",
+                                            "red_card",
+                                            "suspension",
+                                            "fine",
+                                            "warning"
+                                        ]
+                                    },
+                                    "severity": {
+                                        "description": "Severidad de la sanción",
+                                        "type": "string",
+                                        "enum": [
+                                            "minor",
+                                            "moderate",
+                                            "major",
+                                            "severe"
+                                        ]
+                                    },
+                                    "reason": {
+                                        "description": "Motivo de la sanción",
+                                        "type": "string"
+                                    },
+                                    "match_id": {
+                                        "description": "ID del partido (opcional)",
+                                        "type": "integer"
+                                    },
+                                    "tournament_id": {
+                                        "description": "ID del torneo (opcional)",
+                                        "type": "integer"
+                                    },
+                                    "description": {
+                                        "description": "Descripción detallada",
+                                        "type": "string"
+                                    },
+                                    "fine_amount": {
+                                        "description": "Monto de multa",
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "suspension_matches": {
+                                        "description": "Partidos de suspensión",
+                                        "type": "integer"
+                                    },
+                                    "suspension_days": {
+                                        "description": "Días de suspensión",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Sanción aplicada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sanction"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sanción aplicada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/sanctions/{id}": {
+            "get": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Obtener detalles de una sanción",
+                "operationId": "84fcaf8e66346e18be4d3679e90c6673",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la sanción",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles de la sanción",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Sanction"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/sanctions/{id}/revoke": {
+            "put": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Revocar una sanción",
+                "operationId": "922f7d468845d16d361488eee93ab20f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la sanción",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "reason": {
+                                        "description": "Motivo de la revocación",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sanción revocada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sanción revocada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/sanctions/{id}/appeal": {
+            "post": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Apelar una sanción",
+                "operationId": "55ec6882c1649027762c498f72ea0294",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la sanción",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "reason": {
+                                        "description": "Motivo de la apelación",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Apelación registrada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Apelación registrada exitosamente"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/players/{playerId}/sanctions/active": {
+            "get": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Obtener sanciones activas de un jugador",
+                "operationId": "3248c6cf6802bf38174debb3ab4fcc47",
+                "parameters": [
+                    {
+                        "name": "playerId",
+                        "in": "path",
+                        "description": "ID del jugador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sanciones activas del jugador",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "is_eligible": {
+                                                    "type": "boolean"
+                                                },
+                                                "active_sanctions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Sanction"
+                                                    }
+                                                },
+                                                "restrictions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/matches/{matchId}/sanctions": {
+            "get": {
+                "tags": [
+                    "Sanctions"
+                ],
+                "summary": "Obtener sanciones de un partido",
+                "operationId": "d55b38d88dcf4153ac9c33555e36e6bf",
+                "parameters": [
+                    {
+                        "name": "matchId",
+                        "in": "path",
+                        "description": "ID del partido",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sanciones del partido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sanction"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "MatchEvent": {
+                "title": "Match Event",
+                "description": "Volleyball match event model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "match_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "set_number": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "team_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "player_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "event_type": {
+                        "type": "string",
+                        "example": "attack"
+                    },
+                    "event_subtype": {
+                        "type": "string",
+                        "example": "spike"
+                    },
+                    "event_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "set_score_home": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "set_score_away": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Successful attack"
+                    },
+                    "is_successful": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "points_awarded": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "coordinates_x": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "coordinates_y": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "MatchSet": {
+                "title": "Match Set",
+                "description": "Volleyball match set model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "match_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "set_number": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "home_score": {
+                        "type": "integer",
+                        "example": 25
+                    },
+                    "away_score": {
+                        "type": "integer",
+                        "example": 23
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "completed"
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "ended_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "duration_minutes": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Sanction": {
+                "title": "Sanction",
+                "description": "Player sanction model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "player_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "team_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "match_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "tournament_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "yellow_card"
+                    },
+                    "severity": {
+                        "type": "string",
+                        "example": "minor"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "example": "Unsportsmanlike conduct"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Player argued with referee"
+                    },
+                    "incident_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "applied_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "fine_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "suspension_matches": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "suspension_days": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Tournament": {
+                "title": "Tournament",
+                "description": "Tournament model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Copa Nacional de Voleibol"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "copa-nacional-voleibol"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Torneo nacional de voleibol"
+                    },
+                    "league_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "championship"
+                    },
+                    "format": {
+                        "type": "string",
+                        "example": "round_robin"
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "senior"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "example": "mixed"
+                    },
+                    "registration_start": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "registration_end": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "season": {
+                        "type": "string",
+                        "example": "2024"
+                    },
+                    "max_teams": {
+                        "type": "integer",
+                        "example": 16
+                    },
+                    "min_teams": {
+                        "type": "integer",
+                        "example": 8
+                    },
+                    "registration_fee": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 100
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "is_public": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "venue": {
+                        "type": "string",
+                        "example": "Polideportivo Municipal"
+                    },
+                    "total_teams": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "total_matches": {
+                        "type": "integer",
+                        "example": 66
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "VolleyMatch": {
+                "title": "Volleyball Match",
+                "description": "Volleyball match model",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tournament_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "home_team_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "away_team_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "match_number": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "scheduled_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "finished_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "venue": {
+                        "type": "string",
+                        "example": "Gimnasio Municipal"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "scheduled"
+                    },
+                    "phase": {
+                        "type": "string",
+                        "example": "group_stage"
+                    },
+                    "round": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "home_sets": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "away_sets": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "home_points": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "away_points": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "winner_team_id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "first_referee": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "second_referee": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "duration_minutes": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Usar el token de autenticación en el header Authorization: Bearer {token}",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Endpoints de autenticación y gestión de tokens"
+        },
+        {
+            "name": "QR Verification",
+            "description": "Verificación de códigos QR"
+        },
+        {
+            "name": "Sanctions",
+            "description": "Gestión de sanciones disciplinarias"
+        },
+        {
+            "name": "Match Live",
+            "description": "Gestión de partidos en vivo y eventos"
+        },
+        {
+            "name": "Public Matches",
+            "description": "Endpoints públicos para consultar partidos"
+        },
+        {
+            "name": "Public Tournaments",
+            "description": "Endpoints públicos para consultar torneos"
+        },
+        {
+            "name": "Rotation Tracking",
+            "description": "Gestión de rotaciones de jugadores en partidos"
+        }
+    ]
+}

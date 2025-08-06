@@ -3,6 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+
+/**
+ * @OA\Schema(
+ *     schema="MatchSet",
+ *     type="object",
+ *     title="Match Set",
+ *     description="Volleyball match set model",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="match_id", type="integer", example=1),
+ *     @OA\Property(property="set_number", type="integer", example=1),
+ *     @OA\Property(property="home_score", type="integer", example=25),
+ *     @OA\Property(property="away_score", type="integer", example=23),
+ *     @OA\Property(property="status", type="string", example="completed"),
+ *     @OA\Property(property="started_at", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="ended_at", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="duration_minutes", type="integer", nullable=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time")
+ * )
+ */
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;

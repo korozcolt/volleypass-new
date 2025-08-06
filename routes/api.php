@@ -69,6 +69,18 @@ Route::prefix('v1')->group(function () {
                 'clubs_registered' => \App\Models\Club::count()
             ]);
         })->name('api.public.league-stats');
+
+        // Servicios públicos de torneos y partidos
+        Route::prefix('tournaments')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\PublicTournamentController::class, 'index'])->name('api.public.tournaments.index');
+            Route::get('/{id}', [\App\Http\Controllers\Api\PublicTournamentController::class, 'show'])->name('api.public.tournaments.show');
+        });
+
+        Route::prefix('matches')->group(function () {
+            Route::get('/scheduled', [\App\Http\Controllers\Api\PublicMatchController::class, 'scheduled'])->name('api.public.matches.scheduled');
+            Route::get('/live', [\App\Http\Controllers\Api\PublicMatchController::class, 'live'])->name('api.public.matches.live');
+            Route::get('/{id}', [\App\Http\Controllers\Api\PublicMatchController::class, 'show'])->name('api.public.matches.show');
+        });
     });
 });
 
@@ -262,6 +274,41 @@ Route::prefix('v1/matches')->group(function () {
         Route::post('/{matchId}/new-set', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'startNewSet']);
         Route::post('/{matchId}/events', [\App\Http\Controllers\Api\MatchRealTimeController::class, 'addMatchEvent']);
     });
+});
+
+// Match Live Management (Solo para árbitros)
+Route::prefix('v1/matches')->middleware(['auth:sanctum', 'api.role:Referee,LeagueAdmin,SuperAdmin'])->group(function () {
+    Route::post('/{id}/start', [\App\Http\Controllers\Api\MatchLiveController::class, 'startMatch']);
+    Route::post('/{id}/finish', [\App\Http\Controllers\Api\MatchLiveController::class, 'finishMatch']);
+    Route::post('/{id}/sets/start', [\App\Http\Controllers\Api\MatchLiveController::class, 'startNewSet']);
+    Route::post('/{id}/sets/finish', [\App\Http\Controllers\Api\MatchLiveController::class, 'finishSet']);
+    Route::post('/{id}/score', [\App\Http\Controllers\Api\MatchLiveController::class, 'updateScore']);
+    Route::post('/{id}/rotation', [\App\Http\Controllers\Api\MatchLiveController::class, 'updateRotation']);
+    Route::post('/{id}/events', [\App\Http\Controllers\Api\MatchLiveController::class, 'addEvent']);
+    Route::get('/{id}/events', [\App\Http\Controllers\Api\MatchLiveController::class, 'getEvents']);
+    Route::get('/{id}/status', [\App\Http\Controllers\Api\MatchLiveController::class, 'getMatchStatus']);
+});
+
+// Rotation Tracking (Solo para árbitros)
+Route::prefix('v1/matches')->middleware(['auth:sanctum', 'api.role:Referee,LeagueAdmin,SuperAdmin'])->group(function () {
+    Route::post('/{id}/rotation/update', [\App\Http\Controllers\Api\RotationTrackingController::class, 'updateRotation']);
+    Route::post('/{id}/rotation/rotate', [\App\Http\Controllers\Api\RotationTrackingController::class, 'rotatePositions']);
+    Route::get('/{id}/rotation/current', [\App\Http\Controllers\Api\RotationTrackingController::class, 'getCurrentRotation']);
+    Route::get('/{id}/rotation/history', [\App\Http\Controllers\Api\RotationTrackingController::class, 'getRotationHistory']);
+    Route::post('/{id}/rotation/substitute', [\App\Http\Controllers\Api\RotationTrackingController::class, 'substitutePlayer']);
+    Route::post('/{id}/rotation/validate', [\App\Http\Controllers\Api\RotationTrackingController::class, 'validateRotation']);
+    Route::get('/{id}/rotation/positions', [\App\Http\Controllers\Api\RotationTrackingController::class, 'getAvailablePositions']);
+});
+
+// Sanctions Management (Solo para árbitros)
+Route::prefix('v1/sanctions')->middleware(['auth:sanctum', 'api.role:Referee,LeagueAdmin,SuperAdmin'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\SanctionController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\SanctionController::class, 'store']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\SanctionController::class, 'show']);
+    Route::post('/{id}/revoke', [\App\Http\Controllers\Api\SanctionController::class, 'revoke']);
+    Route::post('/{id}/appeal', [\App\Http\Controllers\Api\SanctionController::class, 'appeal']);
+    Route::get('/player/{playerId}/active', [\App\Http\Controllers\Api\SanctionController::class, 'getActiveSanctionsForPlayer']);
+    Route::get('/match/{matchId}', [\App\Http\Controllers\Api\SanctionController::class, 'getSanctionsForMatch']);
 });
 
 // Webhooks

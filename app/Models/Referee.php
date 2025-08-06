@@ -20,12 +20,16 @@ class Referee extends Model
         'category',
         'experience_years',
         'status',
+        'is_active',
+        'is_available',
         'notes',
         'created_by',
     ];
 
     protected $casts = [
         'experience_years' => 'integer',
+        'is_active' => 'boolean',
+        'is_available' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

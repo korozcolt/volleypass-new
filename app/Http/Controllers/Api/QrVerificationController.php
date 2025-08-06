@@ -21,10 +21,69 @@ class QrVerificationController extends Controller
     ) {}
 
     /**
-     * Verificación principal de código QR
-     *
-     * @param VerifyQrRequest $request
-     * @return JsonResponse
+     * @OA\Post(
+     *     path="/api/verify-qr",
+     *     tags={"QR Verification"},
+     *     summary="Verificación principal de código QR",
+     *     description="Verifica un código QR de carnet de jugador para eventos deportivos",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"qr_code", "verification_token", "scanner_id"},
+     *             @OA\Property(property="qr_code", type="string", example="QR123456789"),
+     *             @OA\Property(property="verification_token", type="string", example="TOKEN_ABC123"),
+     *             @OA\Property(property="scanner_id", type="string", example="SCANNER_001"),
+     *             @OA\Property(
+     *                 property="event_data",
+     *                 type="object",
+     *                 @OA\Property(property="match_id", type="integer", example=1),
+     *                 @OA\Property(property="event_type", type="string", example="match_entry")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Verificación exitosa",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="message", type="string", example="Carnet válido"),
+     *             @OA\Property(property="can_play", type="boolean", example=true),
+     *             @OA\Property(property="response_time_ms", type="integer", example=150),
+     *             @OA\Property(
+     *                 property="player_info",
+     *                 type="object",
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="card_number", type="string", example="VP2024001"),
+     *                 @OA\Property(property="club", type="string", example="Club Deportivo")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Carnet inválido o suspendido",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="invalid"),
+     *             @OA\Property(property="message", type="string", example="Carnet suspendido"),
+     *             @OA\Property(property="can_play", type="boolean", example=false),
+     *             @OA\Property(property="error_code", type="string", example="CARD_SUSPENDED")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Errores de validación",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\AdditionalProperties(
+     *                     type="array",
+     *                     @OA\Items(type="string")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function verify(VerifyQrRequest $request): JsonResponse
     {
@@ -73,10 +132,38 @@ class QrVerificationController extends Controller
     }
 
     /**
-     * Información básica del carnet (sin logging)
-     *
-     * @param string $qrCode
-     * @return JsonResponse
+     * @OA\Get(
+     *     path="/api/qr-info/{qrCode}",
+     *     tags={"QR Verification"},
+     *     summary="Información básica del carnet",
+     *     description="Obtiene información básica de un carnet sin registrar verificación",
+     *     @OA\Parameter(
+     *         name="qrCode",
+     *         in="path",
+     *         required=true,
+     *         description="Código QR del carnet",
+     *         @OA\Schema(type="string", example="QR123456789")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Información del carnet",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="card_number", type="string", example="VP2024001"),
+     *             @OA\Property(property="player_name", type="string", example="Juan Pérez"),
+     *             @OA\Property(property="club_name", type="string", example="Club Deportivo"),
+     *             @OA\Property(property="status", type="string", example="Activo"),
+     *             @OA\Property(property="photo_url", type="string", nullable=true),
+     *             @OA\Property(property="valid_until", type="string", format="date", example="2024-12-31")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Carnet no encontrado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Carnet no encontrado")
+     *         )
+     *     )
+     * )
      */
     public function getCardInfo(string $qrCode): JsonResponse
     {

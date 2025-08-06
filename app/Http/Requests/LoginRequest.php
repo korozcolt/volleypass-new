@@ -1,7 +1,7 @@
 <?php
-// app/Http/Requests/Api/LoginRequest.php - CREAR
+// app/Http/Requests/LoginRequest.php
 
-namespace App\Http\Requests\Api;
+namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\NoAccentsEmail;

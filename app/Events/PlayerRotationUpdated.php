@@ -16,7 +16,7 @@ class PlayerRotationUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $match;
-    public $teamId;
+    public $team;
     public $rotationData;
     public $eventType;
     public $timestamp;
@@ -24,10 +24,10 @@ class PlayerRotationUpdated implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(VolleyMatch $match, int $teamId, array $rotationData, string $eventType = 'rotation')
+    public function __construct(VolleyMatch $match, string $team, array $rotationData, string $eventType = 'rotation')
     {
         $this->match = $match;
-        $this->teamId = $teamId;
+        $this->team = $team;
         $this->rotationData = $rotationData;
         $this->eventType = $eventType;
         $this->timestamp = now();
@@ -52,7 +52,7 @@ class PlayerRotationUpdated implements ShouldBroadcast
     {
         return [
             'match_id' => $this->match->id,
-            'team_id' => $this->teamId,
+            'team' => $this->team,
             'rotation_data' => $this->rotationData,
             'event_type' => $this->eventType,
             'timestamp' => $this->timestamp->toISOString(),

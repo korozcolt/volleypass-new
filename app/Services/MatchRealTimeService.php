@@ -116,8 +116,11 @@ class MatchRealTimeService
 
         $match->update(['events' => $events]);
 
+        // Determinar si es equipo local o visitante
+        $team = $teamId === $match->home_team_id ? 'home' : 'away';
+        
         // Disparar evento de rotación
-        broadcast(new PlayerRotationUpdated($match, $teamId, $rotationData));
+        broadcast(new PlayerRotationUpdated($match, $team, $rotationData));
 
         return [
             'success' => true,

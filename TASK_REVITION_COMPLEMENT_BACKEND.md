@@ -55,10 +55,10 @@ php artisan migrate:status
 - [ ] FederationService ✅
 - [ ] PaymentValidationService ✅  
 - [ ] TransferApprovalService ❌
-- [ ] TournamentGeneratorService ❌ (CRÍTICO)
-- [ ] MatchLiveService ❌ (CRÍTICO)
-- [ ] RotationTrackingService ❌ (CRÍTICO)
-- [ ] SanctionService ❌
+- [ ] TournamentGeneratorService ✅ (IMPLEMENTADO)
+- [ ] MatchLiveService ✅ (IMPLEMENTADO)
+- [ ] RotationTrackingService ✅ (IMPLEMENTADO)
+- [ ] SanctionService ✅ (IMPLEMENTADO)
 - [ ] CardGenerationService ❌
 - [ ] QrVerificationService ❌
 ```

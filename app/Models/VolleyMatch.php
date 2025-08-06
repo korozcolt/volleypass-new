@@ -3,6 +3,37 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+
+/**
+ * @OA\Schema(
+ *     schema="VolleyMatch",
+ *     type="object",
+ *     title="Volleyball Match",
+ *     description="Volleyball match model",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="tournament_id", type="integer", example=1),
+ *     @OA\Property(property="home_team_id", type="integer", example=1),
+ *     @OA\Property(property="away_team_id", type="integer", example=2),
+ *     @OA\Property(property="match_number", type="integer", example=1),
+ *     @OA\Property(property="scheduled_at", type="string", format="date-time"),
+ *     @OA\Property(property="started_at", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="finished_at", type="string", format="date-time", nullable=true),
+ *     @OA\Property(property="venue", type="string", example="Gimnasio Municipal"),
+ *     @OA\Property(property="status", type="string", example="scheduled"),
+ *     @OA\Property(property="phase", type="string", example="group_stage"),
+ *     @OA\Property(property="round", type="integer", example=1),
+ *     @OA\Property(property="home_sets", type="integer", example=0),
+ *     @OA\Property(property="away_sets", type="integer", example=0),
+ *     @OA\Property(property="home_points", type="integer", example=0),
+ *     @OA\Property(property="away_points", type="integer", example=0),
+ *     @OA\Property(property="winner_team_id", type="integer", nullable=true),
+ *     @OA\Property(property="first_referee", type="string", nullable=true),
+ *     @OA\Property(property="second_referee", type="string", nullable=true),
+ *     @OA\Property(property="duration_minutes", type="integer", nullable=true),
+ *     @OA\Property(property="created_at", type="string", format="date-time"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time")
+ * )
+ */
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -53,7 +84,7 @@ class VolleyMatch extends Model
         'status' => MatchStatus::class,
         'phase' => MatchPhase::class,
         'referees' => 'array',
-        'events' => 'array',
+        'events' => 'object',
         'statistics' => 'array',
     ];
 
@@ -121,6 +152,11 @@ class VolleyMatch extends Model
     public function sets(): HasMany
     {
         return $this->hasMany(MatchSet::class, 'match_id');
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(MatchEvent::class, 'match_id');
     }
 
     // Snake case aliases for compatibility

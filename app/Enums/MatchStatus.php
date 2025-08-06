@@ -9,6 +9,7 @@ use Filament\Support\Contracts\HasIcon;
 enum MatchStatus: string implements HasLabel, HasColor, HasIcon {
     case Scheduled = 'scheduled';
     case In_Progress = 'in_progress';
+    case Paused = 'paused';
     case Finished = 'finished';
     case Cancelled = 'cancelled';
     case Postponed = 'postponed';
@@ -19,6 +20,7 @@ enum MatchStatus: string implements HasLabel, HasColor, HasIcon {
         return match ($this) {
             self::Scheduled => 'Programado',
             self::In_Progress => 'En Curso',
+            self::Paused => 'Pausado',
             self::Finished => 'Finalizado',
             self::Cancelled => 'Cancelado',
             self::Postponed => 'Pospuesto',
@@ -31,6 +33,7 @@ enum MatchStatus: string implements HasLabel, HasColor, HasIcon {
         return match ($this) {
             self::Scheduled => 'info',
             self::In_Progress => 'warning',
+            self::Paused => 'orange',
             self::Finished => 'success',
             self::Cancelled => 'danger',
             self::Postponed => 'purple',
@@ -43,6 +46,7 @@ enum MatchStatus: string implements HasLabel, HasColor, HasIcon {
         return match ($this) {
             self::Scheduled => 'heroicon-o-clock',
             self::In_Progress => 'heroicon-o-play-circle',
+            self::Paused => 'heroicon-o-pause',
             self::Finished => 'heroicon-o-check-circle',
             self::Cancelled => 'heroicon-o-x-circle',
             self::Postponed => 'heroicon-o-pause-circle',

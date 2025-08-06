@@ -4,25 +4,94 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\LoginRequest;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
     /**
-     * Login para verificadores móviles
+     * @OA\Post(
+     *     path="/api/auth/login",
+     *     tags={"Authentication"},
+     *     summary="Login para verificadores móviles",
+     *     description="Autenticación de usuarios con permisos de verificador, administrador de liga o super administrador",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "password", "device_name"},
+     *             @OA\Property(property="email", type="string", format="email", example="verifier@volleypass.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123"),
+     *             @OA\Property(property="device_name", type="string", example="iPhone 15 Pro")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login exitoso",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="token", type="string", example="1|abcdef123456..."),
+     *             @OA\Property(property="token_type", type="string", example="Bearer"),
+     *             @OA\Property(property="expires_in", type="integer", example=2592000),
+     *             @OA\Property(
+     *                 property="user",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="verifier@volleypass.com"),
+     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"Verifier"}),
+     *                 @OA\Property(property="abilities", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(
+     *                     property="profile",
+     *                     type="object",
+     *                     @OA\Property(property="avatar_url", type="string", nullable=true),
+     *                     @OA\Property(property="phone", type="string", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Credenciales inválidas",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Credenciales inválidas")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Demasiados intentos de login",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Demasiados intentos de login. Intente en 300 segundos.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Errores de validación",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\AdditionalProperties(
+     *                     type="array",
+     *                     @OA\Items(type="string")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function login(LoginRequest $request): JsonResponse
     {
         try {
             // Rate limiting por IP
-            $key = 'login-attempts:' . $request->ip();
+            $clientIp = $request->getClientIp() ?? $request->ip() ?? '127.0.0.1';
+            $key = 'login-attempts:' . $clientIp;
             if (RateLimiter::tooManyAttempts($key, 5)) {
                 return response()->json([
                     'error' => 'Demasiados intentos de login. Intente en ' .
@@ -46,8 +115,8 @@ class AuthController extends Controller
 
                 Log::warning('Failed API login attempt', [
                     'email' => $credentials['email'],
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent()
+                    'ip' => $clientIp,
+                    'user_agent' => $request->header('User-Agent') ?? 'Unknown'
                 ]);
 
                 return response()->json([
@@ -73,7 +142,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'device' => $credentials['device_name'],
-                'ip' => $request->ip()
+                'ip' => $clientIp
             ]);
 
             // Clear rate limiting on success
@@ -97,10 +166,11 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            $clientIp = $request->getClientIp() ?? $request->ip() ?? '127.0.0.1';
             Log::error('API login error', [
                 'error' => $e->getMessage(),
-                'email' => $request->input('email'),
-                'ip' => $request->ip()
+                'email' => $request->get('email', 'unknown'),
+                'ip' => $clientIp
             ]);
 
             return response()->json([
@@ -110,8 +180,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout - revocar token actual
-     * ✅ SOLUCIÓN DEFINITIVA para el error de IntelliSense
+     * @OA\Post(
+     *     path="/api/auth/logout",
+     *     tags={"Authentication"},
+     *     summary="Cerrar sesión actual",
+     *     description="Revoca el token de acceso actual del usuario",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sesión cerrada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Sesión cerrada exitosamente")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function logout(Request $request): JsonResponse
     {
@@ -198,7 +287,27 @@ class AuthController extends Controller
     }
 
     /**
-     * Revocar TODOS los tokens del usuario (logout desde todos los dispositivos)
+     * @OA\Post(
+     *     path="/api/auth/logout-all",
+     *     tags={"Authentication"},
+     *     summary="Cerrar sesión en todos los dispositivos",
+     *     description="Revoca todos los tokens de acceso del usuario",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sesiones cerradas en todos los dispositivos",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Sesión cerrada en todos los dispositivos (3 tokens revocados)")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function logoutAll(Request $request): JsonResponse
     {
@@ -238,7 +347,49 @@ class AuthController extends Controller
     }
 
     /**
-     * Obtener usuario autenticado
+     * @OA\Get(
+     *     path="/api/auth/user",
+     *     tags={"Authentication"},
+     *     summary="Obtener información del usuario autenticado",
+     *     description="Retorna la información del usuario actual y detalles del token",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Información del usuario",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="user",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Juan Pérez"),
+     *                 @OA\Property(property="email", type="string", example="verifier@volleypass.com"),
+     *                 @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"Verifier"}),
+     *                 @OA\Property(property="abilities", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(
+     *                     property="profile",
+     *                     type="object",
+     *                     @OA\Property(property="avatar_url", type="string", nullable=true),
+     *                     @OA\Property(property="phone", type="string", nullable=true)
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="token_info",
+     *                 type="object",
+     *                 @OA\Property(property="name", type="string", example="iPhone 15 Pro"),
+     *                 @OA\Property(property="abilities", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="expires_at", type="string", format="date-time", nullable=true)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function user(Request $request): JsonResponse
     {
