@@ -13,6 +13,56 @@ use Illuminate\Support\Collection;
 class LeagueConfigurationService
 {
     /**
+     * Establece una configuración específica para una liga
+     */
+    public function set(int $leagueId, string $key, $value): bool
+    {
+        try {
+            // Usar el modelo LeagueConfiguration directamente
+            \App\Models\LeagueConfiguration::set($leagueId, $key, $value);
+            
+            Log::info('Configuración de liga actualizada', [
+                'league_id' => $leagueId,
+                'key' => $key,
+                'value' => $value
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error estableciendo configuración de liga', [
+                'league_id' => $leagueId,
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene una configuración específica de una liga
+     */
+    public function get(int $leagueId, string $key, $default = null)
+    {
+        try {
+            // Usar el modelo LeagueConfiguration directamente
+            $config = \App\Models\LeagueConfiguration::where('league_id', $leagueId)
+                ->where('key', $key)
+                ->first();
+            
+            return $config ? $config->typed_value : $default;
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo configuración de liga', [
+                'league_id' => $leagueId,
+                'key' => $key,
+                'error' => $e->getMessage()
+            ]);
+            
+            return $default;
+        }
+    }
+
+    /**
      * Crea categorías por defecto para una liga basadas en el enum PlayerCategory
      */
     public function createDefaultCategories(League $league): array

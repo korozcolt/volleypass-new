@@ -10,6 +10,7 @@ use App\Models\City;
 use App\Models\User;
 use App\Enums\FederationStatus;
 use App\Enums\UserStatus;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\CreateRecord;
@@ -119,7 +120,7 @@ class CreateClub extends CreateRecord
 
                             Forms\Components\TextInput::make('email')
                                 ->label('Email')
-                                ->email()
+                                ->rules([new NoAccentsEmail()])
                                 ->maxLength(255),
 
                             Forms\Components\TextInput::make('website')

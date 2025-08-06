@@ -105,16 +105,20 @@ class LeagueConfiguration extends Model
 
     public static function set(int $league_id, string $key, $value): bool
     {
-        $config = static::where('league_id', $league_id)
-            ->where('key', $key)
-            ->first();
-
-        if (!$config) {
+        try {
+            static::updateOrCreate(
+                [
+                    'league_id' => $league_id,
+                    'key' => $key
+                ],
+                [
+                    'value' => $value
+                ]
+            );
+            return true;
+        } catch (\Exception $e) {
             return false;
         }
-
-        $config->update(['value' => $value]);
-        return true;
     }
 
     public static function getByGroup(int $league_id, string $group): array

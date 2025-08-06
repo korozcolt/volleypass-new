@@ -415,10 +415,59 @@ class TransferResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['player.user', 'fromClub', 'toClub', 'league', 'requestedBy', 'approvedBy']);
+        
+        $user = Auth::user();
+
+        // SuperAdmin puede ver todas las transferencias
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin puede ver transferencias de su liga
+        if ($user->hasRole('LeagueAdmin')) {
+            if ($user->league_id) {
+                return $query->where('league_id', $user->league_id);
+            }
+            return $query;
+        }
+
+        // ClubDirector puede ver transferencias donde su club está involucrado
+        if ($user->hasRole('ClubDirector')) {
+            if ($user->club_id) {
+                return $query->where(function (Builder $q) use ($user) {
+                    $q->where('from_club_id', $user->club_id)
+                      ->orWhere('to_club_id', $user->club_id);
+                });
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Coach puede ver transferencias de jugadores de su club
+        if ($user->hasRole('Coach')) {
+            if ($user->club_id) {
+                return $query->where(function (Builder $q) use ($user) {
+                    $q->where('from_club_id', $user->club_id)
+                      ->orWhere('to_club_id', $user->club_id);
+                });
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Player puede ver solo sus propias transferencias
+        if ($user->hasRole('Player')) {
+            $player = $user->player;
+            if ($player) {
+                return $query->where('player_id', $player->id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver transferencias por defecto
+        return $query->whereRaw('1 = 0');
     }
 
     public static function getNavigationBadge(): ?string

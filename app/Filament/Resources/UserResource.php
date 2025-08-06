@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use App\Enums\UserStatus;
 use App\Enums\Gender;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -84,7 +85,7 @@ class UserResource extends Resource
                             ->schema([
                                 Forms\Components\TextInput::make('email')
                                     ->label('Correo Electrónico')
-                                    ->email()
+                                    ->rules([new NoAccentsEmail()])
                                     ->required()
                                     ->unique(User::class, 'email', ignoreRecord: true)
                                     ->maxLength(255),
@@ -417,12 +418,58 @@ class UserResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+        
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        // SuperAdmin puede ver todos los usuarios
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin puede ver usuarios de su liga y departamento
+        if ($user->hasRole('LeagueAdmin')) {
+            return $query->where(function (Builder $q) use ($user) {
+                // Usuarios de su liga
+                $q->where('league_id', $user->league_id);
+                
+                // O usuarios de su departamento (si tiene uno asignado)
+                if ($user->departamento_id) {
+                    $q->orWhere('departamento_id', $user->departamento_id);
+                }
+                
+                // O usuarios de clubes de su departamento
+                if ($user->departamento_id) {
+                    $q->orWhereHas('club', function (Builder $clubQuery) use ($user) {
+                        $clubQuery->where('department_id', $user->departamento_id);
+                    });
+                }
+            });
+        }
+
+        // ClubDirector puede ver usuarios de su club
+        if ($user->hasRole('ClubDirector')) {
+            if ($user->club_id) {
+                return $query->where('club_id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Coach puede ver usuarios de su club
+        if ($user->hasRole('Coach')) {
+            if ($user->club_id) {
+                return $query->where('club_id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver usuarios por defecto
+        return $query->whereRaw('1 = 0');
     }
 
     public static function getNavigationBadge(): ?string

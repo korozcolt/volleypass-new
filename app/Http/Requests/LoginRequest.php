@@ -4,6 +4,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\NoAccentsEmail;
 
 class LoginRequest extends FormRequest
 {
@@ -17,7 +18,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => [
                 'required',
-                'email',
+                new NoAccentsEmail(),
                 'max:255'
             ],
             'password' => [

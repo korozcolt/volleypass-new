@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QrVerificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Rules\NoAccentsEmail;
 
 // RUTAS PÚBLICAS API (NO REQUIEREN TOKEN)
 Route::prefix('v1')->group(function () {
@@ -30,7 +31,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('auth')->name('api.auth.')->group(function () {
         Route::post('/login', [AuthController::class, 'login'])->name('login');
         Route::post('/check-email', function (Request $request) {
-            $request->validate(['email' => 'required|email']);
+            $request->validate(['email' => ['required', new NoAccentsEmail()]]);
             $exists = \App\Models\User::where('email', $request->email)
                 ->whereHas('roles', function($q) {
                     $q->whereIn('name', ['Verifier', 'LeagueAdmin', 'SuperAdmin']);

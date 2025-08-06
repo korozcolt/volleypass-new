@@ -22,6 +22,7 @@ use App\Enums\PaymentType;
 use App\Enums\Gender;
 use App\Enums\SelectionStatus;
 use App\Services\FederationService;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -145,7 +146,7 @@ class PlayerResource extends Resource
                                             ->schema([
                                                 Forms\Components\TextInput::make('user.email')
                                                     ->label('Correo Electrónico')
-                                                    ->email()
+                                                    ->rules([new NoAccentsEmail()])
                                                     ->required()
                                                     ->unique(User::class, 'email', ignoreRecord: true),
                                                 
@@ -657,12 +658,65 @@ class PlayerResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+        
+        $user = Auth::user();
+
+        // SuperAdmin puede ver todos los jugadores
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin solo puede ver jugadores de clubes de su departamento
+        if ($user->hasRole('LeagueAdmin')) {
+            if ($user->departamento_id) {
+                return $query->whereHas('club', function (Builder $clubQuery) use ($user) {
+                    $clubQuery->where('department_id', $user->departamento_id);
+                });
+            }
+            return $query;
+        }
+
+        // ClubDirector solo puede ver jugadores de su club
+        if ($user->hasRole('ClubDirector')) {
+            if ($user->club_id) {
+                return $query->where('club_id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Coach puede ver jugadores del club donde trabaja
+        if ($user->hasRole('Coach')) {
+            if ($user->club_id) {
+                return $query->where('club_id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // SportsDoctor puede ver jugadores que ha atendido o de su área
+        if ($user->hasRole('SportsDoctor')) {
+            // Puede ver jugadores con certificados médicos que él ha emitido
+            return $query->whereHas('medicalCertificates', function (Builder $certQuery) use ($user) {
+                $certQuery->where('issued_by', $user->id);
+            });
+        }
+
+        // Player solo puede verse a sí mismo
+        if ($user->hasRole('Player')) {
+            $player = $user->player;
+            if ($player) {
+                return $query->where('id', $player->id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver jugadores por defecto
+        return $query->whereRaw('1 = 0');
     }
 
     public static function getNavigationBadge(): ?string

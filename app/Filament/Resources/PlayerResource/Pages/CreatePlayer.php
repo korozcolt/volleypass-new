@@ -19,6 +19,7 @@ use App\Enums\PlayerPosition;
 use App\Enums\MedicalStatus;
 use App\Enums\UserStatus;
 use App\Enums\Gender;
+use App\Rules\NoAccentsEmail;
 use Illuminate\Support\Facades\Auth;
 
 class CreatePlayer extends CreateRecord
@@ -133,7 +134,7 @@ class CreatePlayer extends CreateRecord
 
                             Forms\Components\TextInput::make('user.email')
                                 ->label('Email')
-                                ->email()
+                                ->rules([new NoAccentsEmail()])
                                 ->unique('users', 'email')
                                 ->maxLength(255),
 

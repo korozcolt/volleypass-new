@@ -106,7 +106,7 @@ class SystemConfigurationSeeder extends Seeder
                 'group' => 'notifications',
                 'is_public' => false,
                 'is_editable' => true,
-                'validation_rules' => 'required|email',
+                'validation_rules' => 'required|App\\Rules\\NoAccentsEmail',
             ],
 
             // Configuraciones de seguridad

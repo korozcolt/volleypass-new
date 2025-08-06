@@ -334,12 +334,84 @@ class MatchResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+        
+        $user = Auth::user();
+
+        // SuperAdmin puede ver todos los partidos
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin puede ver partidos de su liga o de equipos de su departamento
+        if ($user->hasRole('LeagueAdmin')) {
+            return $query->where(function (Builder $q) use ($user) {
+                // Partidos donde el equipo local o visitante pertenece a su liga
+                $q->whereHas('homeTeam', function (Builder $teamQuery) use ($user) {
+                    $teamQuery->where('league_id', $user->league_id)
+                             ->orWhereHas('club', function (Builder $clubQuery) use ($user) {
+                                 if ($user->departamento_id) {
+                                     $clubQuery->where('department_id', $user->departamento_id);
+                                 }
+                             });
+                })
+                ->orWhereHas('awayTeam', function (Builder $teamQuery) use ($user) {
+                    $teamQuery->where('league_id', $user->league_id)
+                             ->orWhereHas('club', function (Builder $clubQuery) use ($user) {
+                                 if ($user->departamento_id) {
+                                     $clubQuery->where('department_id', $user->departamento_id);
+                                 }
+                             });
+                });
+            });
+        }
+
+        // ClubDirector puede ver partidos de equipos de su club
+        if ($user->hasRole('ClubDirector')) {
+            if ($user->club_id) {
+                return $query->where(function (Builder $q) use ($user) {
+                    $q->whereHas('homeTeam', function (Builder $teamQuery) use ($user) {
+                        $teamQuery->where('club_id', $user->club_id);
+                    })
+                    ->orWhereHas('awayTeam', function (Builder $teamQuery) use ($user) {
+                        $teamQuery->where('club_id', $user->club_id);
+                    });
+                });
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Coach puede ver partidos de equipos de su club
+        if ($user->hasRole('Coach')) {
+            if ($user->club_id) {
+                return $query->where(function (Builder $q) use ($user) {
+                    $q->whereHas('homeTeam', function (Builder $teamQuery) use ($user) {
+                        $teamQuery->where('club_id', $user->club_id);
+                    })
+                    ->orWhereHas('awayTeam', function (Builder $teamQuery) use ($user) {
+                        $teamQuery->where('club_id', $user->club_id);
+                    });
+                });
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Referee puede ver partidos que arbitra
+        if ($user->hasRole('Referee')) {
+            $referee = $user->referee;
+            if ($referee) {
+                return $query->where('referee_id', $referee->id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver partidos por defecto
+        return $query->whereRaw('1 = 0');
     }
 
     public static function canAccess(): bool

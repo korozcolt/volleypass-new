@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Models\User;
 use App\Enums\FederationStatus;
 use App\Enums\UserStatus;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -75,7 +76,7 @@ class ClubResource extends Resource
                                     ->schema([
                                         Forms\Components\TextInput::make('email')
                                             ->label(__('Email'))
-                                            ->email()
+                                            ->rules([new NoAccentsEmail()])
                                             ->unique(ignoreRecord: true)
                                             ->columnSpan(1),
                                         Forms\Components\TextInput::make('phone')
@@ -529,6 +530,46 @@ class ClubResource extends Resource
     public static function canDelete($record): bool
     {
         return Auth::user()->can('delete_club', $record);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        // SuperAdmin puede ver todos los clubes
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin solo puede ver clubes de su departamento
+        if ($user->hasRole('LeagueAdmin')) {
+            if ($user->departamento_id) {
+                return $query->where('department_id', $user->departamento_id);
+            }
+            // Si no tiene departamento asignado, puede ver todos
+            return $query;
+        }
+
+        // ClubDirector solo puede ver su propio club
+        if ($user->hasRole('ClubDirector')) {
+            if ($user->club_id) {
+                return $query->where('id', $user->club_id);
+            }
+            // Si no tiene club asignado, no puede ver ninguno
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Coach puede ver el club donde trabaja
+        if ($user->hasRole('Coach')) {
+            if ($user->club_id) {
+                return $query->where('id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver clubes por defecto
+        return $query->whereRaw('1 = 0');
     }
 
     public static function getNavigationBadge(): ?string

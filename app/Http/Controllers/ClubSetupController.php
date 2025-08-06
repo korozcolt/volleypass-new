@@ -11,6 +11,7 @@ use App\Models\Club;
 use App\Models\Team;
 use App\Models\Category;
 use App\Models\Season;
+use App\Rules\NoAccentsEmail;
 
 class ClubSetupController extends Controller
 {
@@ -267,7 +268,7 @@ class ClubSetupController extends Controller
                         'department_id' => 'nullable|exists:departments,id',
                         'city_id' => 'nullable|exists:cities,id',
                         'phone' => 'nullable|string|max:20',
-                        'email' => 'nullable|email|max:255',
+                        'email' => ['nullable', new NoAccentsEmail(), 'max:255'],
                         'website' => 'nullable|url|max:255',
                     ])->validate();
                     break;

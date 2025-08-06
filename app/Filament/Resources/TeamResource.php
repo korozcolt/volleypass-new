@@ -18,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Infolists;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Infolist;
 
 class TeamResource extends Resource
@@ -372,6 +373,56 @@ class TeamResource extends Resource
     }
 
     // Eliminado getNavigationItems() - ahora las selecciones departamentales se acceden desde el botón en la lista de equipos
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        // SuperAdmin puede ver todos los equipos
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin puede ver equipos de su liga o de clubes de su departamento
+        if ($user->hasRole('LeagueAdmin')) {
+            return $query->where(function (Builder $q) use ($user) {
+                // Equipos de selección de su liga
+                $q->where(function (Builder $selectionQuery) use ($user) {
+                    $selectionQuery->where('team_type', \App\Enums\TeamType::SELECTION)
+                                  ->where('league_id', $user->league_id);
+                })
+                // O equipos de club de su departamento
+                ->orWhere(function (Builder $clubQuery) use ($user) {
+                    $clubQuery->where('team_type', \App\Enums\TeamType::CLUB)
+                             ->whereHas('club', function (Builder $clubSubQuery) use ($user) {
+                                 if ($user->departamento_id) {
+                                     $clubSubQuery->where('department_id', $user->departamento_id);
+                                 }
+                             });
+                });
+            });
+        }
+
+        // ClubDirector solo puede ver equipos de su club
+        if ($user->hasRole('ClubDirector')) {
+            if ($user->club_id) {
+                return $query->where('club_id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Coach puede ver equipos del club donde trabaja
+        if ($user->hasRole('Coach')) {
+            if ($user->club_id) {
+                return $query->where('club_id', $user->club_id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver equipos por defecto
+        return $query->whereRaw('1 = 0');
+    }
 
     public static function canViewAny(): bool
     {

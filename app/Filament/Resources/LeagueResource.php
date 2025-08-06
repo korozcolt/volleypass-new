@@ -8,6 +8,7 @@ use App\Models\Country;
 use App\Models\Player;
 use App\Enums\UserStatus;
 use App\Enums\PlayerCategory;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -89,7 +90,7 @@ class LeagueResource extends Resource
 
                                         Forms\Components\TextInput::make('email')
                                             ->label('Email')
-                                            ->email()
+                                            ->rules([new NoAccentsEmail()])
                                             ->maxLength(255),
 
                                         Forms\Components\TextInput::make('phone')

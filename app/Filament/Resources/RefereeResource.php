@@ -7,6 +7,7 @@ use App\Models\Referee;
 use App\Models\User;
 use App\Enums\UserStatus;
 use App\Enums\Gender;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -54,7 +55,7 @@ class RefereeResource extends Resource
 
                                 Forms\Components\TextInput::make('email')
                                     ->label('Correo Electrónico')
-                                    ->email()
+                                    ->rules([new NoAccentsEmail()])
                                     ->required()
                                     ->unique(User::class, 'email')
                                     ->maxLength(255),
@@ -317,12 +318,48 @@ class RefereeResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+        
+        $user = Auth::user();
+
+        // SuperAdmin puede ver todos los árbitros
+        if ($user->hasRole('SuperAdmin')) {
+            return $query;
+        }
+
+        // LeagueAdmin puede ver árbitros de su liga o departamento
+        if ($user->hasRole('LeagueAdmin')) {
+            return $query->where(function (Builder $q) use ($user) {
+                // Árbitros de su liga
+                $q->whereHas('user', function (Builder $userQuery) use ($user) {
+                    $userQuery->where('league_id', $user->league_id);
+                });
+                
+                // O árbitros de su departamento (si tiene uno asignado)
+                if ($user->departamento_id) {
+                    $q->orWhereHas('user', function (Builder $userQuery) use ($user) {
+                        $userQuery->where('departamento_id', $user->departamento_id);
+                    });
+                }
+            });
+        }
+
+        // Referee puede verse solo a sí mismo
+        if ($user->hasRole('Referee')) {
+            $referee = $user->referee;
+            if ($referee) {
+                return $query->where('id', $referee->id);
+            }
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Otros roles no pueden ver árbitros por defecto
+        return $query->whereRaw('1 = 0');
     }
 
     public static function canAccess(): bool

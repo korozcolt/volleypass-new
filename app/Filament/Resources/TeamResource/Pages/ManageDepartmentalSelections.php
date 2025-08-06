@@ -79,7 +79,11 @@ class ManageDepartmentalSelections extends Page implements HasTable
                                         return [];
                                     }
                                     $league = League::find($leagueId);
-                                    return $league ? $league->departments()->pluck('name', 'id') : [];
+                                    if (!$league) {
+                                        return [];
+                                    }
+                                    return Department::where('country_id', $league->country_id)
+                                        ->pluck('name', 'id');
                                 })
                                 ->required()
                                 ->reactive(),
@@ -95,8 +99,21 @@ class ManageDepartmentalSelections extends Page implements HasTable
 
                             Select::make('league_category_id')
                                 ->label('Categoría')
-                                ->relationship('leagueCategory', 'name')
-                                ->required(),
+                                ->options(function (callable $get) {
+                                    $leagueId = $get('league_id');
+                                    if (!$leagueId) {
+                                        return [];
+                                    }
+                                    
+                                    return \App\Models\LeagueCategory::where('league_id', $leagueId)
+                                        ->active()
+                                        ->pluck('name', 'id')
+                                        ->toArray();
+                                })
+                                ->searchable()
+                                ->preload()
+                                ->required()
+                                ->reactive(),
 
                             Select::make('status')
                                 ->label('Estado')
@@ -127,17 +144,28 @@ class ManageDepartmentalSelections extends Page implements HasTable
                                                 return [];
                                             }
 
-                                            return Player::whereHas('club', function (Builder $query) use ($departmentId) {
+                                            // Obtener la categoría de liga para determinar el rango de edad
+                                            $leagueCategory = \App\Models\LeagueCategory::find($categoryId);
+                                            if (!$leagueCategory) {
+                                                return [];
+                                            }
+
+                                            return Player::whereHas('currentClub', function (Builder $query) use ($departmentId) {
                                                 $query->where('department_id', $departmentId);
                                             })
-                                            ->where('gender', $gender)
-                                            ->where('league_category_id', $categoryId)
+                                            ->whereHas('user', function (Builder $query) use ($gender) {
+                                                $query->where('gender', $gender);
+                                            })
                                             ->where('status', UserStatus::Active)
-                                            ->with(['user', 'club'])
+                                            ->with(['user', 'currentClub'])
                                             ->get()
+                                            ->filter(function ($player) use ($leagueCategory) {
+                                                $age = $player->age;
+                                                return $age >= $leagueCategory->min_age && $age <= $leagueCategory->max_age;
+                                            })
                                             ->mapWithKeys(function ($player) {
                                                 return [
-                                                    $player->id => $player->user->name . ' (' . $player->club->name . ')'
+                                                    $player->id => $player->user->name . ' (' . $player->currentClub->name . ')'
                                                 ];
                                             });
                                         })
@@ -152,7 +180,7 @@ class ManageDepartmentalSelections extends Page implements HasTable
                                         return null;
                                     }
                                     $player = Player::find($state['player_id']);
-                                    return $player ? $player->user->name . ' (' . $player->club->name . ')' : null;
+                                    return $player ? $player->user->name . ' (' . $player->currentClub->name . ')' : null;
                                 }),
                         ])
                         ->visible(fn (callable $get) => $get('department_id') && $get('gender') && $get('league_category_id')),
@@ -244,7 +272,7 @@ class ManageDepartmentalSelections extends Page implements HasTable
                                             ->options(function ($record) {
                                                 return $record->players->mapWithKeys(function ($player) {
                                                     return [
-                                                        $player->id => $player->user->name . ' (' . $player->club->name . ')'
+                                                        $player->id => $player->user->name . ' (' . $player->currentClub->name . ')'
                                                     ];
                                                 });
                                             }),
@@ -267,18 +295,29 @@ class ManageDepartmentalSelections extends Page implements HasTable
                                         Select::make('player_id')
                                             ->label('Jugador')
                                             ->options(function ($record) {
-                                                return Player::whereHas('club', function (Builder $query) use ($record) {
+                                                // Obtener la categoría de liga para determinar el rango de edad
+                                                $leagueCategory = \App\Models\LeagueCategory::find($record->league_category_id);
+                                                if (!$leagueCategory) {
+                                                    return [];
+                                                }
+
+                                                return Player::whereHas('currentClub', function (Builder $query) use ($record) {
                                                     $query->where('department_id', $record->department_id);
                                                 })
-                                                ->where('gender', $record->gender)
-                                                ->where('league_category_id', $record->league_category_id)
+                                                ->whereHas('user', function (Builder $query) use ($record) {
+                                                    $query->where('gender', $record->gender);
+                                                })
                                                 ->where('status', UserStatus::Active)
                                                 ->whereNotIn('id', $record->players->pluck('id'))
-                                                ->with(['user', 'club'])
+                                                ->with(['user', 'currentClub'])
                                                 ->get()
+                                                ->filter(function ($player) use ($leagueCategory) {
+                                                    $age = $player->age;
+                                                    return $age >= $leagueCategory->min_age && $age <= $leagueCategory->max_age;
+                                                })
                                                 ->mapWithKeys(function ($player) {
                                                     return [
-                                                        $player->id => $player->user->name . ' (' . $player->club->name . ')'
+                                                        $player->id => $player->user->name . ' (' . $player->currentClub->name . ')'
                                                     ];
                                                 });
                                             })
@@ -316,7 +355,7 @@ class ManageDepartmentalSelections extends Page implements HasTable
                             ->options(function ($record) {
                                 return $record->players->mapWithKeys(function ($player) {
                                     return [
-                                        $player->id => $player->user->name . ' (' . $player->club->name . ')'
+                                        $player->id => $player->user->name . ' (' . $player->currentClub->name . ')'
                                     ];
                                 });
                             })

@@ -6,6 +6,7 @@ use App\Filament\Resources\ClubResource;
 use App\Models\Club;
 use App\Models\Player;
 use App\Enums\PlayerPosition;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\ManageRelatedRecords;
@@ -66,7 +67,7 @@ class ManagePlayers extends ManageRelatedRecords
 
                                 Forms\Components\TextInput::make('email')
                                     ->label('Email')
-                                    ->email()
+                                    ->rules([new NoAccentsEmail()])
                                     ->unique(Player::class, 'email', ignoreRecord: true),
 
                                 Forms\Components\TextInput::make('phone')

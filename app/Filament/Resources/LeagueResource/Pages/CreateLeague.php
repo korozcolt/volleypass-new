@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Enums\LeagueType;
 use App\Enums\PlayerCategory;
 use App\Enums\Gender;
+use App\Rules\NoAccentsEmail;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\CreateRecord;
@@ -183,7 +184,7 @@ class CreateLeague extends CreateRecord
 
                             Forms\Components\TextInput::make('email')
                                 ->label('Email de Contacto')
-                                ->email()
+                                ->rules([new NoAccentsEmail()])
                                 ->maxLength(255),
 
                             Forms\Components\TextInput::make('website')

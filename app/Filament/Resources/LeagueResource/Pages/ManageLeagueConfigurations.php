@@ -32,12 +32,64 @@ class ManageLeagueConfigurations extends Page
     {
         $configurations = LeagueConfiguration::where('league_id', $this->record->id)
             ->get()
-            ->groupBy('group');
+            ->keyBy('key');
+
+        // Define default values for all expected configurations
+        $defaultConfigurations = [
+            // Transfers
+            'transfer_approval_required' => true,
+            'transfer_timeout_days' => 7,
+            'max_transfers_per_season' => 2,
+            'transfer_window_start' => '2024-01-01',
+            'transfer_window_end' => '2024-03-31',
+            'inter_league_transfers_allowed' => false,
+            
+            // Documentation
+            'document_strictness_level' => 'medium',
+            'medical_certificate_required' => true,
+            'medical_validity_months' => 6,
+            'photo_required' => true,
+            'parent_authorization_under_18' => true,
+            'insurance_required' => false,
+            
+            // Categories
+            'age_verification_strict' => true,
+            'category_mixing_allowed' => false,
+            'guest_players_allowed' => true,
+            'max_guest_players_per_match' => 2,
+            
+            // Discipline
+            'yellow_card_accumulation_limit' => 3,
+            'suspension_games_per_red_card' => 1,
+            'appeal_process_enabled' => true,
+            'appeal_deadline_days' => 3,
+            
+            // Federation
+            'federation_required_for_tournaments' => true,
+            'federation_grace_period_days' => 30,
+            'federation_validity_months' => 12,
+            'manual_approval_process' => true,
+            
+            // Tournament Interface
+            'live_match_updates' => true,
+            'real_time_scoring' => true,
+            'player_eligibility_check' => true,
+            'referee_interface_enabled' => true,
+            
+            // Public Data
+            'show_live_scores' => true,
+            'show_team_rosters' => false,
+            'show_player_stats' => true,
+            'show_tournament_brackets' => true,
+            'public_api_enabled' => true,
+        ];
 
         $this->data = [];
-        foreach ($configurations as $group => $configs) {
-            foreach ($configs as $config) {
-                $this->data[$config->key] = $config->typed_value;
+        foreach ($defaultConfigurations as $key => $defaultValue) {
+            if ($configurations->has($key)) {
+                $this->data[$key] = $configurations[$key]->typed_value;
+            } else {
+                $this->data[$key] = $defaultValue;
             }
         }
     }
