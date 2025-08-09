@@ -7,6 +7,7 @@ use App\Models\Club;
 use App\Models\Player;
 use App\Observers\ClubObserver;
 use App\Observers\PlayerObserver;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,9 +24,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
         // Model bindings para rutas
         \Illuminate\Support\Facades\Route::model('category', \App\Models\LeagueCategory::class);
-        
+
         // Registrar observers
         Club::observe(ClubObserver::class);
         Player::observe(PlayerObserver::class);
