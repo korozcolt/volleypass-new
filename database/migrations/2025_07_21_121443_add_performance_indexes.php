@@ -53,11 +53,11 @@ return new class extends Migration
         });
 
         // Índices adicionales para optimización de consultas frecuentes
-        
+
         // Índice para jugadores activos por club
         Schema::table('players', function (Blueprint $table) {
             $table->index(
-                ['current_club_id', 'is_active', 'created_at'],
+                ['current_club_id', 'status', 'created_at'],
                 'idx_players_active_by_club'
             );
         });
@@ -105,7 +105,7 @@ return new class extends Migration
         // Índice para registros de escaneo QR
         Schema::table('qr_scan_logs', function (Blueprint $table) {
             $table->index(
-                ['scanned_at', 'verification_result'],
+                ['scanned_at', 'verification_status'],
                 'idx_qr_scan_logs_verification'
             );
         });
@@ -141,7 +141,7 @@ return new class extends Migration
     public function down(): void
     {
         // Eliminar índices en orden inverso
-        
+
         Schema::table('activity_log', function (Blueprint $table) {
             $table->dropIndex('idx_activity_log_subject');
         });

@@ -5,9 +5,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-$appName = \App\Models\SystemConfiguration::getValue('app.name', 'VolleyPass');
-$appDescription = \App\Models\SystemConfiguration::getValue('app.description', 'Sistema de gestión para la Liga de Voleibol de Sucre');
-$favicon = \App\Models\SystemConfiguration::getValue('branding.favicon', '/favicon.ico');
+// Temporalmente usando valores por defecto hasta completar setup
+$appName = 'VolleyPass';
+$appDescription = 'Sistema de gestión para la Liga de Voleibol de Sucre';
+$favicon = '/favicon.ico';
 
 echo json_encode([
     'name' => $appName . ' - Liga de Voleibol de Sucre',

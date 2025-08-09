@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->brandLogo(fn () => view('filament.admin.logo'))
-            ->favicon(\App\Models\SystemConfiguration::getValue('branding.favicon', asset('favicon.ico')))
+            // ->favicon(\App\Models\SystemConfiguration::getValue('branding.favicon', asset('favicon.ico'))) // Temporalmente deshabilitado hasta completar setup
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->pages([
                 \App\Filament\Pages\RoleDashboard::class,
