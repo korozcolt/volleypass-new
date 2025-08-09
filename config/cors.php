@@ -27,9 +27,9 @@ return [
     |
     */
     'allowed_origins' => [
-        // ✅ Se pueden agregar desde .env usando CORS_ALLOWED_ORIGINS
-        // O configurar aquí directamente según necesidad
+        '*'  // O mantener * para desarrollo
     ],
+
 
     /*
     |--------------------------------------------------------------------------
@@ -100,5 +100,5 @@ return [
     | Se determina automáticamente según el origen
     |
     */
-    'supports_credentials' => env('CORS_SUPPORTS_CREDENTIALS', true),
+    'supports_credentials' => env('CORS_SUPPORTS_CREDENTIALS', false),
 ];
