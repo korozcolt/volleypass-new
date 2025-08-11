@@ -28,11 +28,7 @@ export default defineConfig({
         global: 'globalThis',
     },
     server: {
-        host: '0.0.0.0',
-        port: 5173,
-        https: false,
-        hmr: {
-            host: 'localhost',
-        },
+        https: true,
+        host: 'volleypass.kronnos.dev'
     },
 })
