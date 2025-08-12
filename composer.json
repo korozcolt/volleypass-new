@@ -21,6 +21,7 @@
         "livewire/volt": "^1.7.0",
         "maatwebsite/excel": "^3.1",
         "pusher/pusher-php-server": "^7.2",
+        "resend/resend-php": "^0.19.1",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/geocoder": "^3.16",
         "spatie/image-optimizer": "^1.8",

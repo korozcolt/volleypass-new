@@ -122,6 +122,6 @@ return [
     |
     */
 
-    'contact_email' => env('MAIL_CONTACT', 'ing.korozco@gmail.com'),
+    'contact' => env('MAIL_CONTACT', 'ing.korozco@gmail.com'),
 
 ];
