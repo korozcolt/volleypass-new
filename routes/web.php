@@ -39,14 +39,12 @@ Route::prefix('club')->group(function () {
 Route::get('/card/{cardNumber}', [PlayerCardController::class, 'show'])->name('player.card.show');
 Route::get('/card/{cardNumber}/download', [PlayerCardController::class, 'download'])->name('player.card.download');
 
-// Rutas para pruebas de email (solo en desarrollo)
-if (app()->environment(['local', 'development'])) {
-    Route::prefix('test-email')->group(function () {
-        Route::get('/', [\App\Http\Controllers\TestEmailController::class, 'index'])->name('test-email.index');
-        Route::get('/send', [\App\Http\Controllers\TestEmailController::class, 'test'])->name('test-email.send');
-        Route::get('/command', [\App\Http\Controllers\TestEmailController::class, 'testCommand'])->name('test-email.command');
-    });
-}
+Route::prefix('test-email')->group(function () {
+    Route::get('/', [\App\Http\Controllers\TestEmailController::class, 'index'])->name('test-email.index');
+    Route::get('/send', [\App\Http\Controllers\TestEmailController::class, 'test'])->name('test-email.send');
+    Route::get('/command', [\App\Http\Controllers\TestEmailController::class, 'testCommand'])->name('test-email.command');
+});
+
 
 // Todas las rutas de administración se manejan a través de Filament
 // Las vistas de usuario son React/TypeScript
