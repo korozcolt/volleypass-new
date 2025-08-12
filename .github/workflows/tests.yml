@@ -50,5 +50,7 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      - name: Database migration
+        run: php artisan migrate --force
       - name: Run Tests
         run: ./vendor/bin/pest
